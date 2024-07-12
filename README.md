@@ -34,12 +34,10 @@ Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` 
 - [x] SMS (Bird)
 - [x] Telegram
 - [ ] WhatsApp
-- [ ] Twitter
 - [ ] Phone Calls
 
 ### Web Access
-- [x] Google Calendar
-- [x] Google Drive
+- [x] Google Drive & Calendar
 - [ ] Search
 - [ ] Autonomous agent (using an external API)
 

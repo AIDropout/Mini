@@ -7,7 +7,7 @@ from zootopia.controller.intent.models import (
 )
 from archive.langchain import LLM
 from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
-from zootopia.core.schema import Action
+from zootopia.core.schema import Action, MessageTableModel
 
 
 class IntentManager:
@@ -74,17 +74,18 @@ class IntentManager:
         return result
     
     # Paradigm 2 - produce actions. For agent autonomy
-    def produce_actions(self, message_history: List[Message], possible_actions: List[str]) -> List[Action]:
-        # Prepare the prompt for the LLM
+    def produce_actions(self, message_history: List[MessageTableModel], possible_actions: List[str]) -> List[Action]:
         prompt = self._prepare_prompt(message_history, possible_actions)
         
-        # Get response from LLM
         response = self.llm.generate_response(prompt)
         
-        # Parse the response and return the list of actions
         return self._parse_llm_response(response)
 
-    def _prepare_prompt(self, message_history: List[Message], possible_actions: List[str]) -> str:
+    def _prepare_prompt(self, message_history: List[MessageTableModel], possible_actions: List[str]) -> str:
+        print("Preparing prompt...")
+        print(message_history)
+        print(possible_actions)
+        
         # Implement the logic to create a prompt for the LLM
         # Include the message history and possible actions
         pass

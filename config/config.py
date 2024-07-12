@@ -5,9 +5,74 @@ from typing import cast, Optional, List
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from zootopia.controller.memory.autodb.models import AutoDBConfig
-from config.models import ConstantIDConfig, SupabaseConfig, _UserIDConfig
+from config.models import SupabaseConfig, _UserIDConfig
 from zootopia.apis.gsuite.models import GAuthConfig
+
+class LLMNames(Enum):
+    """Enumeration of available LLM models."""
+
+    GPT_4O = "gpt-4o"
+    GPT_35_TURBO = "gpt-3.5-turbo"
+
+    CLAUDE_OPUS = "claude-3-opus-20240229"
+    CLAUDE_SONNET = "claude-3-sonnet-20240229"
+    CLAUDE_HAIKU = "claude-3-haiku-20240307"
+
+    GEMINI_PRO = "gemini-1.5-pro"
+    GEMINI_FLASH = "gemini-1.5-flash"
+
+    LLAMA3_8B = "llama3-8b-8192"
+    LLAMA3_70B = "llama3-70b-8192"
+    MIXTRAL = "mixtral-8x7b-32768"
+    GEMMA = "gemma-7b-it"
+
+class LLMConfig(BaseModel):
+    """Configuration for an LLM instance."""
+    name: LLMNames
+
+class TableType(Enum):
+    ROW = "row"
+    COL = "column"
+
+
+class DataType(Enum):
+    LIST = "list"
+    JSON = "json"
+    DICT = "json"
+    BOOL = "boolean"
+    STR = "string"
+    INT = "integer"
+    TIMESTAMP = "timestamp"
+
+
+class DatabaseColumn(BaseModel):
+    name: str
+    datatype: DataType
+    description: str
+
+
+class DatabaseTable(BaseModel):
+    name: str
+    table_type: TableType
+    description: str
+    llm_control: bool
+    columns: list[DatabaseColumn]
+
+
+class AutoDBConfig(BaseModel):
+    database_tables: list[DatabaseTable]
+    intent_llm_config: LLMConfig
+
+
+class DataLocation(BaseModel):
+    table: str
+    column: Optional[str]
+
+
+class DataAction(BaseModel):
+    data_location: DataLocation
+    data: dict
+
 
 class CalendarConfig(BaseModel):
     CALENDAR_NAME: str
@@ -111,10 +176,10 @@ def load_config(
 
 
 testing = True
-prefix = "zootopia/config/" if testing else "/etc/secrets/"
+prefix = "config/" if testing else "/etc/secrets/"
 config = cast(ZootopiaConfig, load_config(f"{prefix}local.yaml", set_env=True))
 autodb_config = cast(
-    AutoDBConfig, load_config("zootopia/config/autodb.yaml", config_type=AutoDBConfig)
+    AutoDBConfig, load_config("config/autodb.yaml", config_type=AutoDBConfig)
 )
 
 UserIDType = Enum(

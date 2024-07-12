@@ -1,9 +1,10 @@
 from zootopia.core.logger import logger
+from zootopia.core.schema import ActionType
+
 from zootopia.controller.context import ContextManager
 from zootopia.controller.intent import IntentManager
 from zootopia.controller.action import ActionManager
 from zootopia.controller.memory import MemoryManager
-from zootopia.core.schema import ActionType
 
 
 class AgentController:
