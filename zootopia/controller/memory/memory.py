@@ -23,7 +23,7 @@ class MemoryManager:
         except Exception as e:
             logger.error(f"Error storing message: {str(e)}")
             raise
-    
+        
     def get_recent_messages(self, count: int = 10) -> List[MessageTableModel]:
         """
         Get the most recent messages for a given room ID.
@@ -40,16 +40,16 @@ class MemoryManager:
                 max_rows=count,
                 order_by=Tables.MESSAGES__created_at.value,
                 order_desc=True,
-                conditions=[(Tables.MESSAGES__room_id.value, self.context.room.id)]
+                conditions={Tables.MESSAGES__room_id.value: self.context.room.id}
             )
             
             # Convert database results to MessageTableModel instances
-            messages = [MessageTableModel(**message) for message in messages]
+            message_models = [MessageTableModel.model_validate(message) for message in messages]
 
             # Reverse the list to get chronological order (oldest to newest)
-            messages.reverse()
+            message_models.reverse()
 
-            return messages
+            return message_models
         except Exception as e:
             logger.error(f"Error fetching recent messages for room {self.context.room.id}: {str(e)}")
             return []

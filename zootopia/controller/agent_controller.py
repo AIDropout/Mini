@@ -13,13 +13,9 @@ class AgentController:
         context: ContextManager
     ) -> None:
         self.context = context
-        print("0")
         self.intent = IntentManager.from_config(context)
-        print("1")
         self.action = ActionManager(context)
-        print("0")
         self.memory = MemoryManager(context)
-        print("1")
 
     def handle_message(self):
         try:
@@ -44,13 +40,6 @@ class AgentController:
             
             # Store new memories if necessary
             self.memory.store_memory(recent_messages[-1])
-            
-            # Handle any necessary responses or side effects
-            self._handle_results(results)
-            
+                        
         except Exception as e:
             logger.error(f"Error in handling message: {str(e)}")
-
-    def _handle_results(self, results):
-        # Implement logic to handle the results of actions
-        pass

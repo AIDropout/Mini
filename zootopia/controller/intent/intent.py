@@ -35,7 +35,7 @@ class IntentManager:
 
         prompt = render_jinja_template(
             "autonomous.jinja",
-            "zootopia/intent/templates",
+            "zootopia/controller/intent/templates",
             message_history=history_str,
             possible_actions=actions_str,
             response_structure=json.dumps(response_structure, indent=2)

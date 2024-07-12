@@ -93,8 +93,3 @@ TABLE_MODEL_MAP = {
     Tables.AGENTS.value: AgentTableModel,
     Tables.MESSAGES.value: MessageTableModel,
 }
-
-AgentTableModel = AgentTableModel()
-UserTableModel = UserTableModel()
-RoomTableModel = RoomTableModel()
-MessageTableModel = MessageTableModel()

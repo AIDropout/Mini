@@ -1,8 +1,9 @@
 
 from datetime import datetime
-from typing import List, Optional, TypeVar
+from typing import List, Optional, TypeVar, Dict
 from supabase import create_client
 from zootopia.storage.database.database import Database
+from zootopia.core.logger import logger
 from config.models import SupabaseConfig
 from zootopia.core.schema import TableModel
 from zootopia.core.schema.table import TABLE_MODEL_MAP
@@ -44,28 +45,44 @@ class SupabaseDB(Database):
         return None
 
     def get_multiple_rows(
-        self,
-        table_name: str,
-        max_rows: int = 10,
-        from_time: Optional[datetime] = None,
-        order_by: str = "created_at",
-        order_desc: bool = True,
-        *conditions
-    ) -> List[TableModel]:
-        query = self.supabase.table(table_name).select("*")
+            self,
+            table_name: str,
+            max_rows: int = 10,
+            from_time: Optional[datetime] = None,
+            order_by: str = "created_at",
+            order_desc: bool = True,
+            conditions: Optional[Dict] = None,
+            **kwargs
+        ) -> List[Dict]:
+            try:
+                query = self.supabase.table(table_name).select("*")
 
-        for key, value in conditions:
-            query = query.eq(key, value)
+                if conditions:
+                    for key, value in conditions.items():
+                        query = query.eq(key, value)
+                
+                for key, value in kwargs.items():
+                    query = query.eq(key, value)
 
-        if from_time is not None:
-            query = query.gte("created_at", from_time.isoformat())
+                if from_time is not None:
+                    query = query.gte("created_at", from_time.isoformat())
 
-        query = query.order(order_by, desc=order_desc).limit(max_rows)
+                query = query.order(order_by, desc=order_desc).limit(max_rows)
 
-        data, _ = query.execute()
+                response = query.execute()
+                
+                # Handle the actual response format
+                if hasattr(response, 'data') and isinstance(response.data, list):
+                    data = response.data
+                else:
+                    logger.error(f"Unexpected response format from Supabase: {response}")
+                    return []
 
-        model_class = TABLE_MODEL_MAP[table_name]
-        return [model_class(**item) for item in data[1]] if data and data[1] else []
+                # Return the data as a list of dictionaries
+                return data
+            except Exception as e:
+                logger.error(f"Error in get_multiple_rows: {str(e)}")
+                return []
 
     def delete(self, table_name: str, *conditions) -> bool:
         query = self.supabase.table(table_name).delete()
