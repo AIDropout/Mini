@@ -3,7 +3,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from zootopia.core.schema.llm import LLMConfig
+from config.config import LLMConfig
 
 from enum import Enum
 

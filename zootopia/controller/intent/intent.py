@@ -9,11 +9,12 @@ class IntentManager:
         self.context = context
         self.llm = LLM(model=intent_model)
 
+    #TODO: add config
     @classmethod
-    def from_config(cls, context, config: IntentConfig) -> "IntentManager":
+    def from_config(cls, context) -> "IntentManager":
         return cls(
             context=context,
-            intent_model=config.intent_model
+            intent_model="gpt-4o"
         )
 
     def produce_actions(self, message_history: List[MessageTableModel], possible_actions: List[str]) -> List[Action]:

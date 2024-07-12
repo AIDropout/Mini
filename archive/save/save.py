@@ -7,9 +7,8 @@ from zootopia.controller.action.autodb.autodb import AutoDB
 from config.config import autodb_config, config
 from zootopia.storage.database.supabase import SupabaseDB
 from zootopia.apis.gsuite.gcal.gcal import GCal
-from zootopia.controller.intent._intent import IntentManager
+from archive._intent import IntentManager
 from zootopia.controller.intent.models import IntentFilters
-from archive.langchain import LLM
 from zootopia.core.schema.llm import LLMConfig, LLMNames, LLMProviders
 from zootopia.messaging.messaging  import MessageProviderBase
 from zootopia.messaging.models import ZootopiaMessage
@@ -51,7 +50,7 @@ class SaveManager:
             llm_config = LLMConfig(
                 provider=LLMProviders.GOOGLE, name=LLMNames.GEMINI_FLASH
             )
-            llm = LLM.from_config(llm_config)
+            llm = LLM(llm_config)
             intent_detector = IntentManager(llm, intent_filters)
             intent = intent_detector.detect_intent(self.message.message.message.text)
             logger.info(intent)
@@ -102,7 +101,7 @@ class SaveManager:
         )
 
         llm_config = LLMConfig(provider=LLMProviders.GOOGLE, name=LLMNames.GEMINI_FLASH)
-        llm = LLM.from_config(llm_config)
+        llm = LLM(llm_config)
 
         for data, location in self.saved_data:
             saved_data = f"{location}: {str(data)}"

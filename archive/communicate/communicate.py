@@ -6,7 +6,6 @@ from langchain_core.messages import HumanMessage
 from zootopia.controller.action.autodb.autodb import AutoDB
 from config.config import autodb_config, config
 from zootopia.storage.database.supabase import SupabaseDB
-from archive.langchain import LLM
 from zootopia.core.schema.llm import ImitateChat, LLMConfig, LLMNames, LLMProviders
 from zootopia.messaging.messaging  import MessageProviderBase
 from zootopia.messaging.models import ZootopiaMessage
@@ -60,7 +59,7 @@ class CommunicateManager:
         )
 
         llm_config = LLMConfig(provider=LLMProviders.GOOGLE, name=LLMNames.GEMINI_PRO)
-        llm = LLM.from_config(llm_config)
+        llm = LLM(llm_config)
 
         llm.system_prompt = system_prompt
         response = llm.generate_response(

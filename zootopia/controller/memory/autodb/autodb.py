@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Callable, Dict, List, Optional, cast
 
-from zootopia.controller.memory.autodb.models import (
+from config.config import (
     AutoDBConfig,
     DataAction,
     DatabaseColumn,
@@ -10,9 +10,9 @@ from zootopia.controller.memory.autodb.models import (
     TableType,
 )
 from zootopia.storage.database.database import Database
-from zootopia.controller.intent._intent import IntentManager
+from archive._intent import IntentManager
 from zootopia.controller.intent.models import IntentConfig, IntentFilters
-from archive.langchain import LLM
+from zootopia.llm.llm import LLM
 from zootopia.core.logger import logger
 from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
 
@@ -47,7 +47,7 @@ class AutoDB:
         )
         intent_detector = IntentManager.from_config(intent_detector_config)
 
-        autodb_llm = LLM.from_config(config.intent_llm_config)
+        autodb_llm = LLM(config.intent_llm_config)
 
         col_to_llm_struct = database_info["column_to_llm_structure"]
 

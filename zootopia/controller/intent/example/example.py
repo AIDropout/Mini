@@ -8,7 +8,7 @@ Steps:
 
 from dotenv import load_dotenv
 
-from zootopia.controller.intent._intent import IntentConfig, IntentManager
+from archive._intent import IntentConfig, IntentManager
 from zootopia.core.utils.utils import load_yaml_config
 
 load_dotenv()

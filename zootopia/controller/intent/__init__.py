@@ -1,4 +1,4 @@
-from ._intent import IntentManager
+from .intent import IntentManager
 from .models import Confidence, IntentConfig, IntentFilters, LLMResponseStructure
 
 __all__ = [

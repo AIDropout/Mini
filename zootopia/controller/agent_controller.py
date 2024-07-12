@@ -13,9 +13,13 @@ class AgentController:
         context: ContextManager
     ) -> None:
         self.context = context
-        self.intent = IntentManager(context)
+        print("0")
+        self.intent = IntentManager.from_config(context)
+        print("1")
         self.action = ActionManager(context)
+        print("0")
         self.memory = MemoryManager(context)
+        print("1")
 
     def handle_message(self):
         try:

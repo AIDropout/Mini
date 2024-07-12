@@ -5,7 +5,7 @@ from zootopia.controller.intent.models import (
     IntentFilters,
     LLMResponseStructure,
 )
-from archive.langchain import LLM
+from zootopia.llm.llm import LLM
 from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
 from zootopia.core.schema import Action, MessageTableModel
 
@@ -30,7 +30,7 @@ class IntentManager:
     @classmethod
     def from_config(cls, config: IntentConfig) -> "IntentManager":
         """Create an IntentManager instance from a configuration."""
-        llm = LLM.from_config(config.llm_config)
+        llm = LLM(config.llm_config)
         return cls(llm=llm, filters=config.filters)
 
     # Paradigm 1 - produce intents. For custom flows
@@ -85,7 +85,7 @@ class IntentManager:
         print("Preparing prompt...")
         print(message_history)
         print(possible_actions)
-        
+
         # Implement the logic to create a prompt for the LLM
         # Include the message history and possible actions
         pass

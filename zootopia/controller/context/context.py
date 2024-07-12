@@ -35,6 +35,9 @@ class ContextManager:
         self.room: RoomTableModel = self._get_or_create_room_from_db(
             self.message, self.user, self.agent
         )
+    
+    def __str__(self):
+        return f"ContextManager(user={self.user}, agent={self.agent}, room={self.room}, message={self.message})"
 
     def _create_messaging_provider(
         self, request_body, config: ZootopiaConfig
