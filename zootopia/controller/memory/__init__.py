@@ -1,4 +1,3 @@
-from .history import ShortTermHistory
-from .memory import GeneralMemory
+from .memory import MemoryManager
 
-__all__ = ['GeneralMemory', 'ShortTermHistory']
+__all__ = ['MemoryManager']

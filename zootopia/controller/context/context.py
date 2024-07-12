@@ -43,7 +43,7 @@ class ContextManager:
         if "payload" in request_body:
             return BirdSMSProvider.from_config(config.MESSAGING_CONFIG.BIRD)
         elif "update_id" in request_body:
-            return TelegramBot.from_config(config.MESSAGING_CONFIG.TELEGRAM)
+            return Telegram.from_config(config.MESSAGING_CONFIG.TELEGRAM)
         else:
             raise NotImplementedError("Messaging platform not implemented yet.")
 
