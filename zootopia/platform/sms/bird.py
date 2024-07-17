@@ -52,7 +52,6 @@ class BirdSMSProvider(MessageProviderBase):
         )
     
     # TODO: Handle images and files
-    @classmethod
     def receive_message(self, request_body: dict) -> ZootopiaMessage:
         """Handle an incoming message from a Bird SMS sender."""
         try:
@@ -65,7 +64,8 @@ class BirdSMSProvider(MessageProviderBase):
         try:
             phone_number = bird_message['sender']['contact']['identifierValue']
             channel_id = bird_message['channelId']
-            self._user_phone =phone_number
+            print(f"-------{phone_number}")
+            self._user_phone = phone_number
             self._channel_id = channel_id
             message_text = bird_message['body']['text']['text']
 
@@ -87,9 +87,10 @@ class BirdSMSProvider(MessageProviderBase):
             raise MessageParsingError(f"Missing key in Bird message: {e}") from e
     
     # TODO: Get verification that message was actually sent
-    async def send_message(self, message: str) -> bool:
+    async def send_message(self, message: str) -> None:
         """Send a Bird SMS message to the recipient."""
         try:
+            print(f"------{self._user_phone}")
             url = f"{self._api_url}/workspaces/{self._workspace_id}/channels/{self._channel_id}/messages"
             payload = {
                 "receiver": {
@@ -97,8 +98,11 @@ class BirdSMSProvider(MessageProviderBase):
                 },
                 "body": {"type": "text", "text": {"text": message}},
             }
+            print(url)
+            print(payload)
 
-            requests.post(url, headers=self._api_header, json=payload)
+            response = requests.post(url, headers=self._api_header, json=payload)
+            logger.info(response.json())
         except Exception as e:
             raise SendMessageError(f"Error sending message: {e}") from e
 

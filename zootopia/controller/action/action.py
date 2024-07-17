@@ -5,23 +5,22 @@ from zootopia.controller.context import ContextManager
 
 class ActionManager:
     def __init__(self, context: ContextManager) -> None:
-        self.context = context
+        self.messaging_service = context.messaging_service
 
-    def execute_actions(self, actions: List[Action]) -> List[ActionResult]:
+    async def execute_actions(self, actions: List[Action]) -> List[ActionResult]:
         results = []
         for action in actions:
             try:
-                result = self._execute_single_action(action)
+                result = await self._execute_single_action(action)
                 results.append(result)
             except Exception as e:
                 logger.error(f"Error executing action {action.type}: {str(e)}")
                 results.append(ActionResult(action=action, success=False, result=str(e)))
         return results
 
-    def _execute_single_action(self, action: Action) -> ActionResult:
+    async def _execute_single_action(self, action: Action) -> ActionResult:
         if action.type == ActionType.MESSAGE:
-            print(f"Sending message: {action.args.get('content', '')}")
-            # TODO: Implement actual message sending logic
+            await self.messaging_service.send_message(action.args.get('text', ''))
             return ActionResult(action=action, success=True, result="Message sent")
 
         elif action.type == ActionType.RECALL:

@@ -20,7 +20,7 @@ class MessageProviderBase(ABC):
         pass
 
     @abstractmethod
-    async def send_message(self, message: str, user_id: int) -> Optional[str]:
+    async def send_message(self, message: str) -> Optional[str]:
         """Send a message to a recipient."""
         pass
 

@@ -20,7 +20,7 @@ async def message_webhook(request: Request):
 
         zootopian = AgentController(context)
 
-        zootopian.handle_message()
+        await zootopian.handle_message()
     except Exception as e:
         logger.error(f"Error in message_webhook: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")

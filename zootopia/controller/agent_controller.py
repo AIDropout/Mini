@@ -17,7 +17,7 @@ class AgentController:
         self.action = ActionManager(context)
         self.memory = MemoryManager(context)
 
-    def handle_message(self):
+    async def handle_message(self):
         try:
             # Insert message
             self.memory.store_user_message()
@@ -31,9 +31,12 @@ class AgentController:
             ]
 
             actions = self.intent.produce_actions(recent_messages, possible_actions)
+
+            logger.info("Actions:")
+            logger.info(actions)
             
             # Execute the actions
-            results = self.action.execute_actions(actions)
+            results = await self.action.execute_actions(actions)
             
             # Update general memory with the results
             self.memory.update_memory(results)

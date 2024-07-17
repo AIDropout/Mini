@@ -43,7 +43,9 @@ class IntentManager:
 
         content = self.llm.generate_response([{"role": "user", "content": prompt}])
         cleaned = clean_and_parse_llm_json_output(content)
-        
+
+        print(cleaned) 
+                
         if isinstance(cleaned, dict) and 'action' in cleaned and 'args' in cleaned:
             action_type = cleaned['action']
             if action_type in possible_actions:
