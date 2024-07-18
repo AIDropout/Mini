@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Union
 from oauth2client.client import OAuth2Credentials
 from config.config import config
-from config.models import GAuthTable, Tables, UserModel, AgentModel, RoomModel
+from archive.autodb_config.models import GAuthTable, Tables, UserModel, AgentModel, RoomModel
 from zootopia.storage.database.supabase import SupabaseDB
 from zootopia.apis.gsuite.gauth.gauth import GAuth
 from zootopia.messaging.messaging  import MessageProviderBase

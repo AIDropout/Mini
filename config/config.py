@@ -5,53 +5,9 @@ from typing import cast, Optional, List
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from config.models import SupabaseConfig, _UserIDConfig
+from archive.autodb_config.models import SupabaseConfig, _UserIDConfig
 from zootopia.apis.gsuite.models import GAuthConfig
 from zootopia.core.schema import LLMConfig
-
-class TableType(Enum):
-    ROW = "row"
-    COL = "column"
-
-
-class DataType(Enum):
-    LIST = "list"
-    JSON = "json"
-    DICT = "json"
-    BOOL = "boolean"
-    STR = "string"
-    INT = "integer"
-    TIMESTAMP = "timestamp"
-
-
-class DatabaseColumn(BaseModel):
-    name: str
-    datatype: DataType
-    description: str
-
-
-class DatabaseTable(BaseModel):
-    name: str
-    table_type: TableType
-    description: str
-    llm_control: bool
-    columns: list[DatabaseColumn]
-
-
-class AutoDBConfig(BaseModel):
-    database_tables: list[DatabaseTable]
-    intent_llm_config: LLMConfig
-
-
-class DataLocation(BaseModel):
-    table: str
-    column: Optional[str]
-
-
-class DataAction(BaseModel):
-    data_location: DataLocation
-    data: dict
-
 
 class CalendarConfig(BaseModel):
     CALENDAR_NAME: str
@@ -106,16 +62,15 @@ class IntentDetectionConfig(BaseModel):
 class HumanLikeMemoryConfig(BaseModel):
     MODEL: str
 
-class AsyncConfig(BaseModel):
+class TaskManagerConfig(BaseModel):
     REDIS_URL: str
 
 class BehaviorsConfig(BaseModel):
-    NAME: str
     PROMPT: str
     INTENT_DETECTION: IntentDetectionConfig
     HUMAN_LIKE_MEMORY: HumanLikeMemoryConfig
     INTERNET_ACCESS: Optional[dict]
-    ASYNC_CONFIG: AsyncConfig
+    TASK_MANAGER: TaskManagerConfig
 
 class ZootopiaConfig(BaseModel):
     MESSAGING_CONFIG: MessagingConfig

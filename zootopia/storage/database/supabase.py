@@ -4,7 +4,7 @@ from typing import List, Optional, TypeVar, Dict
 from supabase import create_client
 from zootopia.storage.database.database import Database
 from zootopia.core.logger import logger
-from config.models import SupabaseConfig
+from archive.autodb_config.models import SupabaseConfig
 from zootopia.core.schema import TableModel
 from zootopia.core.schema.table import TABLE_MODEL_MAP
 
