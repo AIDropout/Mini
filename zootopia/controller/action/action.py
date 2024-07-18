@@ -1,21 +1,22 @@
 from typing import List, Dict
-from zootopia.core.schema import Action, ActionType, ActionResult, MessageTableModel
+from zootopia.core.schema import Action, ActionType, ActionResult
 from zootopia.core.logger import logger
-from zootopia.controller.context import ContextManager
 from zootopia.llm.llm import LLM 
-from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
+from zootopia.core.utils.utils import render_jinja_template
+from config.config import ActionManagerConfig
+from zootopia.platform.platform import MessageProviderBase
 
 class ActionManager:
-    def __init__(self, context: ContextManager, action_model: str) -> None:
-        self.messaging_service = context.messaging_service
+    def __init__(self, action_model: str, messaging_service: MessageProviderBase) -> None:
         self.llm = LLM(model=action_model)
+        self.messaging_service = messaging_service
     
-    #TODO: add config
     @classmethod
-    def from_config(cls, context) -> "ActionManager":
+    def from_config(cls, config: ActionManagerConfig, messaging_service: MessageProviderBase) -> "ActionManager":
+        action_model = config.MODEL
+        messaging_service = messaging_service
         return cls(
-            context=context,
-            action_model="gpt-4o"
+            action_model, messaging_service
         )
 
     async def respond_to_user(self, recent_messages: List[Dict[str, str]]):

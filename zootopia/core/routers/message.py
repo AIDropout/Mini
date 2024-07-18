@@ -17,7 +17,7 @@ async def message_webhook(request: Request):
 
         context = ContextManager(request_body, config)
 
-        zootopian = AgentController(context)
+        zootopian = AgentController(context, config)
 
         await zootopian.handle_message()
     except Exception as e:

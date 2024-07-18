@@ -1,6 +1,6 @@
 """Class used to store utils needed for agent_controller logic"""
 
-from config.config import ZootopiaConfig
+from config.config import Config, SupabaseConfig, MessagingConfig
 from zootopia.core.schema import Tables, AgentTableModel, RoomTableModel, UserTableModel
 from zootopia.storage.database.supabase import SupabaseDB
 from zootopia.platform.platform import MessageProviderBase
@@ -14,7 +14,7 @@ from zootopia.platform.models import (
 from zootopia.platform.telegram.telegram import Telegram
 
 class ContextManager:
-    def __init__(self, request_body, config: ZootopiaConfig):
+    def __init__(self, request_body, supabase_config: SupabaseConfig, messaging_config: MessagingConfig):
         """
         1. Init database
         2. Init correct messaging service given the message
@@ -22,10 +22,10 @@ class ContextManager:
         4. Use ZootopiaMessage to locate correct user, room & store in ZootopiaAppState variables
         """
         self.database: SupabaseDB = SupabaseDB.from_config(
-            config.DATABASE_CONFIG.SUPABASE
+            supabase_config
         )
         self.messaging_service: MessageProviderBase = self._create_messaging_provider(
-            request_body, config
+            request_body, messaging_config
         )
         self.message: ZootopiaMessage = self.messaging_service.receive_message(
             request_body
@@ -35,18 +35,26 @@ class ContextManager:
         self.room: RoomTableModel = self._get_or_create_room_from_db(
             self.message, self.user, self.agent
         )
+
+    @classmethod
+    def from_config(cls, config: Config) -> "ContextManager":
+        supabase_config = config.DATABASE_CONFIG.SUPABASE
+        messaging_config = config.MESSAGING_CONFIG
+        return cls( 
+            supabase_config, messaging_config
+        )
     
     def __str__(self):
         return f"ContextManager(user={self.user}, agent={self.agent}, room={self.room}, message={self.message})"
 
     def _create_messaging_provider(
-        self, request_body, config: ZootopiaConfig
+        self, request_body, messaging_config: MessagingConfig
     ) -> MessageProviderBase:
         """Returns correct messaging service based on the request body"""
         if "payload" in request_body:
-            return BirdSMSProvider.from_config(config.MESSAGING_CONFIG.BIRD)
+            return BirdSMSProvider.from_config(messaging_config.BIRD)
         elif "update_id" in request_body:
-            return Telegram.from_config(config.MESSAGING_CONFIG.TELEGRAM)
+            return Telegram.from_config(messaging_config.TELEGRAM)
         else:
             raise NotImplementedError("Messaging platform not implemented yet.")
 

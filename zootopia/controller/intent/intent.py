@@ -3,18 +3,17 @@ from zootopia.core.schema import MessageTableModel, Action, ActionType
 from zootopia.llm.llm import LLM 
 from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
 import json
+from config.config import IntentManagerConfig
 
 class IntentManager:
-    def __init__(self, context, intent_model: str):
-        self.context = context
+    def __init__(self, intent_model: str):
         self.llm = LLM(model=intent_model)
 
-    #TODO: add config
     @classmethod
-    def from_config(cls, context) -> "IntentManager":
+    def from_config(cls, config: IntentManagerConfig) -> "IntentManager":
+        intent_model = config.MODEL
         return cls(
-            context=context,
-            intent_model="gpt-4o"
+            intent_model
         )
     
     def produce_actions(self, recent_messages: List[Dict[str, str]], possible_actions: List[str]) -> List[Action]:

@@ -3,21 +3,33 @@ from zootopia.controller.context.context import ContextManager
 from zootopia.core.logger import logger
 from zootopia.core.schema import Tables, MessageTableModel
 from typing import List, Dict
-
+from config.config import MemoryManagerConfig
+from zootopia.storage.database.supabase import SupabaseDB
+from zootopia.core.schema import Tables, AgentTableModel, RoomTableModel, UserTableModel
 
 class MemoryManager:
-    def __init__(self, context: ContextManager):
-        self.context = context
+    def __init__(self, database_service: SupabaseDB, room_id: int):
+        self.database_service = database_service
+        self.room_id = room_id
+
+    @classmethod
+    def from_config(cls, config: MemoryManagerConfig, database_service: SupabaseDB, room_data: RoomTableModel) -> "MemoryManager":
+        action_model = config.MODEL
+        database_service = database_service
+        room_id = room_data.id
+        return cls(
+            action_model, database_service, room_id
+        )
 
     def store_message(self, from_user: bool, message: str):
         """Inserts user's message into database"""
         try:
             message = MessageTableModel(
-                room_id=self.context.room.id,
+                room_id=self.room_id,
                 from_user=from_user,
                 message=message
             )
-            stored_message = self.context.database.insert(Tables.MESSAGES.value, message)
+            stored_message = self.database_service.insert(Tables.MESSAGES.value, message)
             logger.info(f"Message stored successfully. ID: {stored_message.id}")
             return stored_message
         except Exception as e:
@@ -35,12 +47,12 @@ class MemoryManager:
         - List[Dict[str, str]]: A list of dictionaries with 'role' and 'content' keys.
         """
         try:
-            messages = self.context.database.get_multiple_rows(
+            messages = self.database_service.get_multiple_rows(
                 table_name=Tables.MESSAGES.value,
                 max_rows=count,
                 order_by=Tables.MESSAGES__created_at.value,
                 order_desc=True,
-                conditions={Tables.MESSAGES__room_id.value: self.context.room.id}
+                conditions={Tables.MESSAGES__room_id.value: self.room_id}
             )
             
             # Convert database results to MessageTableModel instances
@@ -65,23 +77,17 @@ class MemoryManager:
 
             return llm_messages
         except Exception as e:
-            logger.error(f"Error fetching recent messages for room {self.context.room.id}: {str(e)}")
+            logger.error(f"Error fetching recent messages for room {self.room_id}: {str(e)}")
             return []
 
     def update_memory(self, results):
-        # Implement logic to update general memory based on action results
         logger.info("Updating general memory")
-        # TODO: Implement the actual logic for updating general memory
         pass
 
     def retrieve_memory(self, query):
-        # Implement logic to retrieve relevant memories
         logger.info(f"Retrieving memory for query: {query}")
-        # TODO: Implement the actual logic for retrieving memory
         pass
 
     def store_memory(self, data):
-        # Implement logic to store new memories
         logger.info("Storing new memory")
-        # TODO: Implement the actual logic for storing new memory
         pass
