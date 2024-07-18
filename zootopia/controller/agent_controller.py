@@ -14,35 +14,37 @@ class AgentController:
     ) -> None:
         self.context = context
         self.intent = IntentManager.from_config(context)
-        self.action = ActionManager(context)
+        self.action = ActionManager.from_config(context)
         self.memory = MemoryManager(context)
 
     async def handle_message(self):
         try:
             # Insert message
-            self.memory.store_user_message()
+            self.memory.store_message(
+                from_user=True, 
+                message=self.context.message.content
+            )
 
             # Produce list of actions based on recent messages
             recent_messages = self.memory.get_recent_messages(count=10)
             possible_actions = [
-                ActionType.MESSAGE,
                 ActionType.RECALL,
                 ActionType.WEB_SEARCH,
             ]
 
+            # Intent layer to determine actions
             actions = self.intent.produce_actions(recent_messages, possible_actions)
-
-            logger.info("Actions:")
-            logger.info(actions)
             
             # Execute the actions
-            results = await self.action.execute_actions(actions)
+            results, agent_response = await self.action.execute_actions(actions, recent_messages)
             
             # Update general memory with the results
             self.memory.update_memory(results)
             
-            # Store new memories if necessary
-            self.memory.store_memory(recent_messages[-1])
+            self.memory.store_message(
+                from_user=False, 
+                message=agent_response
+            )
                         
         except Exception as e:
             logger.error(f"Error in handling message: {str(e)}")

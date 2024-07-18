@@ -16,7 +16,6 @@ async def message_webhook(request: Request):
         logger.info(f"Received request body: {request_body}")
 
         context = ContextManager(request_body, config)
-        logger.info(f"Created ContextManager: {context}")
 
         zootopian = AgentController(context)
 

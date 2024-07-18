@@ -16,12 +16,9 @@ class IntentManager:
             context=context,
             intent_model="gpt-4o"
         )
-
-    def produce_actions(self, message_history: List[MessageTableModel], possible_actions: List[str]) -> List[Action]:
-        history_str = "\n".join([
-            f"{'User' if msg.from_user else 'Bot'}: {msg.message}"
-            for msg in message_history
-        ])
+    
+    def produce_actions(self, recent_messages: List[Dict[str, str]], possible_actions: List[str]) -> List[Action]:
+        history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in recent_messages])
 
         actions_str = ", ".join(possible_actions)
 
@@ -44,8 +41,6 @@ class IntentManager:
         content = self.llm.generate_response([{"role": "user", "content": prompt}])
         cleaned = clean_and_parse_llm_json_output(content)
 
-        print(cleaned) 
-                
         if isinstance(cleaned, dict) and 'action' in cleaned and 'args' in cleaned:
             action_type = cleaned['action']
             if action_type in possible_actions:

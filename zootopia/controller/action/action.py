@@ -1,13 +1,48 @@
-from typing import List
-from zootopia.core.schema import Action, ActionType, ActionResult
+from typing import List, Dict
+from zootopia.core.schema import Action, ActionType, ActionResult, MessageTableModel
 from zootopia.core.logger import logger
 from zootopia.controller.context import ContextManager
+from zootopia.llm.llm import LLM 
+from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
 
 class ActionManager:
-    def __init__(self, context: ContextManager) -> None:
+    def __init__(self, context: ContextManager, action_model: str) -> None:
         self.messaging_service = context.messaging_service
+        self.llm = LLM(model=action_model)
+    
+    #TODO: add config
+    @classmethod
+    def from_config(cls, context) -> "ActionManager":
+        return cls(
+            context=context,
+            action_model="gpt-4o"
+        )
 
-    async def execute_actions(self, actions: List[Action]) -> List[ActionResult]:
+    async def respond_to_user(self, recent_messages: List[Dict[str, str]]):
+        system_prompt = render_jinja_template(
+            "system_prompt.jinja",
+            "zootopia/controller/action/templates",
+            system_prompt="You are a rabbit. speak in gibberish only"
+        )
+
+        # Create the messages list with the system prompt at the beginning
+        messages = [
+            {"role": "system", "content": system_prompt}
+        ] + recent_messages
+
+        # Define message_action with a default content
+        message_action = Action(type=ActionType.MESSAGE, args={"content": ""})
+
+        try:
+            content = self.llm.generate_response(messages)
+            await self.messaging_service.send_message(content)
+            message_action = Action(type=ActionType.MESSAGE, args={"content": content})
+            return ActionResult(action=message_action, success=True, result=content)
+        except Exception as e:
+            logger.error(f"Error executing respond action: {str(e)}")
+            return ActionResult(action=message_action, success=False, result=f"Agent response failed to generate or send: {str(e)}")
+
+    async def execute_actions(self, actions: List[Action], recent_messages: List[Dict[str, str]]) -> List[ActionResult]:
         results = []
         for action in actions:
             try:
@@ -16,14 +51,14 @@ class ActionManager:
             except Exception as e:
                 logger.error(f"Error executing action {action.type}: {str(e)}")
                 results.append(ActionResult(action=action, success=False, result=str(e)))
-        return results
+
+        # Always respond
+        response_result = await self.respond_to_user(recent_messages)
+        results.append(response_result)
+        return results, response_result.result
 
     async def _execute_single_action(self, action: Action) -> ActionResult:
-        if action.type == ActionType.MESSAGE:
-            await self.messaging_service.send_message(action.args.get('text', ''))
-            return ActionResult(action=action, success=True, result="Message sent")
-
-        elif action.type == ActionType.RECALL:
+        if action.type == ActionType.RECALL:
             print(f"Recalling from memory: {action.args.get('query', '')}")
             # TODO: Implement actual memory recall logic
             return ActionResult(action=action, success=True, result="Memory recalled")

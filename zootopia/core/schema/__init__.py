@@ -1,5 +1,6 @@
 from .action import ActionType, Action, ActionResult
 from .table import Tables, TableModel, AgentTableModel, UserTableModel, RoomTableModel, MessageTableModel
+from .llm import LLMNames, LLMConfig
 
 __all__ = [
     'ActionType',
@@ -12,4 +13,7 @@ __all__ = [
     'UserTableModel',
     'RoomTableModel',
     'MessageTableModel'
+
+    'LLMNames',
+    'LLMConfig'
 ]
