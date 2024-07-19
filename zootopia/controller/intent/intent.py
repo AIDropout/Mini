@@ -6,14 +6,14 @@ import json
 from config.config import IntentManagerConfig
 
 class IntentManager:
-    def __init__(self, intent_model: str):
-        self.llm = LLM(model=intent_model)
+    def __init__(self, model_name: str):
+        self.llm = LLM(model_name)
 
     @classmethod
-    def from_config(cls, config: IntentManagerConfig) -> "IntentManager":
-        intent_model = config.MODEL
+    def from_config(cls, manager_config: IntentManagerConfig) -> "IntentManager":
+        model_name = manager_config.LLM_NAME
         return cls(
-            intent_model
+            model_name,
         )
     
     def produce_actions(self, recent_messages: List[Dict[str, str]], possible_actions: List[str]) -> List[Action]:

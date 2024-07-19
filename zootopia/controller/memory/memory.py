@@ -14,11 +14,10 @@ class MemoryManager:
 
     @classmethod
     def from_config(cls, config: MemoryManagerConfig, database_service: SupabaseDB, room_data: RoomTableModel) -> "MemoryManager":
-        action_model = config.MODEL
         database_service = database_service
         room_id = room_data.id
         return cls(
-            action_model, database_service, room_id
+            database_service, room_id
         )
 
     def store_message(self, from_user: bool, message: str):
@@ -35,10 +34,11 @@ class MemoryManager:
         except Exception as e:
             logger.error(f"Error storing message: {str(e)}")
             raise
-        
+            
     def get_recent_messages(self, count: int = 10) -> List[Dict[str, str]]:
         """
         Get the most recent messages for a given room ID in a format suitable for LLM input.
+        Multiple consecutive user messages are combined with a pipe symbol.
 
         Args:
         - count (int): The number of recent messages to fetch. Defaults to 10.
@@ -62,18 +62,17 @@ class MemoryManager:
             
             # Convert to LLM friendly format
             llm_messages = []
-            prev_role = None
             for msg in message_models:
                 role = "user" if msg.from_user else "assistant"
                 content = msg.message
                 
-                if role == prev_role == "user":
-                    # If two user messages in a row, append with pipe symbol
+                if llm_messages and llm_messages[-1]['role'] == "user" and role == "user":
+                    # If the current message is from a user and the last message was also from a user,
+                    # append the content with a pipe symbol
                     llm_messages[-1]['content'] += f" | {content}"
                 else:
+                    # Otherwise, add a new message entry
                     llm_messages.append({"role": role, "content": content})
-                
-                prev_role = role
 
             return llm_messages
         except Exception as e:

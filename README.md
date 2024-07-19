@@ -68,6 +68,7 @@ Make sure Python, [ngrok](https://ngrok.com/), and [uv]() are installed.
    ```
 
 Copy `local.template.yaml` to a new file called `local.yaml` in the same directory
+Paste API keys into .env
 
 ## 🚀 Usage
 Run the project:

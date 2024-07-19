@@ -15,9 +15,9 @@ async def message_webhook(request: Request):
         request_body = json.loads(await request.body())
         logger.info(f"Received request body: {request_body}")
 
-        context = ContextManager(request_body, config)
+        context = ContextManager.from_config(request_body, config)
 
-        zootopian = AgentController(context, config)
+        zootopian = AgentController.from_config(context, config)
 
         await zootopian.handle_message()
     except Exception as e:

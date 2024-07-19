@@ -37,11 +37,11 @@ class ContextManager:
         )
 
     @classmethod
-    def from_config(cls, config: Config) -> "ContextManager":
+    def from_config(cls, request_body, config: Config) -> "ContextManager":
         supabase_config = config.DATABASE_CONFIG.SUPABASE
         messaging_config = config.MESSAGING_CONFIG
         return cls( 
-            supabase_config, messaging_config
+            request_body, supabase_config, messaging_config
         )
     
     def __str__(self):

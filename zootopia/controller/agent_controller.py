@@ -20,7 +20,7 @@ class AgentController:
         room_data: RoomTableModel,
         intent_config: IntentManagerConfig, 
         action_config: ActionManagerConfig, 
-        memory_config: MemoryManagerConfig
+        memory_config: MemoryManagerConfig,
     ) -> None:
         self.message = message
         self.intent = IntentManager.from_config(intent_config)
@@ -28,7 +28,7 @@ class AgentController:
         self.memory = MemoryManager.from_config(memory_config, database_service, room_data)
 
     @classmethod
-    def from_config(cls, context: ContextManager, config: Config) -> "ContextManager":
+    def from_config(cls, context: ContextManager, config: Config) -> "AgentController":
         message = context.message.content
         messaging_service = context.messaging_service
         database_service = context.database
@@ -50,6 +50,7 @@ class AgentController:
 
             # Produce list of actions based on recent messages
             recent_messages = self.memory.get_recent_messages(count=10)
+            print(recent_messages)
             possible_actions = [
                 ActionType.RECALL,
                 ActionType.WEB_SEARCH,
@@ -61,13 +62,14 @@ class AgentController:
             # Execute the actions
             results, agent_response = await self.action.execute_actions(actions, recent_messages)
             
-            # Update general memory with the results
+            # Update general memory with the results (Not Implemented)
             self.memory.update_memory(results)
             
-            self.memory.store_message(
-                from_user=False, 
-                message=agent_response
-            )
+            if agent_response:
+                self.memory.store_message(
+                    from_user=False, 
+                    message=agent_response
+                )
                         
         except Exception as e:
             logger.error(f"Error in handling message: {str(e)}")

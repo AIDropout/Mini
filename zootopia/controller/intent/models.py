@@ -3,8 +3,6 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from config.config import LLMConfig
-
 from enum import Enum
 
 
@@ -31,7 +29,7 @@ class IntentFilters(BaseModel):
 
 
 class IntentConfig(BaseModel):
-    llm_config: LLMConfig
+    # llm_config: LLMConfig
     filters: List[IntentFilters]
 
 

@@ -1,11 +1,12 @@
 from typing import List, Dict, Optional
-from litellm import completion
+import litellm
 
 class LLM:
     """Class for Large Language Models (LLMs) usage powered by LiteLLM"""
 
-    def __init__(self, model: str):
-        self.model: str = model
+    def __init__(self, llm_name: str):
+        self.llm_name: str = llm_name
+        litellm.modify_params = True
 
     def _prepare_messages(self, messages: List[Dict[str, str]], system_prompt: Optional[str] = None) -> List[Dict[str, str]]:
         """Prepend the system prompt to the messages if it exists."""
@@ -24,7 +25,7 @@ class LLM:
         """
         try:
             prepared_messages = self._prepare_messages(messages, system_prompt)
-            response = completion(model=self.model, messages=prepared_messages, **kwargs)
+            response = litellm.completion(model=self.llm_name, messages=prepared_messages, **kwargs)
             return response.choices[0].message.content
         except Exception as e:
             print(f"Error generating response: {e}")
@@ -41,7 +42,7 @@ class LLM:
         """
         try:
             prepared_messages = self._prepare_messages(messages, system_prompt)
-            response = completion(model=self.model, messages=prepared_messages, stream=True, **kwargs)
+            response = litellm.completion(model=self.llm_name, messages=prepared_messages, stream=True, **kwargs)
             for chunk in response:
                 yield chunk.choices[0].delta.content or ""
         except Exception as e:

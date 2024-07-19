@@ -1,5 +1,6 @@
 import os
-from typing import Any, Dict, List
+import re
+from typing import Any, Dict, List, Union
 from pydantic import BaseModel
 import yaml
 
@@ -17,7 +18,7 @@ class TelegramConfig(BaseModel):
 class BirdConfig(BaseModel):
     BIRD_API_URL: str
     BIRD_ORGANIZATION_ID: str
-    BIRD_WORKSPACE_ID: str
+    BIRD_WORKSPACE_ID: str 
     BIRD_API_KEY: str
     BIRD_SIGNING_KEY: str
     BIRD_CHANNEL_ID: str
@@ -26,20 +27,16 @@ class MessagingConfig(BaseModel):
     TELEGRAM: TelegramConfig
     BIRD: BirdConfig
 
-class LLMConfig(BaseModel):
-    GEMINI: Dict[str, str]
-    GROQ: Dict[str, str]
-    OPENAI: Dict[str, str]
-    ANTHROPIC: Dict[str, str]
-
 class ActionManagerConfig(BaseModel):
-    MODEL: str
+    LLM_NAME: str
 
 class IntentManagerConfig(BaseModel):
-    MODEL: str
+    LLM_NAME: str
 
 class MemoryManagerConfig(BaseModel):
-    MODEL: str
+    LLM_NAME: str
+
+ManagerConfig = Union[ActionManagerConfig, IntentManagerConfig, MemoryManagerConfig]
 
 class TaskManagerConfig(BaseModel):
     REDIS_URL: str
@@ -52,19 +49,37 @@ class BehaviorsConfig(BaseModel):
     TASK_MANAGER: TaskManagerConfig
 
 class WebAccessConfig(BaseModel):
-    GOOGLE: Dict[str, Any]  # You might want to define a more specific type here
+    GOOGLE: Dict[str, Any]
 
 class Config(BaseModel):
     DATABASE_CONFIG: DatabaseConfig
     MESSAGING_CONFIG: MessagingConfig
-    LLM_CONFIG: LLMConfig
     BEHAVIORS_CONFIG: BehaviorsConfig
     WEB_ACCESS_CONFIG: WebAccessConfig
 
-# Config loading function
+def replace_env_vars(value: Any) -> Any:
+    if isinstance(value, str):
+        pattern = r'\$\{([^}^{]+)\}'
+        matches = re.finditer(pattern, value)
+        for match in matches:
+            env_var = match.group(1)
+            env_value = os.getenv(env_var)
+            if env_value is not None:
+                value = value.replace(match.group(0), env_value)
+            else:
+                raise ValueError(f"Environment variable {env_var} is not set")
+    elif isinstance(value, dict):
+        return {k: replace_env_vars(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [replace_env_vars(v) for v in value]
+    return value
+
 def load_config(config_path: str, set_env: bool = False) -> Config:
     with open(config_path, "r", encoding="utf-8") as config_file:
         config_data = yaml.safe_load(config_file)
+    
+    # Replace ${___} with environment variables
+    config_data = replace_env_vars(config_data)
 
     if set_env:
         set_environment_variables(config_data)

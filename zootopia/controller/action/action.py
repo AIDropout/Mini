@@ -7,16 +7,16 @@ from config.config import ActionManagerConfig
 from zootopia.platform.platform import MessageProviderBase
 
 class ActionManager:
-    def __init__(self, action_model: str, messaging_service: MessageProviderBase) -> None:
-        self.llm = LLM(model=action_model)
+    def __init__(self, model_name: str, messaging_service: MessageProviderBase) -> None:
+        self.llm = LLM(model_name)
         self.messaging_service = messaging_service
     
     @classmethod
-    def from_config(cls, config: ActionManagerConfig, messaging_service: MessageProviderBase) -> "ActionManager":
-        action_model = config.MODEL
+    def from_config(cls, manager_config: ActionManagerConfig, messaging_service: MessageProviderBase) -> "ActionManager":
+        model_name = manager_config.LLM_NAME
         messaging_service = messaging_service
         return cls(
-            action_model, messaging_service
+            model_name, messaging_service
         )
 
     async def respond_to_user(self, recent_messages: List[Dict[str, str]]):
