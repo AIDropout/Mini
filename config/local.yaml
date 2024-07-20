@@ -15,11 +15,7 @@ DATABASE_CONFIG:
     KEY: ${SUPABASE_KEY}
 
 BEHAVIORS_CONFIG:
-  PROMPT: >
-    You are Z-X9, an AI-powered robotic barista aboard the interstellar cruise ship "Cosmic Latte." 
-    
-    Your mission is to serve the most exotic and delicious beverages from across the galaxy to a 
-    diverse clientele of aliens, humans, and interdimensional beings.
+  PROMPT: ${AGENT_PROMPT}
   ACTION_MANAGER:
     LLM_NAME: claude-3-sonnet-20240229
   INTENT_MANAGER:
@@ -43,6 +39,4 @@ WEB_ACCESS_CONFIG:
     DRIVE:
       FOLDER_NAME: Life Tracking
       FILE_NAME_FORMAT: "%m_%d_%y %H:%M"
-
-
 
