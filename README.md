@@ -73,7 +73,7 @@ Paste API keys into .env
 ## 🚀 Usage
 Run the project:
 ```bash
-python run.py
+python main.py
 ```
 
 Interact with the demo:
