@@ -23,7 +23,6 @@ class BirdSMSProvider(MessageProviderBase):
         workspace_id: str,
         api_key: str,
         signing_key: str,
-        channel_id: str
     ):
         """Initialize Bird credentials."""
         self._api_url = bird_url
@@ -35,7 +34,7 @@ class BirdSMSProvider(MessageProviderBase):
         self._organization_id = organization_id
         self._workspace_id = workspace_id
         self._user_phone = None
-        self._channel_id = channel_id
+        self._channel_id = None
 
     @classmethod
     def from_config(cls, config: BirdConfig) -> "BirdSMSProvider":
@@ -45,14 +44,16 @@ class BirdSMSProvider(MessageProviderBase):
         workspace_id = config.BIRD_WORKSPACE_ID
         api_key = config.BIRD_API_KEY
         signing_key = config.BIRD_SIGNING_KEY
-        channel_id = config.BIRD_CHANNEL_ID
 
         return cls(
-            bird_url, organization_id, workspace_id, api_key, signing_key, channel_id
+            bird_url, organization_id, workspace_id, api_key, signing_key
         )
     
     def set_user_phone(self, user_phone: str) -> None:
         self._user_phone = user_phone
+
+    def set_channel_id(self, channel_id: str) -> None:
+        self._channel_id = channel_id
     
     # TODO: Handle images and files
     def receive_message(self, request_body: dict) -> ZootopiaMessage:

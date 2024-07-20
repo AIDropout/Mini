@@ -48,7 +48,7 @@ class ContextManager:
             request_body
         )
         self.user: UserTableModel = self._get_or_create_user_from_db(self.message)
-        self.agent: AgentTableModel = self._get_or_create_agent_from_db(self.message)
+        self.agent: AgentTableModel = self._get_agent_from_db(self.message)
         self.room: RoomTableModel = get_or_create_room_from_db(
             self.user, self.agent, database=self.database
         )
@@ -110,7 +110,8 @@ class ContextManager:
 
         return user
 
-    def _get_or_create_agent_from_db(self, message: ZootopiaMessage) -> AgentTableModel:
+    #TODO: figure out telegram conditions
+    def _get_agent_from_db(self, message: ZootopiaMessage) -> AgentTableModel:
         """Returns agent object from database using message metadata"""
         agent = None
 
@@ -118,29 +119,12 @@ class ContextManager:
         if message.provider == MessageProvider.TELEGRAM:
             agent = self.database.get_row(
                 Tables.AGENTS.value,
-                conditions={}  # Add appropriate conditions if needed
+                conditions={}
             )
         elif message.provider == MessageProvider.BIRD:
             agent = self.database.get_row(
                 Tables.AGENTS.value,
                 conditions={Tables.AGENTS__bird_channel_id.value: message.metadata.channel_id}
             )
-
-        # If no agents exists, create one
-        if not agent:
-            new_agent = AgentTableModel(
-                telegram_chat_id=(
-                    message.metadata.chat_id
-                    if isinstance(message.metadata, TelegramMetadata)
-                    else None
-                ),
-                bird_channel_id=(
-                    message.metadata.channel_id
-                    if isinstance(message.metadata, BirdMetadata)
-                    else None
-                ),
-            )
-
-            agent = self.database.insert(Tables.AGENTS.value, new_agent)
 
         return agent

@@ -64,12 +64,13 @@ def get_or_create_user_and_room(request: SignupRequestBase, agent: AgentTableMod
 async def signup_webhook(request: SignupRequestBase):
     try: 
         database: SupabaseDB = SupabaseDB.from_config(config.DATABASE_CONFIG.SUPABASE)
-        sms_service: MessageProviderBase = BirdSMSProvider.from_config(config.MESSAGING_CONFIG.BIRD)
+        sms_service: BirdSMSProvider = BirdSMSProvider.from_config(config.MESSAGING_CONFIG.BIRD)
         
         agent = get_or_create_agent(request.agent_id, database)
         user, room, is_new_user = get_or_create_user_and_room(request, agent, database)
 
         sms_service.set_user_phone(request.user_phone)
+        sms_service.set_channel_id(agent.bird_channel_id)
         await sms_service.send_message(agent.first_message)
         
         database.insert(table_name=Tables.MESSAGES.value, item=MessageTableModel(
