@@ -83,14 +83,12 @@ class ContextManager:
         if message.provider == MessageProvider.TELEGRAM:
             user = self.database.get_row(
                 Tables.USERS.value,
-
-                (Tables.USERS__telegram_uid.value, message.metadata.uid),
+                conditions={Tables.USERS__telegram_uid.value: message.metadata.uid}
             )
         elif message.provider == MessageProvider.BIRD:
             user = self.database.get_row(
                 Tables.USERS.value,
-
-                (Tables.USERS__phone_number.value, message.metadata.phone_number),
+                conditions={Tables.USERS__phone_number.value: message.metadata.phone_number}
             )
 
         # If no user exists, create user
@@ -120,11 +118,12 @@ class ContextManager:
         if message.provider == MessageProvider.TELEGRAM:
             agent = self.database.get_row(
                 Tables.AGENTS.value,
+                conditions={}  # Add appropriate conditions if needed
             )
         elif message.provider == MessageProvider.BIRD:
             agent = self.database.get_row(
                 Tables.AGENTS.value,
-                (Tables.AGENTS__bird_channel_id.value, message.metadata.channel_id),
+                conditions={Tables.AGENTS__bird_channel_id.value: message.metadata.channel_id}
             )
 
         # If no agents exists, create one
