@@ -14,6 +14,7 @@ from config.config import config
 from zootopia.platform.telegram.telegram import Telegram
 from zootopia.platform.sms.bird import BirdSMSProvider
 from zootopia.core.routers.message import router as message_router
+from zootopia.core.routers.signup import router as signup_router
 from zootopia.core.logger import logger
 
 
@@ -55,8 +56,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(LoggingMiddleware)
 app.include_router(message_router)
+app.include_router(signup_router)
 
 if __name__ == "__main__":
     asyncio.run(configure_webhooks())
-    uvicorn.run("run:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
   

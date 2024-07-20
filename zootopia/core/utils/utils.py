@@ -5,7 +5,6 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel, ValidationError
 
-
 def load_yaml_config(
     config_path: str,
     config_type: BaseModel,

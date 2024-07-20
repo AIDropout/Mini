@@ -32,9 +32,9 @@ class SupabaseDB(Database):
         data, _ = query.execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
-    def get_row(self, table_name: str, *conditions) -> Optional[TableModel]:
+    def get_row(self, table_name: str, conditions: Dict[str, any]) -> Optional[TableModel]:
         query = self.supabase.table(table_name).select("*")
-        for key, value in conditions:
+        for key, value in conditions.items():
             query = query.eq(key, value)
 
         data, _ = query.limit(1).execute()

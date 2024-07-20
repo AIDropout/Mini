@@ -51,6 +51,9 @@ class BirdSMSProvider(MessageProviderBase):
             bird_url, organization_id, workspace_id, api_key, signing_key, channel_id
         )
     
+    def set_user_phone(self, user_phone: str) -> None:
+        self._user_phone = user_phone
+    
     # TODO: Handle images and files
     def receive_message(self, request_body: dict) -> ZootopiaMessage:
         """Handle an incoming message from a Bird SMS sender."""
@@ -63,7 +66,7 @@ class BirdSMSProvider(MessageProviderBase):
         try:
             phone_number = bird_message['sender']['contact']['identifierValue']
             channel_id = bird_message['channelId']
-            self._user_phone = phone_number
+            self.set_user_phone(phone_number)
             self._channel_id = channel_id
             message_text = bird_message['body']['text']['text']
 
