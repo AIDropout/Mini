@@ -13,23 +13,6 @@ from zootopia.platform.models import (
 )
 from zootopia.platform.telegram.telegram import Telegram
 
-def get_or_create_room_from_db(
-       user: UserTableModel, agent: AgentTableModel, database: SupabaseDB
-    ) -> RoomTableModel:
-        """Returns room object from database using message metadata. This function is also used by signup"""
-        room = database.get_row(
-            Tables.ROOMS.value,
-            conditions={
-                Tables.ROOMS__user_id.value: user.id,
-                Tables.ROOMS__agent_id.value: agent.id
-            }
-        )
-
-        if not room:
-            room = RoomTableModel(user_id=user.id, agent_id=agent.id)
-            user = database.insert(Tables.ROOMS.value, room)
-        return room
-
 class ContextManager:
     def __init__(self, request_body, supabase_config: SupabaseConfig, messaging_config: MessagingConfig):
         """
@@ -49,8 +32,8 @@ class ContextManager:
         )
         self.user: UserTableModel = self._get_or_create_user_from_db(self.message)
         self.agent: AgentTableModel = self._get_agent_from_db(self.message)
-        self.room: RoomTableModel = get_or_create_room_from_db(
-            self.user, self.agent, database=self.database
+        self.room: RoomTableModel = self._get_or_create_room_from_db(
+            self.user, self.agent
         )
 
     @classmethod
@@ -128,3 +111,21 @@ class ContextManager:
             )
 
         return agent
+    
+    def _get_or_create_room_from_db(
+       self, user: UserTableModel, agent: AgentTableModel
+    ) -> RoomTableModel:
+        """Returns room object from database using message metadata. This function is also used by signup"""
+        room = self.database.get_row(
+            Tables.ROOMS.value,
+            conditions={
+                Tables.ROOMS__user_id.value: user.id,
+                Tables.ROOMS__agent_id.value: agent.id
+            }
+        )
+
+        if not room:
+            room = RoomTableModel(user_id=user.id, agent_id=agent.id)
+            user = self.database.insert(Tables.ROOMS.value, room)
+
+        return room

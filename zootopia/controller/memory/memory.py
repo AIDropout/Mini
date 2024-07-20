@@ -1,11 +1,9 @@
-
-from zootopia.controller.context.context import ContextManager
 from zootopia.core.logger import logger
 from zootopia.core.schema import Tables, MessageTableModel
 from typing import List, Dict
 from config.config import MemoryManagerConfig
 from zootopia.storage.database.supabase import SupabaseDB
-from zootopia.core.schema import Tables, AgentTableModel, RoomTableModel, UserTableModel
+from zootopia.core.schema import Tables, RoomTableModel
 
 class MemoryManager:
     def __init__(self, database_service: SupabaseDB, room_id: int):

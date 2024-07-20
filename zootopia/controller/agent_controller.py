@@ -17,7 +17,7 @@ class AgentController:
         message: str,
         messaging_service: MessageProviderBase,
         database_service: SupabaseDB,
-        room_data: RoomTableModel,
+        room: RoomTableModel,
         intent_config: IntentManagerConfig, 
         action_config: ActionManagerConfig, 
         memory_config: MemoryManagerConfig,
@@ -25,19 +25,19 @@ class AgentController:
         self.message = message
         self.intent = IntentManager.from_config(intent_config)
         self.action = ActionManager.from_config(action_config, messaging_service)
-        self.memory = MemoryManager.from_config(memory_config, database_service, room_data)
+        self.memory = MemoryManager.from_config(memory_config, database_service, room)
 
     @classmethod
     def from_config(cls, context: ContextManager, config: Config) -> "AgentController":
         message = context.message.content
         messaging_service = context.messaging_service
         database_service = context.database
-        room_data = context.room
+        room = context.room
         intent_config = config.BEHAVIORS_CONFIG.INTENT_MANAGER
         action_config = config.BEHAVIORS_CONFIG.ACTION_MANAGER
         memory_config = config.BEHAVIORS_CONFIG.MEMORY_MANAGER
         return cls( 
-            message, messaging_service, database_service, room_data, intent_config, action_config, memory_config
+            message, messaging_service, database_service, room, intent_config, action_config, memory_config
         )
 
     async def handle_message(self):
