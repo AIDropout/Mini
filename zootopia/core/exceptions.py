@@ -8,11 +8,7 @@ class RoomAlreadyExistsError(Exception):
 
 
 class AgentNotFoundError(Exception):
-    def __init__(self, agent_id=None):
-        if agent_id is not None:
-            message = f"No agent found with id '{agent_id}'"
-        else:
-            message = 'Agent not found'
+    def __init__(self, message):
         super().__init__(message)
 
 

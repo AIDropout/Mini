@@ -1,18 +1,20 @@
 """Class used to store utils needed for agent_controller logic"""
 
+from zootopia.core.logger import logger
+from typing import Tuple
 from config.config import Config, SupabaseConfig, MessagingConfig
 from zootopia.core.schema import Tables, AgentTableModel, RoomTableModel, UserTableModel
 from zootopia.storage.database.supabase import SupabaseDB
 from zootopia.platform.platform import MessageProviderBase
 from zootopia.platform.sms.bird import BirdSMSProvider
+from zootopia.platform.telegram.telegram import Telegram
 from zootopia.platform.models import (
     BirdMetadata,
     MessageProvider,
     TelegramMetadata,
     ZootopiaMessage,
 )
-from zootopia.platform.telegram.telegram import Telegram
-from zootopia.core.logger import logger
+from zootopia.core.exceptions import AgentNotFoundError
 
 class ContextManager:
     def __init__(self, request_body, supabase_config: SupabaseConfig, messaging_config: MessagingConfig):
@@ -20,7 +22,7 @@ class ContextManager:
         1. Init database
         2. Init correct messaging service given the message
         3. Use messaging service to format it into a ZootopiaMessage object
-        4. Use ZootopiaMessage to locate correct user, room & store in ZootopiaAppState variables
+        4. Use ZootopiaMessage to locate correct user, agent, and room
         """
         self.database: SupabaseDB = SupabaseDB.from_config(
             supabase_config
@@ -31,8 +33,7 @@ class ContextManager:
         self.message: ZootopiaMessage = self.messaging_service.receive_message(
             request_body
         )
-        self.user: UserTableModel = self._get_or_create_user_from_db(self.message)
-        self.agent: AgentTableModel = self._get_agent_from_db(self.message)
+        self.user, self.agent = self._get_user_and_agent_from_db(self.message)
         self.room: RoomTableModel = self._get_or_create_room_from_db(
             self.user, self.agent
         )
@@ -59,9 +60,10 @@ class ContextManager:
         else:
             raise NotImplementedError("Messaging platform not implemented yet.")
 
-    def _get_or_create_user_from_db(self, message: ZootopiaMessage) -> UserTableModel:
+    def _get_user_and_agent_from_db(self, message: ZootopiaMessage) -> Tuple[UserTableModel, AgentTableModel]:
         """Returns user object from database using message metadata"""
         user = None
+        agent = None
 
         # Get user
         if message.provider == MessageProvider.TELEGRAM:
@@ -69,12 +71,22 @@ class ContextManager:
                 Tables.USERS.value,
                 conditions={Tables.USERS__telegram_uid.value: message.metadata.uid}
             )
+            agent = self.database.get_row(
+                Tables.AGENTS.value,
+                conditions={}
+            )
         elif message.provider == MessageProvider.BIRD:
             user = self.database.get_row(
                 Tables.USERS.value,
                 conditions={Tables.USERS__phone_number.value: message.metadata.phone_number}
             )
-
+            agent = self.database.get_row(
+                Tables.AGENTS.value,
+                conditions={Tables.AGENTS__bird_channel_id.value: message.metadata.channel_id}
+            )
+        logger.info(user)
+        logger.info(agent)
+        
         # If no user exists, create user
         if not user:
             new_user = UserTableModel(
@@ -91,35 +103,11 @@ class ContextManager:
             )
 
             user = self.database.insert(Tables.USERS.value, new_user)
-        logger.info(user)
-        return user
 
-    #TODO: figure out telegram conditions
-    def _get_agent_from_db(self, message: ZootopiaMessage) -> AgentTableModel:
-        """Returns agent object from database using message metadata"""
-        agent = None
-
-        logger.info(message.provider)
-        logger.info(MessageProvider.BIRD)
-        logger.info(Tables.AGENTS__bird_channel_id.value)
-        logger.info(message.metadata.channel_id)
-        # Get agent
-        if message.provider == MessageProvider.TELEGRAM:
-            logger.info("apple")
-            agent = self.database.get_row(
-                Tables.AGENTS.value,
-                conditions={}
-            )
-        elif message.provider == MessageProvider.BIRD:
-            logger.info("banana")
-            agent = self.database.get_row(
-                Tables.AGENTS.value,
-                conditions={Tables.AGENTS__bird_channel_id.value: message.metadata.channel_id}
-            )
-            logger.info(agent)
-        logger.info(agent)
-
-        return agent
+        if not agent:
+            raise AgentNotFoundError(f"No agent found from given metadata: {message.metadata}")
+        
+        return user, agent
     
     def _get_or_create_room_from_db(
        self, user: UserTableModel, agent: AgentTableModel
