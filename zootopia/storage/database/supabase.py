@@ -37,10 +37,16 @@ class SupabaseDB(Database):
         for key, value in conditions.items():
             query = query.eq(key, value)
 
+        logger.info(query)
+
         data, _ = query.limit(1).execute()
+
+        logger.info(data)
 
         if data and data[1]:
             model_class = TABLE_MODEL_MAP[table_name]
+            logger.info(model_class)
+            logger.info(model_class(**data[1][0]))
             return model_class(**data[1][0])
         return None
 

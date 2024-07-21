@@ -73,7 +73,8 @@ class ContextManager:
             )
             agent = self.database.get_row(
                 Tables.AGENTS.value,
-                conditions={}
+                conditions={Tables.AGENTS__telegram_chat_id.value: message.metadata.chat_id}
+
             )
         elif message.provider == MessageProvider.BIRD:
             user = self.database.get_row(
