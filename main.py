@@ -17,6 +17,8 @@ from zootopia.core.routers.message import router as message_router
 from zootopia.core.routers.signup import router as signup_router
 from zootopia.core.logger import logger
 
+def is_production():
+    return os.getenv("ENVIRONMENT", "local").lower() == "production"
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -28,14 +30,14 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         return response
 
-async def configure_webhooks():
+async def configure_local_webhooks():
     ngrok_connection = ngrok.connect(addr="127.0.0.1:8000", proto="http")
     print(f"Ngrok public URL: {ngrok_connection.public_url}")
 
     _telegram = Telegram.from_config(config.MESSAGING_CONFIG.TELEGRAM)
     _bird = BirdSMSProvider.from_config(config.MESSAGING_CONFIG.BIRD)
-    if hasattr(config.MESSAGING_CONFIG.BIRD, 'BIRD_DEV_CHANNEL_ID'):
-        _bird.set_channel_id(config.MESSAGING_CONFIG.BIRD.BIRD_DEV_CHANNEL_ID)
+    bird_dev_channel_id = os.getenv('BIRD_DEV_CHANNEL_ID')
+    bird_dev_channel_id and _bird.set_channel_id(bird_dev_channel_id)
     webhook = f"{ngrok_connection.public_url}/message"
     await asyncio.gather(
         _telegram.register_webhook(webhook), 
@@ -61,6 +63,7 @@ app.include_router(message_router)
 app.include_router(signup_router)
 
 if __name__ == "__main__":
-    asyncio.run(configure_webhooks())
+    if os.getenv('ENVIRONMENT', '').lower() != 'production':
+        asyncio.run(configure_local_webhooks())
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
   
