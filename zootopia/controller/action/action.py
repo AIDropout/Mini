@@ -7,25 +7,25 @@ from config.config import ActionManagerConfig
 from zootopia.platform.platform import MessageProviderBase
 
 class ActionManager:
-    def __init__(self, model_name: str, messaging_service: MessageProviderBase) -> None:
+    def __init__(self, model_name: str, messaging_service: MessageProviderBase, agent_prompt: str) -> None:
         self.llm = LLM(model_name)
         self.messaging_service = messaging_service
+        self.agent_prompt = agent_prompt
     
     @classmethod
-    def from_config(cls, manager_config: ActionManagerConfig, messaging_service: MessageProviderBase) -> "ActionManager":
+    def from_config(cls, manager_config: ActionManagerConfig, messaging_service: MessageProviderBase, agent_prompt: str) -> "ActionManager":
         model_name = manager_config.LLM_NAME
-        messaging_service = messaging_service
         return cls(
-            model_name, messaging_service
+            model_name, messaging_service, agent_prompt
         )
 
     async def respond_to_user(self, recent_messages: List[Dict[str, str]]):
         system_prompt = render_jinja_template(
             "system_prompt.jinja",
             "zootopia/controller/action/templates",
-            system_prompt="You are a rabbit. speak in gibberish only"
+            system_prompt=self.agent_prompt
         )
-
+        
         # Create the messages list with the system prompt at the beginning
         messages = [
             {"role": "system", "content": system_prompt}

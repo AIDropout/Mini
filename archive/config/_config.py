@@ -37,7 +37,6 @@ class Config:
     BIRD_WORKSPACE_ID: str = os.getenv("BIRD_WORKSPACE_ID")
     BIRD_API_KEY: str = os.getenv("BIRD_API_KEY")
     BIRD_SIGNING_KEY: str = os.getenv("BIRD_SIGNING_KEY")
-    BIRD_CHANNEL_ID: str = os.getenv("BIRD_CHANNEL_ID")
     BIRD_ACCESS_KEY: str = os.getenv("BIRD_ACCESS_KEY")
 
     SUPABASE_URL: str = os.getenv("SUPABASE_URL")

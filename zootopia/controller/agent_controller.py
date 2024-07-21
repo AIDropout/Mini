@@ -21,10 +21,11 @@ class AgentController:
         intent_config: IntentManagerConfig, 
         action_config: ActionManagerConfig, 
         memory_config: MemoryManagerConfig,
+        agent_prompt: str
     ) -> None:
         self.message = message
         self.intent = IntentManager.from_config(intent_config)
-        self.action = ActionManager.from_config(action_config, messaging_service)
+        self.action = ActionManager.from_config(action_config, messaging_service, agent_prompt)
         self.memory = MemoryManager.from_config(memory_config, database_service, room)
 
     @classmethod
@@ -36,8 +37,9 @@ class AgentController:
         intent_config = config.BEHAVIORS_CONFIG.INTENT_MANAGER
         action_config = config.BEHAVIORS_CONFIG.ACTION_MANAGER
         memory_config = config.BEHAVIORS_CONFIG.MEMORY_MANAGER
+        agent_prompt = config.BEHAVIORS_CONFIG.PROMPT
         return cls( 
-            message, messaging_service, database_service, room, intent_config, action_config, memory_config
+            message, messaging_service, database_service, room, intent_config, action_config, memory_config, agent_prompt
         )
 
     async def handle_message(self):
@@ -61,6 +63,8 @@ class AgentController:
             
             # Execute the actions
             results, agent_response = await self.action.execute_actions(actions, recent_messages)
+
+
             
             # Update general memory with the results (Not Implemented)
             self.memory.update_memory(results)

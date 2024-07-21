@@ -21,7 +21,7 @@ class BirdConfig(BaseModel):
     BIRD_WORKSPACE_ID: str 
     BIRD_API_KEY: str
     BIRD_SIGNING_KEY: str
-    BIRD_CHANNEL_ID: str
+    BIRD_DEV_CHANNEL_ID: str
 
 class MessagingConfig(BaseModel):
     TELEGRAM: TelegramConfig
