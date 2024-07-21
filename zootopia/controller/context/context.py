@@ -91,7 +91,7 @@ class ContextManager:
             )
 
             user = self.database.insert(Tables.USERS.value, new_user)
-
+        logger.info(user)
         return user
 
     #TODO: figure out telegram conditions
@@ -105,15 +105,18 @@ class ContextManager:
         logger.info(message.metadata.channel_id)
         # Get agent
         if message.provider == MessageProvider.TELEGRAM:
+            logger.info("apple")
             agent = self.database.get_row(
                 Tables.AGENTS.value,
                 conditions={}
             )
         elif message.provider == MessageProvider.BIRD:
+            logger.info("banana")
             agent = self.database.get_row(
                 Tables.AGENTS.value,
                 conditions={Tables.AGENTS__bird_channel_id.value: message.metadata.channel_id}
             )
+            logger.info(agent)
         logger.info(agent)
 
         return agent
