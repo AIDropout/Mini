@@ -12,6 +12,7 @@ from zootopia.platform.models import (
     ZootopiaMessage,
 )
 from zootopia.platform.telegram.telegram import Telegram
+from zootopia.core.logger import logger
 
 class ContextManager:
     def __init__(self, request_body, supabase_config: SupabaseConfig, messaging_config: MessagingConfig):
@@ -98,6 +99,10 @@ class ContextManager:
         """Returns agent object from database using message metadata"""
         agent = None
 
+        logger.info(message.provider)
+        logger.info(MessageProvider.BIRD)
+        logger.info(Tables.AGENTS__bird_channel_id.value)
+        logger.info(message.metadata.channel_id)
         # Get agent
         if message.provider == MessageProvider.TELEGRAM:
             agent = self.database.get_row(
@@ -109,13 +114,16 @@ class ContextManager:
                 Tables.AGENTS.value,
                 conditions={Tables.AGENTS__bird_channel_id.value: message.metadata.channel_id}
             )
+        logger.info(agent)
 
         return agent
     
     def _get_or_create_room_from_db(
        self, user: UserTableModel, agent: AgentTableModel
     ) -> RoomTableModel:
-        """Returns room object from database using message metadata. This function is also used by signup"""
+        logger.info(agent)
+
+        """Returns room object from database using message metadata"""
         room = self.database.get_row(
             Tables.ROOMS.value,
             conditions={
