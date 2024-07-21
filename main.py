@@ -34,7 +34,8 @@ async def configure_webhooks():
 
     _telegram = Telegram.from_config(config.MESSAGING_CONFIG.TELEGRAM)
     _bird = BirdSMSProvider.from_config(config.MESSAGING_CONFIG.BIRD)
-    _bird.set_channel_id(config.MESSAGING_CONFIG.BIRD.BIRD_DEV_CHANNEL_ID)
+    if hasattr(config.MESSAGING_CONFIG.BIRD, 'BIRD_DEV_CHANNEL_ID'):
+        _bird.set_channel_id(config.MESSAGING_CONFIG.BIRD.BIRD_DEV_CHANNEL_ID)
     webhook = f"{ngrok_connection.public_url}/message"
     await asyncio.gather(
         _telegram.register_webhook(webhook), 
