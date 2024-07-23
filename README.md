@@ -18,7 +18,12 @@ Help us build characters that are highly convincing, customizable, and dynamic �
 
 Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` & `Stripe Payment` in minutes, not weeks ⚡
 
+Check out the Zootopia-powered <a href="https://www.aibf.rsvp/"> boyfriend demo</a>
+
 ## 🌆 Features
+- [x] All LLMs supported (LiteLLM)
+- [x] Scalable agent DB architecture (Supabase)
+- [x] Bird SMS, Telegram
 
 ### Behaviors
 - [x] Intent detection
@@ -29,24 +34,6 @@ Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` 
 - [ ] Proactive messages
 - [ ] Scheduling
 - [ ] Vision
-
-### Channels
-- [x] SMS (Bird)
-- [x] Telegram
-- [ ] WhatsApp
-- [ ] Phone Calls
-
-### Web Access
-- [x] Google Drive & Calendar
-- [ ] Search
-- [ ] Autonomous agent (using an external API)
-
-## 🛣️ Roadmap
-
-- [ ] Make a master config file
-- [ ] Working boyfriend agent demo
-- [ ] High-level overview, documentation
-
 
 ## 🛠️ Environment Setup
 Make sure Python, [ngrok](https://ngrok.com/), and [uv]() are installed.
