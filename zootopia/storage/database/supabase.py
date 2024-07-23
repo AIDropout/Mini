@@ -33,20 +33,20 @@ class SupabaseDB(Database):
         return type(item)(**data[1][0]) if data and data[1] else None
 
     def get_row(self, table_name: str, conditions: Dict[str, any]) -> Optional[TableModel]:
+        logger.info(f"Calling get rows function on table {table_name}")
+        logger.info(conditions)
+
         query = self.supabase.table(table_name).select("*")
         for key, value in conditions.items():
             query = query.eq(key, value)
 
-        logger.info(query)
-
         data, _ = query.limit(1).execute()
 
+        logger.info("retrieved data")
         logger.info(data)
 
         if data and data[1]:
             model_class = TABLE_MODEL_MAP[table_name]
-            logger.info(model_class)
-            logger.info(model_class(**data[1][0]))
             return model_class(**data[1][0])
         return None
 

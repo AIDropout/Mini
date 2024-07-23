@@ -104,7 +104,7 @@ class BirdSMSProvider(MessageProviderBase):
         except Exception as e:
             raise SendMessageError(f"Error sending message: {e}") from e
 
-    async def register_webhook(self, event: str, webhook_url: str) -> None:
+    async def register_webhook(self, event: str = "sms.inbound", webhook_url: str = None) -> None:
         """Register a webhook URL for receiving text events from Bird API."""
         url = (
             f"{self._api_url}/organizations/{self._organization_id}"
@@ -126,7 +126,8 @@ class BirdSMSProvider(MessageProviderBase):
                 if ".ngrok-free.app" in webhook["url"]:
                     self._delete_webhook(webhook["id"])
 
-            requests.post(url, headers=self._api_header, json=body)
+            result = requests.post(url, headers=self._api_header, json=body)
+            print(result.json())
         except Exception as e:
             raise WebhookError(f"Error registering Bird webhook: {e}") from e
 

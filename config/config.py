@@ -41,7 +41,6 @@ class TaskManagerConfig(BaseModel):
     REDIS_URL: str
 
 class BehaviorsConfig(BaseModel):
-    PROMPT: str
     ACTION_MANAGER: ActionManagerConfig
     INTENT_MANAGER: IntentManagerConfig
     MEMORY_MANAGER: MemoryManagerConfig

@@ -85,8 +85,6 @@ class ContextManager:
                 Tables.AGENTS.value,
                 conditions={Tables.AGENTS__bird_channel_id.value: message.metadata.channel_id}
             )
-        logger.info(user)
-        logger.info(agent)
         
         # If no user exists, create user
         if not user:
@@ -106,7 +104,7 @@ class ContextManager:
             user = self.database.insert(Tables.USERS.value, new_user)
 
         if not agent:
-            raise AgentNotFoundError(f"No agent found from given metadata: {message.metadata}")
+            raise AgentNotFoundError(f"Couldn't retrieve agent. Make sure the agent row matches incoming metadata: {message.metadata}")
         
         return user, agent
     

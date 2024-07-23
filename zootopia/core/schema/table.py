@@ -55,6 +55,7 @@ class AgentTableModel(BaseModel):
     first_message: str = Field(default="Hey there!")
     telegram_chat_id: Optional[str] = Field(default=None)
     bird_channel_id: Optional[str] = Field(default=None)
+    prompt: str = Field(default="You are Chris, a really cool person")
 
 
 class UserTableModel(BaseModel):

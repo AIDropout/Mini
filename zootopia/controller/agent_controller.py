@@ -37,7 +37,7 @@ class AgentController:
         intent_config = config.BEHAVIORS_CONFIG.INTENT_MANAGER
         action_config = config.BEHAVIORS_CONFIG.ACTION_MANAGER
         memory_config = config.BEHAVIORS_CONFIG.MEMORY_MANAGER
-        agent_prompt = config.BEHAVIORS_CONFIG.PROMPT
+        agent_prompt = context.agent.prompt
         return cls( 
             message, messaging_service, database_service, room, intent_config, action_config, memory_config, agent_prompt
         )
