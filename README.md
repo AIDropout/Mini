@@ -18,7 +18,9 @@ Help us build characters that are highly convincing, customizable, and dynamic �
 
 Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` & `Stripe Payment` in minutes, not weeks ⚡
 
-Check out the Zootopia-powered <a href="https://www.aibf.rsvp/"> boyfriend demo</a>
+Check out our Zootopia character demos
+<a href="https://textmini.com/boyfriend">Boyfriend</a>
+<a href="https://textmini.com/goggins">David Goggins</a>
 
 ## 🌆 Features
 - [x] All LLMs supported (LiteLLM)
