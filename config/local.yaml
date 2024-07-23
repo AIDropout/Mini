@@ -15,11 +15,11 @@ DATABASE_CONFIG:
 
 BEHAVIORS_CONFIG:
   ACTION_MANAGER:
-    LLM_NAME: claude-3-sonnet-20240229
+    LLM_NAME: claude-3-5-sonnet-20240620	
   INTENT_MANAGER:
-    LLM_NAME: claude-3-sonnet-20240229
+    LLM_NAME: claude-3-5-sonnet-20240620	
   MEMORY_MANAGER:
-    LLM_NAME: claude-3-sonnet-20240229
+    LLM_NAME: claude-3-5-sonnet-20240620	
   TASK_MANAGER:
     REDIS_URL: redis://127.0.0.1
   
