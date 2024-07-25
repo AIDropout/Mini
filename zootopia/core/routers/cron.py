@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Request, BackgroundTasks
 from config.config import config
 from zootopia.agent.agent import Agent
-from zootopia.context import MessageContextManager
+from zootopia.context import CronContextManager
 from zootopia.core.logger import logger
 from zootopia.storage.database.supabase import SupabaseDB
 from datetime import datetime, timedelta, timezone
-from zootopia.core.schema import Tables
+from zootopia.core.schema import Tables, ReviveChatTask
 import traceback
 import random
 from datetime import datetime, timedelta
@@ -23,7 +23,6 @@ async def cron_webhook(request: Request, background_tasks: BackgroundTasks):
     """
     try: 
         request_body = await request.json()
-        logger.info(f"Received request body: {request_body}")
 
         database: SupabaseDB = SupabaseDB.from_config(config.DATABASE_CONFIG.SUPABASE)
 
@@ -56,7 +55,7 @@ async def cron_webhook(request: Request, background_tasks: BackgroundTasks):
                         last_message_time=last_message.created_at
                     ):
                         # Add a background task to send the message
-                        background_tasks.add_task(process_send, room.id, room.user_id, agent.id)
+                        background_tasks.add_task(process_send, room.agent_id, room.user_id, room.id)
 
 
 
@@ -66,15 +65,12 @@ async def cron_webhook(request: Request, background_tasks: BackgroundTasks):
         logger.error(f"Traceback: {traceback.format_exc()}")
         return {"message": "Error occurred", "error": str(e)}
 
-async def process_send(room_id: int, user_id: int, agent_id: int):
+async def process_send(agent_id: int, user_id: int, room_id: int):
     try:
-        context = MessageContextManager(config, {
-            "room_id": room_id,
-            "user_id": user_id,
-            "agent_id": agent_id
-        })
-        agent = Agent.from_config(context, config)
-        await agent.revive_chat()
+        context = CronContextManager(config, agent_id, user_id, room_id)
+        agent = Agent.from_config(config, context)
+        task = ReviveChatTask()
+        await agent.handle_chat_task(task)
     except Exception as e:
         logger.error(f"Error sending proactive message: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")

@@ -15,7 +15,6 @@ class BaseContextManager:
         self.room: Optional[RoomTableModel] = None
 
     def _get_or_create_room(self, user: UserTableModel, agent: AgentTableModel) -> RoomTableModel:
-        logger.info(f"Getting or creating room for user {user.id} and agent {agent.id}")
         room = self.database.get_row(
             Tables.ROOMS.value,
             conditions={

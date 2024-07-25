@@ -8,7 +8,7 @@ from zootopia.context import BaseContextManager
 class SignupContextManager(BaseContextManager):
     def __init__(self, config):
         super().__init__(config)
-        self.bird_sms: BirdSMSProvider = BirdSMSProvider.from_config(self.config.MESSAGING_CONFIG.BIRD)
+        self.messaging_service: BirdSMSProvider = BirdSMSProvider.from_config(self.config.MESSAGING_CONFIG.BIRD)
 
     def get_agent(self, agent_id: int) -> AgentTableModel:
         agent = self.database.get_row(

@@ -10,7 +10,7 @@ from zootopia.core.schema.table import TABLE_MODEL_MAP
 
 T = TypeVar("T", bound=TableModel)
 
-
+# TODO: add tests
 class SupabaseDB(Database):
     def __init__(self, url: str, key: str) -> None:
         self.supabase = create_client(url, key)
@@ -32,20 +32,15 @@ class SupabaseDB(Database):
         data, _ = query.execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
-    def get_row(self, table_name: str, conditions: Dict[str, any], order_by: str = "created_at", order_desc: bool = True) -> Optional[TableModel]:
-        logger.info(f"Calling get row function on table {table_name}")
-        logger.info(conditions)
-
+    def get_row(self, table_name: str, conditions: Dict[str, any], order_by: Optional[str] = None, order_desc: Optional[bool] = None) -> Optional[TableModel]:
         query = self.supabase.table(table_name).select("*")
         for key, value in conditions.items():
             query = query.eq(key, value)
 
-        query = query.order(order_by, desc=order_desc).limit(1)
+        if order_by:
+            query = query.order(order_by, desc=order_desc)
 
-        data, _ = query.execute()
-
-        logger.info("Retrieved data")
-        logger.info(data)
+        data, _ = query.limit(1).execute()
 
         if data and data[1]:
             model_class = TABLE_MODEL_MAP[table_name]

@@ -18,15 +18,16 @@ class ActionManager:
             model_name, messaging_service
         )
     
-    async def generate_and_send_message(self, system_prompt: str, recent_messages: List[Dict[str, str]]) -> Optional[str]:
-        messages = [
-            {"role": "system", "content": system_prompt}
-        ] + recent_messages
+    async def generate_and_send_message(self, messages: List[Dict[str, str]], system_prompt: Optional[str], ) -> Optional[str]:
 
         try:
-            content = self.llm.generate_response(messages)
-            await self.messaging_service.send_message(content)
-            return content
+            print("🔵🔵🔵🔵🔵")
+            print(messages)
+            msg = self.llm.generate_response(messages, system_prompt)
+            print("🟢🟢🟢🟢")
+            print(msg)
+            await self.messaging_service.send_message(msg)
+            return msg
         except Exception as e:
             logger.error(f"Error executing respond action: {str(e)}")
             return None

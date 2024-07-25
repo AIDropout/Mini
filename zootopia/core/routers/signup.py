@@ -17,9 +17,9 @@ async def signup_webhook(request: SignupRequestBase):
         agent = context.get_agent(request.agent_id)
         user, room, is_new_user = context.get_or_create_user_and_room(request.user_phone, request.agent_id, request.birthday)
         
-        context.bird_sms.set_user_phone(request.user_phone)
-        context.bird_sms.set_channel_id(agent.bird_channel_id)
-        await context.bird_sms.send_message(agent.first_message)
+        context.messaging_service.set_user_phone(request.user_phone)
+        context.messaging_service.set_channel_id(agent.bird_channel_id)
+        await context.messaging_service.send_message(agent.first_message)
         
         context.database.insert(table_name=Tables.MESSAGES.value, item=MessageTableModel(
             room_id=room.id,

@@ -17,7 +17,6 @@ from zootopia.core.utils.utils import get_current_time_readable
 class Agent:
     def __init__(
         self, 
-        message: ZootopiaMessage,
         messaging_service: MessageProviderBase,
         database_service: SupabaseDB,
         room: RoomTableModel,
@@ -27,7 +26,6 @@ class Agent:
         memory_config: MemoryManagerConfig,
         base_prompt: str
     ) -> None:
-        self.message = message
         self.base_prompt = base_prompt
         # self.filter = MessageFilter.from_config(filter_config)
         self.intent = IntentManager.from_config(intent_config)
@@ -35,9 +33,8 @@ class Agent:
         self.memory = MemoryManager.from_config(memory_config, database_service, room)
 
     @classmethod
-    def from_config(cls, context: BaseContextManager, config: Config) -> "Agent":
+    def from_config(cls, config: Config, context: BaseContextManager) -> "Agent":
         return cls(
-            message=context.message,
             messaging_service=context.messaging_service,
             database_service=context.database,
             room=context.room,
@@ -48,19 +45,7 @@ class Agent:
             base_prompt=context.agent.prompt
         )
 
-    async def respond_to_user(self) -> bool:
-        task = RespondChatTask(self.message)
-        return await self._process_chat(task)
-
-    async def revive_chat(self) -> bool:
-        task = ReviveChatTask()
-        return await self._process_chat(task)
-
-    async def handle_scheduled_task(self) -> bool:
-        task = ScheduledChatTask()
-        return await self._process_chat(task)
-
-    async def _process_chat(self, task: ChatTask) -> bool:
+    async def handle_chat_task(self, task: ChatTask) -> bool:
         logger.info(task.message)  
         logger.info(task)
 
@@ -87,7 +72,7 @@ class Agent:
 
             logger.info(f"\nSystem prompt: {system_prompt}\n")
             logger.info(f"\nRecent messages: {recent_messages}\n")
-            sent_response = await self.action.generate_and_send_message(system_prompt, recent_messages)
+            sent_response = await self.action.generate_and_send_message(recent_messages, system_prompt)
             
             if sent_response:
                 self.memory.store_message(from_user=False, message=sent_response)

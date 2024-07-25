@@ -4,6 +4,7 @@ from typing import List, Dict
 from config.config import MemoryManagerConfig
 from zootopia.storage.database.supabase import SupabaseDB
 from zootopia.core.schema import Tables, RoomTableModel
+from zootopia.core.exceptions import MessageInsertError
 
 class MemoryManager:
     def __init__(self, database_service: SupabaseDB, room_id: int):
@@ -21,17 +22,16 @@ class MemoryManager:
     def store_message(self, from_user: bool, message: str):
         """Inserts user's message into database"""
         try:
-            message = MessageTableModel(
+            message_obj = MessageTableModel(
                 room_id=self.room_id,
                 from_user=from_user,
                 message=message
             )
-            stored_message = self.database_service.insert(Tables.MESSAGES.value, message)
+            stored_message = self.database_service.insert(Tables.MESSAGES.value, message_obj)
             logger.info(f"Message stored successfully. ID: {stored_message.id}")
             return stored_message
         except Exception as e:
-            logger.error(f"Error storing message: {str(e)}")
-            raise
+            raise MessageInsertError(room_id=self.room_id, original_error=e, message = message)
             
     def get_recent_messages(self, count: int = 10) -> List[Dict[str, str]]:
         """
@@ -72,19 +72,12 @@ class MemoryManager:
                     # Otherwise, add a new message entry
                     llm_messages.append({"role": role, "content": content})
 
+            # Check if the last message is from the assistant
+            if llm_messages and llm_messages[-1]['role'] == 'assistant':
+                # If so, append a user message with "[ignore]" content
+                llm_messages.append({"role": "user", "content": "[ignore]"})
+
             return llm_messages
         except Exception as e:
             logger.error(f"Error fetching recent messages for room {self.room_id}: {str(e)}")
             return []
-
-    def update_memory(self, results):
-        logger.info("Updating general memory")
-        pass
-
-    def retrieve_memory(self, query):
-        logger.info(f"Retrieving memory for query: {query}")
-        pass
-
-    def store_memory(self, data):
-        logger.info("Storing new memory")
-        pass

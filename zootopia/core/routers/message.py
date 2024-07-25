@@ -4,6 +4,7 @@ from config.config import config
 from zootopia.agent.agent import Agent
 from zootopia.context import MessageContextManager
 from zootopia.core.logger import logger
+from zootopia.core.schema import RespondChatTask
 
 router = APIRouter()
 
@@ -15,9 +16,10 @@ async def message_webhook(request: Request):
         logger.info(f"Received request body: {request_body}")
 
         context = MessageContextManager(config, request_body)
-        agent = Agent.from_config(context, config)
+        task = RespondChatTask(context.message)
+        agent = Agent.from_config(config, context)
 
-        await agent.respond_to_user()
+        await agent.handle_chat_task(task)
     except Exception as e:
         logger.error(f"Error in message_webhook: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")

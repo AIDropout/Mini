@@ -8,12 +8,6 @@ class LLM:
         self.llm_name: str = llm_name
         litellm.modify_params = True
 
-    def _prepare_messages(self, messages: List[Dict[str, str]], system_prompt: Optional[str] = None) -> List[Dict[str, str]]:
-        """Prepend the system prompt to the messages if it exists."""
-        if system_prompt:
-            return [{"role": "system", "content": system_prompt}] + messages
-        return messages
-
     def generate_response(self, messages: List[Dict[str, str]], system_prompt: Optional[str] = None, **kwargs) -> str:
         """
         Generate a response using the specified model.
@@ -24,8 +18,13 @@ class LLM:
         :return: The generated response as a string
         """
         try:
-            prepared_messages = self._prepare_messages(messages, system_prompt)
+            prepared_messages = messages
+            if system_prompt:
+                prepared_messages = [{"role": "system", "content": system_prompt}] + prepared_messages
+            
             response = litellm.completion(model=self.llm_name, messages=prepared_messages, **kwargs)
+            print("🔴🔴🔴")
+            print(response)
             return response.choices[0].message.content
         except Exception as e:
             print(f"Error generating response: {e}")
