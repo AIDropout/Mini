@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, BackgroundTasks, HTTPException
+from fastapi import APIRouter, Request, BackgroundTasks, HTTPException, Security
 from config.config import config
 from zootopia.agent.agent import Agent
 from zootopia.context import CronContextManager
@@ -9,6 +9,7 @@ from zootopia.core.schema import Tables, ReviveChatTask
 import traceback
 import random
 from datetime import datetime, timedelta
+from zootopia.core.routers.auth import verify_api_key
 
 router = APIRouter()
 
@@ -49,7 +50,11 @@ def should_send_proactive_message(
     return random.random() < send_probability
 
 @router.post("/cron")
-async def cron_webhook(request: Request, background_tasks: BackgroundTasks):
+async def cron_webhook(
+    request: Request, 
+    background_tasks: BackgroundTasks,     
+    api_key: str = Security(verify_api_key)
+):
     """ Function called every x minutes by Cron service
     
     Sends a message based on a room's time since last message + proactivity of that particular room.

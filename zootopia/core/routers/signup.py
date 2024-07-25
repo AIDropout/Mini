@@ -1,6 +1,5 @@
-from fastapi import APIRouter, HTTPException
-import traceback
-
+from fastapi import APIRouter, HTTPException, Security
+from zootopia.core.routers.auth import verify_api_key
 from config.config import config
 from zootopia.core.logger import logger
 from zootopia.core.schema import SignupRequestBase, Tables, MessageTableModel
@@ -10,7 +9,8 @@ from zootopia.context import SignupContextManager
 router = APIRouter()
 
 @router.post("/signup")
-async def signup_webhook(request: SignupRequestBase):
+async def signup_webhook(request: SignupRequestBase, api_key: str = Security(verify_api_key)
+):
     try:
         context = SignupContextManager(config)
         
@@ -27,7 +27,6 @@ async def signup_webhook(request: SignupRequestBase):
             message=agent.first_message
         ))
         
-        return {"message": "Signup successful"}
     except RoomAlreadyExistsError as rae:
         logger.warning(f"Room already exists: {str(rae)}")
         raise HTTPException(status_code=409, detail={"error_code": "RoomAlreadyExists", "message": str(rae)})
@@ -35,6 +34,5 @@ async def signup_webhook(request: SignupRequestBase):
         logger.error(f"Agent not found: {str(anf)}")
         raise HTTPException(status_code=404, detail={"error_code": "AgentNotFound", "message": str(anf)})
     except Exception as e:
-        logger.error(f"Unexpected error in signup_webhook: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail={"error_code": "InternalServerError", "message": "An unexpected error occurred"})
+        logger.exception("Error in message_webhook")
+        raise HTTPException(status_code=500, detail=str(e))

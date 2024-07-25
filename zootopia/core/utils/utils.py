@@ -1,6 +1,7 @@
 import json
 import re
 from datetime import datetime
+from config.config import config
 
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape

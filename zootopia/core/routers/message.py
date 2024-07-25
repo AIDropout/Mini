@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Request
-import traceback
+from fastapi import APIRouter, Request, HTTPException
 from config.config import config
 from zootopia.agent.agent import Agent
 from zootopia.context import MessageContextManager
@@ -21,8 +20,5 @@ async def message_webhook(request: Request):
 
         await agent.handle_chat_task(task)
     except Exception as e:
-        logger.error(f"Error in message_webhook: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        return {"message": "Error occurred", "error": str(e)}
-    
-    return {"message": f"Received and processed task"}
+        logger.exception("Error in message_webhook")
+        raise HTTPException(status_code=500, detail=str(e))

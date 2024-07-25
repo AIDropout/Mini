@@ -54,6 +54,7 @@ class WebAccessConfig(BaseModel):
     GOOGLE: Dict[str, Any]
 
 class Config(BaseModel):
+    ZOOTOPIA_API_KEY: str
     DATABASE_CONFIG: DatabaseConfig
     MESSAGING_CONFIG: MessagingConfig
     BEHAVIORS_CONFIG: BehaviorsConfig
