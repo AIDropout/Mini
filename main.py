@@ -14,6 +14,7 @@ from zootopia.platform.telegram.telegram import Telegram
 from zootopia.platform.sms.bird import BirdSMSProvider
 from zootopia.core.routers.message import router as message_router
 from zootopia.core.routers.signup import router as signup_router
+from zootopia.core.routers.cron import router as cron_router
 from zootopia.core.logger import logger
 
 def is_production():
@@ -60,6 +61,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(LoggingMiddleware)
 app.include_router(message_router)
 app.include_router(signup_router)
+app.include_router(cron_router)
 
 if __name__ == "__main__":
     if os.getenv('ENVIRONMENT', '').lower() != 'production':

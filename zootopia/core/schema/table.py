@@ -22,6 +22,7 @@ class Tables(Enum):
     AGENTS__first_message = "first_message"
     AGENTS__bird_channel_id = "bird_channel_id"
     AGENTS__telegram_chat_id = "telegram_chat_id"
+    AGENTS__default_proactivity = "default_proactivity"
 
     USERS = "users"
     USERS__id = "id"
@@ -35,6 +36,7 @@ class Tables(Enum):
     ROOMS__created_at = "created_at"
     ROOMS__user_id = "user_id"
     ROOMS__agent_id = "agent_id"
+    ROOMS__agent_proactivity = "agent_proactivity"
 
     MESSAGES = "messages"
     MESSAGES__id = "id"
@@ -56,7 +58,12 @@ class AgentTableModel(BaseModel):
     telegram_chat_id: Optional[str] = Field(default=None)
     bird_channel_id: Optional[str] = Field(default=None)
     prompt: str = Field(default="You are Chris, a really cool person")
-
+    default_proactivity: float = Field(
+        default=0.5, 
+        ge=0.0, 
+        le=1.0, 
+        description="Proactivity scale from 0 (not proactive) to 1 (very proactive)"
+    )
 
 class UserTableModel(BaseModel):
     id: Optional[int] = Field(
@@ -75,7 +82,12 @@ class RoomTableModel(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
     user_id: int = Field(default=None)
     agent_id: int = Field(default=None)
-
+    agent_proactivity: float = Field(
+        default=0.5, 
+        ge=0.0, 
+        le=1.0, 
+        description="Agent proactivity for a particular room (0 if a user has texted STOP)"
+    )
 
 class MessageTableModel(BaseModel):
     id: Optional[int] = Field(
