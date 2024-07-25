@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, BackgroundTasks
+from fastapi import APIRouter, Request, BackgroundTasks, HTTPException
 from config.config import config
 from zootopia.agent.agent import Agent
 from zootopia.context import CronContextManager
@@ -12,68 +12,11 @@ from datetime import datetime, timedelta
 
 router = APIRouter()
 
-@router.post("/cron")
-async def cron_webhook(request: Request, background_tasks: BackgroundTasks):
-    """ Function called every x minutes by Cron service
-    
-    Sends a message based on a room's time since last message + proactivity of that particular room.
-
-    TODO: Send messages for scheduled events
-    
-    """
-    try: 
-        request_body = await request.json()
-
-        database: SupabaseDB = SupabaseDB.from_config(config.DATABASE_CONFIG.SUPABASE)
-
-        # Get all agents
-        agents = database.query(Tables.AGENTS.value)
-
-        for agent in agents:
-            logger.info(f"agent id: {agent.id}")
-
-            # Get all rooms for this agent where proactivity > 0
-            rooms = database.query(
-                Tables.ROOMS.value,
-                (Tables.ROOMS__agent_id.value, agent.id),
-                (Tables.ROOMS__agent_proactivity.value, ">", 0)
-            )
-
-            for room in rooms:
-                logger.info(f"room id: {room.id}")
-                # Get the last message in the room
-                last_message = database.get_row(
-                    Tables.MESSAGES.value,
-                    {Tables.MESSAGES__room_id.value: room.id},
-                    order_by=Tables.MESSAGES__created_at.value,
-                    order_desc=True
-                )
-
-                if last_message:
-                    if should_send_proactive_message(
-                        agent_proactivity=room.agent_proactivity,
-                        last_message_time=last_message.created_at
-                    ):
-                        # Add a background task to send the message
-                        background_tasks.add_task(process_send, room.agent_id, room.user_id, room.id)
-
-
-
-        return {"message": "Proactive messages processed"}
-    except Exception as e:
-        logger.error(f"Error in proactive_webhook: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        return {"message": "Error occurred", "error": str(e)}
-
 async def process_send(agent_id: int, user_id: int, room_id: int):
-    try:
-        context = CronContextManager(config, agent_id, user_id, room_id)
-        agent = Agent.from_config(config, context)
-        task = ReviveChatTask()
-        await agent.handle_chat_task(task)
-    except Exception as e:
-        logger.error(f"Error sending proactive message: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
+    context = CronContextManager(config, agent_id, user_id, room_id)
+    agent = Agent.from_config(config, context)
+    task = ReviveChatTask()
+    await agent.handle_chat_task(task)
 
 def should_send_proactive_message(
     agent_proactivity: float,
@@ -87,8 +30,8 @@ def should_send_proactive_message(
     Args:
     agent_proactivity (float): The agent's proactivity score (0 to 1).
     last_message_time (datetime): The timestamp of the last message in the room.
-    min_interval (timedelta): The minimum interval between messages (default 30 minutes).
-    max_interval (timedelta): The maximum interval between messages (default 7 days).
+    min_interval (timedelta): The minimum interval between messages.
+    max_interval (timedelta): The maximum interval between messages.
 
     Returns:
     bool: True if the agent should send a message, False otherwise.
@@ -96,16 +39,54 @@ def should_send_proactive_message(
     current_time = datetime.now(timezone.utc)
     time_elapsed = current_time - last_message_time
 
-    # Calculate the actual interval based on proactivity
-    actual_interval = max_interval - (max_interval - min_interval) * agent_proactivity
+    # Calculate how much of the total possible interval has elapsed
+    interval_progress = (time_elapsed - min_interval) / (max_interval - min_interval)
+    interval_progress = max(0, min(interval_progress, 1))  # Clamp between 0 and 1
 
-    # Calculate the probability of sending a message
-    if time_elapsed < actual_interval:
-        # Reduce probability if less time has passed than the actual interval
-        probability = (time_elapsed / actual_interval) * agent_proactivity
-    else:
-        # Full probability if more time has passed than the actual interval
-        probability = agent_proactivity
+    # Combine interval progress with agent proactivity
+    send_probability = interval_progress * agent_proactivity
 
-    # Add some randomness
-    return random.random() < probability
+    return random.random() < send_probability
+
+@router.post("/cron")
+async def cron_webhook(request: Request, background_tasks: BackgroundTasks):
+    """ Function called every x minutes by Cron service
+    
+    Sends a message based on a room's time since last message + proactivity of that particular room.
+
+    TODO: Send messages for scheduled events
+    
+    """
+    try: 
+        db: SupabaseDB = SupabaseDB.from_config(config.DATABASE_CONFIG.SUPABASE)
+
+        # Get all agents
+        agents = db.query(Tables.AGENTS.value)
+
+        for agent in agents:
+            # Get all rooms for this agent where proactivity > 0
+            rooms = db.query(
+                Tables.ROOMS.value,
+                (Tables.ROOMS__agent_id.value, agent.id),
+                (Tables.ROOMS__agent_proactivity.value, ">", 0)
+            )
+
+            for room in rooms:
+                # Get the last message in the room
+                last_message = db.get_row(
+                    Tables.MESSAGES.value,
+                    {Tables.MESSAGES__room_id.value: room.id},
+                    order_by=Tables.MESSAGES__created_at.value,
+                    order_desc=True
+                )
+
+                if last_message:
+                    if should_send_proactive_message(
+                        agent_proactivity=room.agent_proactivity,
+                        last_message_time=last_message.created_at
+                    ):
+                        background_tasks.add_task(process_send, room.agent_id, room.user_id, room.id)
+
+    except Exception as e:
+        logger.exception("Error in proactive_webhook")
+        raise HTTPException(status_code=500, detail=str(e))

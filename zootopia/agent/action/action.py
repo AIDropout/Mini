@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 from zootopia.core.schema import Action, ActionType, ActionResult
 from zootopia.core.logger import logger
-from zootopia.llm.llm import LLM 
+from zootopia.llm import LLM 
 from zootopia.core.utils.utils import render_jinja_template
 from config.config import ActionManagerConfig
 from zootopia.platform.platform import MessageProviderBase
@@ -21,7 +21,7 @@ class ActionManager:
     async def generate_and_send_message(self, messages: List[Dict[str, str]], system_prompt: Optional[str], ) -> Optional[str]:
 
         try:
-            print("🔵🔵🔵🔵🔵")
+            print("🟢🟢🟢🟢")
             print(messages)
             msg = self.llm.generate_response(messages, system_prompt)
             print("🟢🟢🟢🟢")

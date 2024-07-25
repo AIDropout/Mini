@@ -5,7 +5,7 @@ from zootopia.agent.intent.models import (
     IntentFilters,
     LLMResponseStructure,
 )
-from zootopia.llm.llm import LLM
+from zootopia.llm import LLM
 from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
 from zootopia.core.schema import Action, MessageTableModel
 

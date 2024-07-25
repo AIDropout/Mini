@@ -1,6 +1,6 @@
 from typing import List, Dict, Union
 from zootopia.core.schema import MessageTableModel, Action, ActionType
-from zootopia.llm.llm import LLM 
+from zootopia.llm import LLM 
 from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
 import json
 from config.config import IntentManagerConfig

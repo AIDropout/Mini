@@ -12,7 +12,7 @@ from config.config import (
 from zootopia.storage.database.database import Database
 from archive._intent import IntentManager
 from zootopia.agent.intent.models import IntentConfig, IntentFilters
-from zootopia.llm.llm import LLM
+from zootopia.llm import LLM
 from zootopia.core.logger import logger
 from zootopia.core.utils.utils import clean_and_parse_llm_json_output, render_jinja_template
 

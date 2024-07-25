@@ -1,5 +1,5 @@
 from typing import Optional
-from zootopia.llm.llm import LLM  
+from zootopia.llm import LLM  
 from config.config import Config, IntentManagerConfig, ActionManagerConfig, MemoryManagerConfig, FilterConfig
 
 
