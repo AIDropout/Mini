@@ -5,15 +5,6 @@ from typing import Dict, List, Optional, Type, Union
 
 from pydantic import BaseModel, Field
 
-__all__ = [
-    'Tables',
-    'TableModel',
-    'AgentTableModel',
-    'UserTableModel',
-    'RoomTableModel',
-    'MessageTableModel'
-]
-
 class Tables(Enum):
     """Tables available in the database."""
 

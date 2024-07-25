@@ -1,6 +1,6 @@
 
 from datetime import datetime
-from typing import List, Optional, TypeVar, Dict
+from typing import List, Optional, TypeVar, Dict, Tuple, Union
 from supabase import create_client
 from zootopia.storage.database.database import Database
 from zootopia.core.logger import logger
@@ -32,17 +32,19 @@ class SupabaseDB(Database):
         data, _ = query.execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
-    def get_row(self, table_name: str, conditions: Dict[str, any]) -> Optional[TableModel]:
-        logger.info(f"Calling get rows function on table {table_name}")
+    def get_row(self, table_name: str, conditions: Dict[str, any], order_by: str = "created_at", order_desc: bool = True) -> Optional[TableModel]:
+        logger.info(f"Calling get row function on table {table_name}")
         logger.info(conditions)
 
         query = self.supabase.table(table_name).select("*")
         for key, value in conditions.items():
             query = query.eq(key, value)
 
-        data, _ = query.limit(1).execute()
+        query = query.order(order_by, desc=order_desc).limit(1)
 
-        logger.info("retrieved data")
+        data, _ = query.execute()
+
+        logger.info("Retrieved data")
         logger.info(data)
 
         if data and data[1]:
@@ -97,10 +99,29 @@ class SupabaseDB(Database):
         data, _ = query.execute()
         return bool(data and data[1])
 
-    def query(self, table_name: str, *conditions) -> List[TableModel]:
-        query = self.supabase.table(table_name).select("*")
-        for key, value in conditions:
-            query = query.eq(key, value)
-        data, _ = query.execute()
-        model_class = TABLE_MODEL_MAP[table_name]
-        return [model_class(**item) for item in data[1]] if data and data[1] else []
+    def query(self, table_name: str, *conditions: Union[Tuple[str, str], Tuple[str, str, str]]) -> List[TableModel]:
+            query = self.supabase.table(table_name).select("*")
+            for condition in conditions:
+                if len(condition) == 2:
+                    key, value = condition
+                    query = query.eq(key, value)
+                elif len(condition) == 3:
+                    key, op, value = condition
+                    if op == '>':
+                        query = query.gt(key, value)
+                    elif op == '<':
+                        query = query.lt(key, value)
+                    elif op == '>=':
+                        query = query.gte(key, value)
+                    elif op == '<=':
+                        query = query.lte(key, value)
+                    elif op == '!=':
+                        query = query.neq(key, value)
+                    else:
+                        query = query.eq(key, value)
+                else:
+                    logger.warning(f"Unexpected condition format: {condition}")
+
+            data, _ = query.execute()
+            model_class = TABLE_MODEL_MAP[table_name]
+            return [model_class(**item) for item in data[1]] if data and data[1] else []

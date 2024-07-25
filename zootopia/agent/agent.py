@@ -1,4 +1,4 @@
-from zootopia.core.schema import ActionType, RoomTableModel, ZootopiaMessage
+from zootopia.core.schema import ActionType, RoomTableModel, ZootopiaMessage, ChatTask, RespondChatTask, ReviveChatTask, ScheduledChatTask
 from config.config import Config, IntentManagerConfig, ActionManagerConfig, MemoryManagerConfig, FilterConfig
 from zootopia.platform.platform import MessageProviderBase
 from zootopia.storage.database.supabase import SupabaseDB
@@ -8,7 +8,6 @@ from zootopia.context import BaseContextManager
 from zootopia.agent.intent import IntentManager
 from zootopia.agent.action import ActionManager
 from zootopia.agent.memory import MemoryManager
-from zootopia.agent.tasks import ChatTask, RespondChatTask, ReviveChatTask, ScheduledChatTask
 
 from zootopia.core.logger import logger
 from zootopia.core.utils.utils import get_current_time_readable
