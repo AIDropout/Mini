@@ -3,12 +3,12 @@ from typing import Union
 
 from tzlocal import get_localzone
 
-from zootopia.controller.action.autodb.autodb import AutoDB
+from zootopia.agent.action.autodb.autodb import AutoDB
 from config.config import autodb_config, config
 from zootopia.storage.database.supabase import SupabaseDB
 from zootopia.apis.gsuite.gcal.gcal import GCal
 from archive._intent import IntentManager
-from zootopia.controller.intent.models import IntentFilters
+from zootopia.agent.intent.models import IntentFilters
 from zootopia.core.schema.llm import LLMConfig, LLMNames, LLMProviders
 from zootopia.messaging.messaging  import MessageProviderBase
 from zootopia.messaging.models import ZootopiaMessage

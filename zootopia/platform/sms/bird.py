@@ -5,7 +5,7 @@ import requests
 from config.config import BirdConfig
 from zootopia.core.logger import logger
 from zootopia.platform.platform  import MessageProviderBase
-from zootopia.platform.models import (
+from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
     MessageType,

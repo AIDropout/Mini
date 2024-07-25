@@ -14,9 +14,13 @@ class IntentManager:
         model_name = manager_config.LLM_NAME
         return cls(
             model_name,
-        )
+        ) 
     
     def produce_actions(self, recent_messages: List[Dict[str, str]], possible_actions: List[str]) -> List[Action]:
+
+        # Filter message (jailbreak attempts)
+
+
         history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in recent_messages])
 
         actions_str = ", ".join(possible_actions)

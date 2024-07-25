@@ -1,7 +1,7 @@
-from .agent_controller import AgentController
+from .agent import Agent
 from .context.context import ContextManager
 
 __all__ = [
-    'AgentController',
+    'Agent',
     'ContextManager'
 ]

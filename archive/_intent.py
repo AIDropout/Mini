@@ -1,5 +1,5 @@
 from typing import List
-from zootopia.controller.intent.models import (
+from zootopia.agent.intent.models import (
     Confidence,
     IntentConfig,
     IntentFilters,

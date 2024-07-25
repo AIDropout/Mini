@@ -5,8 +5,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError  # Import specific error
 from oauth2client.client import OAuth2Credentials
 
-from zootopia.apis.gsuite.gauth.gauth import GAuth
-from zootopia.apis.gsuite.models import GAuthConfig, GCalError
+from zootopia.tools.gsuite.gauth.gauth import GAuth
+from zootopia.tools.gsuite.models import GAuthConfig, GCalError
 
 
 class GCal:

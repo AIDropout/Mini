@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import Request
 
-from zootopia.platform.models import ZootopiaMessage
+from zootopia.core.schema import ZootopiaMessage
 
 
 class MessageProviderBase(ABC):

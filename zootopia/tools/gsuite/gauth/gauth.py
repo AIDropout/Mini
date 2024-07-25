@@ -3,7 +3,7 @@ from typing import List
 from oauth2client.client import OOB_CALLBACK_URN, OAuth2Credentials, OAuth2WebServerFlow
 from pydrive2.auth import GoogleAuth
 
-from zootopia.apis.gsuite.models import GAuthConfig
+from zootopia.tools.gsuite.models import GAuthConfig
 
 
 class GAuth:

@@ -14,12 +14,14 @@ DATABASE_CONFIG:
     KEY: ${SUPABASE_KEY}
 
 BEHAVIORS_CONFIG:
+  FILTER:
+    LLM_NAME: claude-3-5-sonnet-20240620
   ACTION_MANAGER:
-    LLM_NAME: claude-3-5-sonnet-20240620	
+    LLM_NAME: claude-3-5-sonnet-20240620
   INTENT_MANAGER:
-    LLM_NAME: claude-3-5-sonnet-20240620	
+    LLM_NAME: claude-3-5-sonnet-20240620
   MEMORY_MANAGER:
-    LLM_NAME: claude-3-5-sonnet-20240620	
+    LLM_NAME: claude-3-5-sonnet-20240620
   TASK_MANAGER:
     REDIS_URL: redis://127.0.0.1
   
@@ -37,4 +39,3 @@ WEB_ACCESS_CONFIG:
     DRIVE:
       FOLDER_NAME: Life Tracking
       FILE_NAME_FORMAT: "%m_%d_%y %H:%M"
-

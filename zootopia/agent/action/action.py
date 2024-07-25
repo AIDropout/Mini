@@ -5,28 +5,23 @@ from zootopia.llm.llm import LLM
 from zootopia.core.utils.utils import render_jinja_template
 from config.config import ActionManagerConfig
 from zootopia.platform.platform import MessageProviderBase
+from zootopia.core.utils.utils import get_current_time_readable
 
 class ActionManager:
-    def __init__(self, model_name: str, messaging_service: MessageProviderBase, agent_prompt: str) -> None:
+    def __init__(self, model_name: str, messaging_service: MessageProviderBase) -> None:
         self.llm = LLM(model_name)
         self.messaging_service = messaging_service
-        self.agent_prompt = agent_prompt
     
     @classmethod
-    def from_config(cls, manager_config: ActionManagerConfig, messaging_service: MessageProviderBase, agent_prompt: str) -> "ActionManager":
+    def from_config(cls, manager_config: ActionManagerConfig, messaging_service: MessageProviderBase) -> "ActionManager":
         model_name = manager_config.LLM_NAME
         return cls(
-            model_name, messaging_service, agent_prompt
+            model_name, messaging_service
         )
+    
+# 
 
-    async def respond_to_user(self, recent_messages: List[Dict[str, str]]):
-        system_prompt = render_jinja_template(
-            "system_prompt.jinja",
-            "zootopia/controller/action/templates",
-            system_prompt=self.agent_prompt
-        )
-        
-        # Create the messages list with the system prompt at the beginning
+    async def generate_and_send_message(self, system_prompt: str, recent_messages: List[Dict[str, str]]):        
         messages = [
             {"role": "system", "content": system_prompt}
         ] + recent_messages

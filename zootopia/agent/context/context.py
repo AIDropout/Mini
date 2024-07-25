@@ -8,7 +8,7 @@ from zootopia.storage.database.supabase import SupabaseDB
 from zootopia.platform.platform import MessageProviderBase
 from zootopia.platform.sms.bird import BirdSMSProvider
 from zootopia.platform.telegram.telegram import Telegram
-from zootopia.platform.models import (
+from zootopia.core.schema import (
     BirdMetadata,
     MessageProvider,
     TelegramMetadata,

@@ -4,7 +4,6 @@ import os
 from contextlib import asynccontextmanager
 from pyngrok import ngrok
 import uvicorn
-from typing import Optional
 
 from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -36,7 +35,7 @@ async def configure_local_webhooks():
 
     _telegram = Telegram.from_config(config.MESSAGING_CONFIG.TELEGRAM)
     _bird = BirdSMSProvider.from_config(config.MESSAGING_CONFIG.BIRD)
-    bird_dev_channel_id = os.getenv('BIRD_DEV_CHANNEL_ID')
+    bird_dev_channel_id = os.getenv('BIRD_DEV_CHANNEL_ID') 
     bird_dev_channel_id and _bird.set_channel_id(bird_dev_channel_id)
     webhook = f"{ngrok_connection.public_url}/message"
     await asyncio.gather(

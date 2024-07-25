@@ -8,7 +8,7 @@ from zootopia.messaging.models import MessageType
 from zootopia.messaging.messaging  import MessageProviderBase
 from zootopia.messaging.models import ZootopiaMessage, MessageType
 from zootopia.utils.logger import logger
-from zootopia.context.context import ZootopiaContext
+from zootopia.handler.context import ZootopiaContext
 
 
 

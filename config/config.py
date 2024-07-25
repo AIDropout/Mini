@@ -26,6 +26,9 @@ class MessagingConfig(BaseModel):
     TELEGRAM: TelegramConfig
     BIRD: BirdConfig
 
+class FilterConfig(BaseModel):
+    LLM_NAME: str
+
 class ActionManagerConfig(BaseModel):
     LLM_NAME: str
 
@@ -41,6 +44,7 @@ class TaskManagerConfig(BaseModel):
     REDIS_URL: str
 
 class BehaviorsConfig(BaseModel):
+    FILTER: FilterConfig
     ACTION_MANAGER: ActionManagerConfig
     INTENT_MANAGER: IntentManagerConfig
     MEMORY_MANAGER: MemoryManagerConfig
@@ -92,7 +96,7 @@ def set_environment_variables(config_data: Dict[str, Any], prefix: str = ""):
         else:
             os.environ[env_key] = str(value)
 
-# Load the configuration
+# Load config
 testing = True
 prefix = "config/" if testing else "/etc/secrets/"
 config = load_config(f"{prefix}local.yaml", set_env=True)

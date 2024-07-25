@@ -10,7 +10,7 @@ import telegram
 from pydantic import ValidationError
 from config.config import TelegramConfig
 from zootopia.platform.platform  import MessageProviderBase
-from zootopia.platform.models import (
+from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
     MessageType,

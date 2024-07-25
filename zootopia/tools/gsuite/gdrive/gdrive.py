@@ -4,8 +4,8 @@ from oauth2client.client import OAuth2Credentials
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 
-from zootopia.apis.gsuite.gauth.gauth import GAuth
-from zootopia.apis.gsuite.models import GAuthConfig
+from zootopia.tools.gsuite.gauth.gauth import GAuth
+from zootopia.tools.gsuite.models import GAuthConfig
 
 
 class GDrive:

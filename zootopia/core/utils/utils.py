@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import datetime
 
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -61,3 +62,8 @@ def clean_and_parse_llm_json_output(llm_output: str) -> dict:
         return {"error": f"Invalid JSON output from LLM. Instead got {llm_output}"}
 
     return json_data
+
+
+def get_current_time_readable() -> str:
+    current_time = datetime.now()
+    return current_time.strftime("%-I:%M%p %A, %b %-d, %Y")
