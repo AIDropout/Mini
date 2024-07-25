@@ -1,4 +1,3 @@
-from zootopia.core.logger import logger
 from zootopia.core.schema import ActionType, RoomTableModel, ZootopiaMessage
 from config.config import Config, IntentManagerConfig, ActionManagerConfig, MemoryManagerConfig, FilterConfig
 from zootopia.platform.platform import MessageProviderBase
@@ -9,7 +8,9 @@ from zootopia.agent.context import ContextManager
 from zootopia.agent.intent import IntentManager
 from zootopia.agent.action import ActionManager
 from zootopia.agent.memory import MemoryManager
-from zootopia.agent.tasks.tasks import ChatTask, UserMessageTask, ChatReviverTask, ScheduledTask
+from zootopia.agent.tasks import ChatTask, RespondChatTask, ReviveChatTask, ScheduledChatTask
+
+from zootopia.core.logger import logger
 from zootopia.core.utils.utils import get_current_time_readable
 
 
@@ -47,35 +48,29 @@ class Agent:
             memory_config=config.BEHAVIORS_CONFIG.MEMORY_MANAGER,
             base_prompt=context.agent.prompt
         )
-    
-    # Chat responder (reactive)
-    # Get past messages + incoming message, formulate response, send it
 
-    # Chat reviver (proactive)
-    # Get past messages + context about chat silence, formulate response, send it
-
-    # Chat scheduler (proactive)
-    # Get past messages + scheduled context, formulate response, send it
     async def respond_to_user(self) -> bool:
-        task = UserMessageTask(self.message)
+        task = RespondChatTask(self.message)
         return await self._process_chat(task)
 
     async def revive_chat(self) -> bool:
-        task = ChatReviverTask()
+        task = ReviveChatTask()
         return await self._process_chat(task)
 
     async def handle_scheduled_task(self) -> bool:
-        task = ScheduledTask()
+        task = ScheduledChatTask()
         return await self._process_chat(task)
 
     async def _process_chat(self, task: ChatTask) -> bool:
+        logger.info(task.message)  
+        logger.info(task)
+
         try:
-            if isinstance(task, UserMessageTask):
+            if isinstance(task, RespondChatTask):
                 self.memory.store_message(from_user=True, message=task.instructions)
                 # TODO: Add a message filter
 
             recent_messages = self.memory.get_recent_messages(count=task.recent_message_count)
-            logger.info(f"Recent messages: {recent_messages}")
 
             prompt_template = """
             {base_prompt}
@@ -91,6 +86,8 @@ class Agent:
                 current_time=get_current_time_readable()
             )
 
+            logger.info(f"\nSystem prompt: {system_prompt}\n")
+            logger.info(f"\nRecent messages: {recent_messages}\n")
             sent_response = await self.action.generate_and_send_message(system_prompt, recent_messages)
             
             if sent_response:

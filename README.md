@@ -18,9 +18,9 @@ Help us build characters that are highly convincing, customizable, and dynamic �
 
 Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` & `Stripe Payment` in minutes, not weeks ⚡
 
-Check out our Zootopia character demos
-<a href="https://textmini.com/boyfriend">Boyfriend</a>
-<a href="https://textmini.com/goggins">David Goggins</a>
+#### Zootopia character demos:
+- [Boyfriend](https://textmini.com/boyfriend)
+- [David Goggins](https://textmini.com/goggins)
 
 ## 🌆 Features
 - [x] All LLMs supported (LiteLLM)
@@ -28,14 +28,14 @@ Check out our Zootopia character demos
 - [x] Bird SMS, Telegram
 
 ### Behaviors
-- [x] Intent detection
-- [x] Auto DB
+- [ ] Proactive messages
+- [ ] Scheduled messages
+- [ ] Filtering messages
 - [ ] Not responding to every single message
 - [ ] Human-like memory
-- [ ] Preference tracking
-- [ ] Proactive messages
-- [ ] Scheduling
+- [ ] User preference tracking
 - [ ] Vision
+- [ ] Tool use
 
 ## 🛠️ Environment Setup
 Make sure Python, [ngrok](https://ngrok.com/), and [uv]() are installed.
