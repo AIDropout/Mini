@@ -1,7 +1,14 @@
 from dataclasses import dataclass
 from typing import ClassVar
 from zootopia.core.schema import ZootopiaMessage
+from enum import Enum
 
+
+class ChatTaskType(Enum):
+    RESPOND = "respond"
+    REVIVE = "revive"
+    SCHEDULED = "scheduled"
+    
 
 @dataclass
 class ChatTask():
@@ -17,7 +24,7 @@ class ChatTask():
 @dataclass
 class RespondChatTask(ChatTask):
     user_message: ZootopiaMessage
-
+    task: ChatTaskType = ChatTaskType.RESPOND
     instructions: str = "Respond to the user via a short text"
     recent_message_count: int = 10
 
@@ -33,6 +40,7 @@ class RespondChatTask(ChatTask):
 
 @dataclass
 class ReviveChatTask(ChatTask):
+    task: ChatTaskType = ChatTaskType.REVIVE
     instructions: str = "Re-engage the chat since it has been silent for a while."
     recent_message_count: int = 5
 
@@ -48,6 +56,7 @@ class ReviveChatTask(ChatTask):
 
 @dataclass
 class ScheduledChatTask(ChatTask):
+    task: ChatTaskType = ChatTaskType.SCHEDULED
     instructions: str = "This event was scheduled for this time. Send a message based on it."
     recent_message_count: int = 5
 

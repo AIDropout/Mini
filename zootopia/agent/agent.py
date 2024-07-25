@@ -4,7 +4,7 @@ from zootopia.platform.platform import MessageProviderBase
 from zootopia.storage.database.supabase import SupabaseDB
 
 # from zootopia.agent.filter.filter import MessageFilter
-from zootopia.agent.context import ContextManager
+from zootopia.context import BaseContextManager
 from zootopia.agent.intent import IntentManager
 from zootopia.agent.action import ActionManager
 from zootopia.agent.memory import MemoryManager
@@ -36,7 +36,7 @@ class Agent:
         self.memory = MemoryManager.from_config(memory_config, database_service, room)
 
     @classmethod
-    def from_config(cls, context: ContextManager, config: Config) -> "Agent":
+    def from_config(cls, context: BaseContextManager, config: Config) -> "Agent":
         return cls(
             message=context.message,
             messaging_service=context.messaging_service,

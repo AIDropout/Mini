@@ -1,7 +1,11 @@
 from .agent import Agent
-from .context.context import ContextManager
+from .tasks import ChatTask, ChatTaskType, ReviveChatTask, RespondChatTask, ScheduledChatTask
 
 __all__ = [
     'Agent',
-    'ContextManager'
+    'ChatTask',
+    'ChatTaskType',
+    'ReviveChatTask',
+    'RespondChatTask',
+    'ScheduledChatTask',
 ]

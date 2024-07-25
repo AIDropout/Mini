@@ -22,6 +22,7 @@ from .message import (
     _TelegramDocument,
     _TelegramVenue
 )
+from .request import SignupRequestBase
 
 __all__ = [
     'ActionType',
@@ -54,5 +55,7 @@ __all__ = [
     '_TelegramSticker',
     '_TelegramLocation',
     '_TelegramDocument',
-    '_TelegramVenue'
+    '_TelegramVenue',
+
+    'SignupRequestBase',
 ]

@@ -3,6 +3,7 @@ from typing import List, Optional, Union, Dict, Any
 
 from pydantic import BaseModel
 
+
 class _TelegramPhoto(BaseModel):
     file_id: str
     file_unique_id: str
