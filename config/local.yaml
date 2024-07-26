@@ -17,7 +17,7 @@ DATABASE_CONFIG:
 
 BEHAVIORS_CONFIG:
   FILTER:
-    LLM_NAME: claude-3-5-sonnet-20240620
+    LLM_NAME: groq/llama-3.1-70b-versatile
   ACTION_MANAGER:
     LLM_NAME: claude-3-5-sonnet-20240620
   INTENT_MANAGER:

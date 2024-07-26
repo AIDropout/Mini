@@ -29,10 +29,10 @@ def should_send_proactive_message(
     Determine if the agent should send a proactive message based on proactivity and time elapsed.
 
     Args:
-    agent_proactivity (float): The agent's proactivity score (0 to 1).
-    last_message_time (datetime): The timestamp of the last message in the room.
-    min_interval (timedelta): The minimum interval between messages.
-    max_interval (timedelta): The maximum interval between messages.
+    agent_proactivity - The agent's proactivity score (0 to 1).
+    last_message_time - The timestamp of the last message in the room.
+    min_interval - The minimum interval between messages.
+    max_interval - The maximum interval between messages.
 
     Returns:
     bool: True if the agent should send a message, False otherwise.

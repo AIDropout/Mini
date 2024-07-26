@@ -3,30 +3,21 @@ from typing import ClassVar
 from zootopia.core.schema import ZootopiaMessage
 from enum import Enum
 
-
 class ChatTaskType(Enum):
     RESPOND = "respond"
     REVIVE = "revive"
     SCHEDULED = "scheduled"
-    
 
 @dataclass
 class ChatTask():
-    status: ClassVar[str] = ''
-    
-    @property
-    def message(self) -> str:
-        return f"Executing {self.__class__.__name__}"
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}: {self.message}"
+    recent_message_count: ClassVar[int] = 10
 
 @dataclass
 class RespondChatTask(ChatTask):
     user_message: ZootopiaMessage
     task: ChatTaskType = ChatTaskType.RESPOND
     instructions: str = "Respond to the user via a short text"
-    recent_message_count: int = 10
+    recent_message_count: ClassVar[int] = 10
 
     @property
     def message(self) -> str:
@@ -42,7 +33,7 @@ class RespondChatTask(ChatTask):
 class ReviveChatTask(ChatTask):
     task: ChatTaskType = ChatTaskType.REVIVE
     instructions: str = "Re-engage the chat since it has been silent for a while."
-    recent_message_count: int = 5
+    recent_message_count: ClassVar[int] = 5
 
     @property
     def message(self) -> str:
@@ -58,7 +49,7 @@ class ReviveChatTask(ChatTask):
 class ScheduledChatTask(ChatTask):
     task: ChatTaskType = ChatTaskType.SCHEDULED
     instructions: str = "This event was scheduled for this time. Send a message based on it."
-    recent_message_count: int = 5
+    recent_message_count: ClassVar[int] = 5
 
     @property
     def message(self) -> str:

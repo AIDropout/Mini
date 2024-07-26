@@ -87,7 +87,7 @@ class MessageTableModel(BaseModel):
     room_id: int = Field(default=None)
     created_at: datetime = Field(default_factory=utc_now)
     from_user: bool = Field(default=None)
-    message: str = Field(default=None)
+    content: str = Field(default=None)
 
 
 TableModel = Union[UserTableModel, AgentTableModel, MessageTableModel, RoomTableModel]

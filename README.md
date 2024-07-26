@@ -28,12 +28,12 @@ Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` 
 - [x] Bird SMS, Telegram
 
 ### Behaviors
-- [ ] Proactive messages
-- [ ] Scheduled messages
-- [ ] Filtering messages
+- [x] Proactive messages
+- [x] Filtering messages
 - [ ] Not responding to every single message
-- [ ] Human-like memory
+- [ ] Scheduled messages
 - [ ] User preference tracking
+- [ ] Human-like memory
 - [ ] Vision
 - [ ] Tool use
 

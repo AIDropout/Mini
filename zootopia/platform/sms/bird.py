@@ -89,8 +89,13 @@ class BirdSMSProvider(MessageProviderBase):
             raise MessageParsingError(f"Missing key in Bird message: {e}") from e
     
     # TODO: Get verification that message was actually sent
-    async def send_message(self, message: str) -> None:
-        """Send a Bird SMS message to the recipient."""
+    async def send_message(self, message: str) -> bool:
+        """
+        Send a Bird SMS message to the recipient.
+        
+        Returns:
+            bool: True if the message was successfully sent, False otherwise.
+        """
         try:
             url = f"{self._api_url}/workspaces/{self._workspace_id}/channels/{self._channel_id}/messages"
             payload = {
@@ -100,8 +105,17 @@ class BirdSMSProvider(MessageProviderBase):
                 "body": {"type": "text", "text": {"text": message}},
             }
             response = requests.post(url, headers=self._api_header, json=payload)
-            logger.info(response.json())
+            response_data = response.json()
+                        
+            if response.status_code == 202 and response_data.get('status') == 'accepted':
+                logger.info("🟢 Bird message successfully sent")
+                return True
+            else:
+                logger.error(f"🔴 Failed to send Bird message. Status code: {response.status_code}")
+                logger.error(f"Failed Bird API Response: {response_data}")
+                return False
         except Exception as e:
+            logger.error(f"🔴 Error sending Bird message: {str(e)}")
             raise SendMessageError(f"Error sending message: {e}") from e
 
     async def register_webhook(self, event: str = "sms.inbound", webhook_url: str = None) -> None:
