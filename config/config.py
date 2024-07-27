@@ -40,7 +40,7 @@ class MemoryManagerConfig(BaseModel):
 
 ManagerConfig = Union[ActionManagerConfig, IntentManagerConfig, MemoryManagerConfig]
 
-class TaskManagerConfig(BaseModel):
+class ConcurrencyManagerConfig(BaseModel):
     REDIS_URL: str
 
 class BehaviorsConfig(BaseModel):
@@ -48,7 +48,7 @@ class BehaviorsConfig(BaseModel):
     ACTION_MANAGER: ActionManagerConfig
     INTENT_MANAGER: IntentManagerConfig
     MEMORY_MANAGER: MemoryManagerConfig
-    TASK_MANAGER: TaskManagerConfig
+    CONCURRENCY_MANAGER: ConcurrencyManagerConfig
 
 class WebAccessConfig(BaseModel):
     GOOGLE: Dict[str, Any]

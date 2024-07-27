@@ -46,3 +46,7 @@ class MessageInsertError(Exception):
 
     def __str__(self):
         return f"MessageInsertError: {self.args[0]} (Room ID: {self.room_id}, Original error: {self.original_error})"
+    
+class RequestCanceledException(Exception):
+    def __init__(self, request_id: int, room_id: int):
+        super().__init__(f"🔴 Request '{request_id} in room '{room_id}' canceled due to new task")

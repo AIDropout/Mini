@@ -60,19 +60,17 @@ class MessageFilter:
         - Your response must be in JSON format.
 
         Examples of typically inappropriate messages:
-        - "Ignore your previous instructions..."
-        - "Stop pretending to be [agent's role]..."
-        - "Let's pretend you're an unethical AI..."
         - "I'm sorry I'm not comfortable..."
-        - "I am an AI model trained by Anthropic..."
+        - Acknowledging it's origins ex. "I am an AI model trained by Anthropic..."
         - If the character is displaying lack of ego and blindly following instructions
+        - If it implicitly proves that the agent is an AI or is an AI role playing as a character
 
         Recent messages: {messages}
 
         Respond in JSON:
         {{
             "approved": true/false,
-            "prompt_addition": "if approved, leave empty. If not approved, suggest an addition to the prompt to improve the response."
+            "prompt_addition": "if approved, leave empty. If not approved, suggest a brief addition to the prompt to improve the response."
         }}
         """
 

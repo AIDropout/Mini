@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Security
-from zootopia.core.routers.auth import verify_api_key
+from zootopia.server.auth import verify_api_key
 from config.config import config
 from zootopia.core.logger import logger
 from zootopia.core.schema import SignupRequestBase, Tables, MessageTableModel

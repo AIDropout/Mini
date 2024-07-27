@@ -1,12 +1,14 @@
 from zootopia.core.schema import ActionType, RoomTableModel, ZootopiaMessage, ChatTask, RespondChatTask, ReviveChatTask, ScheduledChatTask, MessageTableModel
-from config.config import Config, ActionManagerConfig, MemoryManagerConfig, FilterConfig
+from config.config import Config, ActionManagerConfig, MemoryManagerConfig, FilterConfig, ConcurrencyManagerConfig
 from zootopia.platform.platform import MessageProviderBase
 from zootopia.storage.database.supabase import SupabaseDB
 
+from zootopia.core.exceptions import RequestCanceledException
 from zootopia.context import BaseContextManager
 from zootopia.agent.filter import MessageFilter, FilterInput, FilterResult
 from zootopia.agent.action import ActionManager
 from zootopia.agent.memory import MemoryManager
+from zootopia.server.concurrency import ConcurrencyManager
 
 from zootopia.core.logger import logger
 from zootopia.core.utils.utils import get_current_time_readable
@@ -22,6 +24,7 @@ class Agent:
         filter_config: FilterConfig, 
         action_config: ActionManagerConfig, 
         memory_config: MemoryManagerConfig,
+        task_config: ConcurrencyManagerConfig,
         agent_prompt: str
     ) -> None:
         self.agent_prompt = agent_prompt
@@ -30,6 +33,7 @@ class Agent:
         self.filter = MessageFilter.from_config(filter_config)
         self.action = ActionManager.from_config(action_config, messaging_service)
         self.memory = MemoryManager.from_config(memory_config, database_service, room)
+        self.concurrency = ConcurrencyManager.from_config(task_config, room.id)
 
     @classmethod
     def from_config(cls, config: Config, context: BaseContextManager) -> "Agent":
@@ -40,11 +44,13 @@ class Agent:
             filter_config=config.BEHAVIORS_CONFIG.FILTER,
             action_config=config.BEHAVIORS_CONFIG.ACTION_MANAGER,
             memory_config=config.BEHAVIORS_CONFIG.MEMORY_MANAGER,
+            task_config=config.BEHAVIORS_CONFIG.CONCURRENCY_MANAGER,
             agent_prompt=context.agent.prompt
         )
 
     async def handle_chat_task(self, task: ChatTask) -> bool:
         logger.info(f"🟢 {task}")
+        await self.concurrency.start_new()
 
         try:
             recent_messages = self.memory.get_recent_messages(count=task.recent_message_count)
@@ -70,6 +76,8 @@ class Agent:
             prompt_addition = ""
 
             for attempt in range(max_attempts):
+                await self.concurrency.verify_is_latest_request()
+
                 system_prompt = system_prompt_template.format(
                     agent_prompt=self.agent_prompt,
                     instructions=task.instructions,
@@ -92,6 +100,7 @@ class Agent:
                 logger.info(filter_result.message)
 
                 if filter_result.approved:
+                    await self.concurrency.verify_is_latest_request()
                     await self.action.send_message(response_text)
                     self.memory.store_message(MessageTableModel(
                         room_id=self.room.id,
@@ -109,6 +118,9 @@ class Agent:
 
             return False
 
+        except RequestCanceledException:
+            logger.info(f"Request cancelled for room {self.room.id} due to new request")
+            return False
         except Exception as e:
             logger.error(f"Unexpected error in processing chat: {str(e)}")
             return False

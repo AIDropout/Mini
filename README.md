@@ -24,13 +24,13 @@ Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` 
 
 ## 🌆 Features
 - [x] All LLMs supported (LiteLLM)
-- [x] Scalable agent DB architecture (Supabase)
+- [x] Scalable agent DB architecture (PostgreSQL)
 - [x] Bird SMS, Telegram
 
 ### Behaviors
 - [x] Proactive messages
 - [x] Filtering messages
-- [ ] Not responding to every single message
+- [x] Rapidly incoming message debouncing (Redis)
 - [ ] Scheduled messages
 - [ ] User preference tracking
 - [ ] Human-like memory
