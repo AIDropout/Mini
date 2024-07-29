@@ -60,9 +60,9 @@ class BackgroundScheduler:
 
                 }
 
-                self.redis.zadd(
-                    "scheduled",
-                    {json.dumps(task_data): response_time.timestamp()},
-                )
+                # self.redis.zadd(
+                #     "scheduled",
+                #     {json.dumps(task_data): response_time.timestamp()},
+                # )
         except Exception as e:
             logger.exception(f"Error in schedule respond: {e}")

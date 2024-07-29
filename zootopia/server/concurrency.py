@@ -1,10 +1,12 @@
-# """Cancels the 1st message request if it's ongoing and a 2nd request comes in"""
+"""Cancels the 1st message request if it's ongoing and a 2nd request comes in"""
+
+
+"""Mught not be needed"""
 
 import uuid
 from typing import Optional
 from zootopia.server.redis import redis_client
 from zootopia.core.logger import logger
-from config.config import ConcurrencyManagerConfig
 from zootopia.core.exceptions import RequestCanceledException
 
 

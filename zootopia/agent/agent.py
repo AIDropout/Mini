@@ -13,7 +13,6 @@ from config.config import (
     ActionManagerConfig,
     MemoryManagerConfig,
     FilterConfig,
-    ConcurrencyManagerConfig,
 )
 from zootopia.platform.platform import MessageProviderBase
 from zootopia.storage.database.supabase import SupabaseDB
@@ -38,7 +37,6 @@ class Agent:
         filter_config: FilterConfig,
         action_config: ActionManagerConfig,
         memory_config: MemoryManagerConfig,
-        task_config: ConcurrencyManagerConfig,
         agent_prompt: str,
     ) -> None:
         self.agent_prompt = agent_prompt

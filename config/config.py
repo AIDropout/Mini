@@ -40,15 +40,11 @@ class MemoryManagerConfig(BaseModel):
 
 ManagerConfig = Union[ActionManagerConfig, IntentManagerConfig, MemoryManagerConfig]
 
-class ConcurrencyManagerConfig(BaseModel):
-    REDIS_URL: str
-
 class BehaviorsConfig(BaseModel):
     FILTER: FilterConfig
     ACTION_MANAGER: ActionManagerConfig
     INTENT_MANAGER: IntentManagerConfig
     MEMORY_MANAGER: MemoryManagerConfig
-    CONCURRENCY_MANAGER: ConcurrencyManagerConfig
 
 class WebAccessConfig(BaseModel):
     GOOGLE: Dict[str, Any]
@@ -59,6 +55,7 @@ class Config(BaseModel):
     MESSAGING_CONFIG: MessagingConfig
     BEHAVIORS_CONFIG: BehaviorsConfig
     WEB_ACCESS_CONFIG: WebAccessConfig
+    REDIS_URL: str
 
 def replace_env_vars(value: Any) -> Any:
     if isinstance(value, str):
