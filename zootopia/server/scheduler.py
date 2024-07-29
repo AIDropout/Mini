@@ -46,11 +46,18 @@ class BackgroundScheduler:
                 delay = self._calculate_response_delay()
                 response_time = datetime.now() + timedelta(seconds=delay)
                 logger.info(f"🟢 Scheduling bot response in {delay} seconds")
+                creation_time = datetime.now()
+
 
                 task_data = {
                     "type": TaskType.RESPOND.value,
                     "response_time": response_time.isoformat(),
+                    "creation_time": creation_time.isoformat(),
+                    #TODO: pass in message object instead of full request
                     "original_request": request_body,
+                    "room_id": context.room.id,
+                    "message": context.message.content,
+
                 }
 
                 self.redis.zadd(
