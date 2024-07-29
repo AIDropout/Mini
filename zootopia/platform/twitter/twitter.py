@@ -1,3 +1,5 @@
+"""This file is unused"""
+
 """Free API access only allows posting"""
 
 from requests_oauthlib import OAuth1Session
@@ -8,7 +10,7 @@ import json
 # export 'CONSUMER_KEY'='<your_consumer_key>'
 # export 'CONSUMER_SECRET'='<your_consumer_secret>'
 
-# insert API KEY 
+# insert API KEY
 consumer_key = os.environ.get("CONSUMER_KEY")
 
 # insert API KEY SECRET

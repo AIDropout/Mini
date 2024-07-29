@@ -109,22 +109,27 @@ class TelegramMessage(BaseModel):
         _TelegramMessageDocument,
     ]
 
+
 class MessageProvider(Enum):
     TELEGRAM = "telegram"
     BIRD = "bird"
 
+
 class MessageType(Enum):
     TEXT = "text"
     FILE = "file"
+
 
 class TelegramMetadata(BaseModel):
     uid: Union[int, str]
     user_name: Optional[str]
     chat_id: Optional[str]
 
+
 class BirdMetadata(BaseModel):
     channel_id: str
     phone_number: str
+
 
 # TODO: Add different Bird message types
 class ZootopiaMessage(BaseModel):

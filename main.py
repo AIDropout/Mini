@@ -17,29 +17,6 @@ from zootopia.core.routers import signup_router, message_router, cron_router
 
 from zootopia.server.background import BackgroundRunner
 
-class ServerManager:
-    @classmethod
-    def run_gunicorn(cls, app: str, workers: int = 4, port: int = 8000) -> None:
-        command = [
-            "gunicorn",
-            "-w", str(workers),
-            "-k", "uvicorn.workers.UvicornWorker",
-            f"{app}:app",
-            "--bind", f"127.0.0.1:{port}",
-        ]
-        try:
-            subprocess.run(command)
-            logger.info("Gunicorn started successfully.")
-        except FileNotFoundError:
-            logger.error("Gunicorn command not found. Make sure it's installed and in your PATH.")
-
-    @classmethod
-    def close_gunicorn(cls) -> None:
-        try:
-            subprocess.run(["pkill", "-f", "gunicorn"], check=True, capture_output=True, text=True)
-            logger.info("Gunicorn stopped successfully.")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to stop Gunicorn. Error: {e.stderr}")
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -70,13 +47,12 @@ async def configure_local_webhooks() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Runs continously as long as the server is up
     runner = BackgroundRunner(config)
     background_task = asyncio.create_task(runner.run())
-
     yield
-    # After
+    # Cleanup
     ngrok.kill()
-    # Cleanup: Cancel the background task when the app is shutting down
     background_task.cancel()
     try:
         await background_task
@@ -89,21 +65,34 @@ app.include_router(message_router)
 app.include_router(signup_router)
 app.include_router(cron_router)
 
-if __name__ == "__main__":
-    use_gunicorn = False
+""" Run python main.py
 
-    if os.getenv('ENVIRONMENT', '').lower() == 'local':
-        asyncio.run(configure_local_webhooks())
+Gunicorn is used in local to test concurrency manager (since multiple workers)
+
+To kill gunicorn run: pkill -f gunicorn
+
+To view ports run: ps aux | grep gunicorn
+"""
+if __name__ == "__main__":
+    use_gunicorn = True
+    asyncio.run(configure_local_webhooks())
 
     if use_gunicorn:
-        ServerManager.close_gunicorn()
-        ServerManager.run_gunicorn(app="main")
+        gunicorn_command = [
+            "gunicorn",
+            "-w", "4",
+            "-k", "uvicorn.workers.UvicornWorker",
+            "main:app",
+            "--bind", "127.0.0.1:8000",
+        ]
+        try:
+            logger.info("Starting Gunicorn server...")
+            subprocess.run(gunicorn_command, check=True)
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to start Gunicorn. Error: {e}")
+        except FileNotFoundError:
+            logger.error("Gunicorn command not found. Make sure it's installed and in your PATH.")
     else:
-        uvicorn.run(f"main:app", host="127.0.0.1", port=8000, reload=True)
-
-    # gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
-    # ps aux | grep gunicorn
-    # pkill -f gunicorn
-
+        uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
 
 

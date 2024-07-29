@@ -2,9 +2,12 @@ from enum import Enum
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+
 class RoomAlreadyExistsError(Exception):
     def __init__(self, phone_number: str, agent_id: int):
-        super().__init__(f"Room with agent '{agent_id} & '{phone_number}' already exists")
+        super().__init__(
+            f"Room with agent '{agent_id} & '{phone_number}' already exists"
+        )
 
 
 class AgentNotFoundError(Exception):
@@ -13,18 +16,19 @@ class AgentNotFoundError(Exception):
 
 
 class DatabaseConnectionError(Exception):
-    def __init__(self, message='Failed to connect to the database'):
+    def __init__(self, message="Failed to connect to the database"):
         super().__init__(message)
 
 
 class SMSServiceError(Exception):
-    def __init__(self, message='Failed to send SMS'):
+    def __init__(self, message="Failed to send SMS"):
         super().__init__(message)
 
 
 class RoomCreationError(Exception):
-    def __init__(self, message='Failed to create or get room'):
+    def __init__(self, message="Failed to create or get room"):
         super().__init__(message)
+
 
 class MessageParsingError(Exception):
     """Custom exception for errors during message parsing."""
@@ -37,6 +41,7 @@ class SendMessageError(Exception):
 class WebhookError(Exception):
     """Custom exception for errors during webhook registration."""
 
+
 class MessageInsertError(Exception):
     def __init__(self, room_id: int, original_error: Exception, message: str = None):
         self.room_id = room_id
@@ -46,7 +51,10 @@ class MessageInsertError(Exception):
 
     def __str__(self):
         return f"MessageInsertError: {self.args[0]} (Room ID: {self.room_id}, Original error: {self.original_error})"
-    
+
+
 class RequestCanceledException(Exception):
     def __init__(self, request_id: int, room_id: int):
-        super().__init__(f"🔴 Request '{request_id} in room '{room_id}' canceled due to new task")
+        super().__init__(
+            f"🔴 Request '{request_id} in room '{room_id}' canceled due to new task"
+        )

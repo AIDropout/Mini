@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from typing import List, Optional, TypeVar, Dict, Tuple, Union
 from supabase import create_client
@@ -10,6 +9,7 @@ from zootopia.core.schema.table import TABLE_MODEL_MAP
 
 T = TypeVar("T", bound=TableModel)
 
+
 # TODO: add tests
 class SupabaseDB(Database):
     def __init__(self, url: str, key: str) -> None:
@@ -20,7 +20,7 @@ class SupabaseDB(Database):
         return cls(url=config.URL, key=config.KEY)
 
     def insert(self, table_name: str, item: TableModel) -> TableModel:
-        # Remove 'id' field, since Supabase auto-increments
+        # Removes 'id' field, since Supabase auto-increments
         item_dict = item.model_dump(exclude={"id"})
         data, _ = self.supabase.table(table_name).insert(item_dict).execute()
         return type(item)(**data[1][0]) if data and data[1] else None
@@ -32,7 +32,13 @@ class SupabaseDB(Database):
         data, _ = query.execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
-    def get_row(self, table_name: str, conditions: Dict[str, any], order_by: Optional[str] = None, order_desc: Optional[bool] = None) -> Optional[TableModel]:
+    def get_row(
+        self,
+        table_name: str,
+        conditions: Dict[str, any],
+        order_by: Optional[str] = None,
+        order_desc: Optional[bool] = None,
+    ) -> Optional[TableModel]:
         query = self.supabase.table(table_name).select("*")
         for key, value in conditions.items():
             query = query.eq(key, value)
@@ -48,44 +54,44 @@ class SupabaseDB(Database):
         return None
 
     def get_multiple_rows(
-            self,
-            table_name: str,
-            max_rows: int = 10,
-            from_time: Optional[datetime] = None,
-            order_by: str = "created_at",
-            order_desc: bool = True,
-            conditions: Optional[Dict] = None,
-            **kwargs
-        ) -> List[Dict]:
-            try:
-                query = self.supabase.table(table_name).select("*")
+        self,
+        table_name: str,
+        max_rows: int = 10,
+        from_time: Optional[datetime] = None,
+        order_by: str = "created_at",
+        order_desc: bool = True,
+        conditions: Optional[Dict] = None,
+        **kwargs,
+    ) -> List[Dict]:
+        try:
+            query = self.supabase.table(table_name).select("*")
 
-                if conditions:
-                    for key, value in conditions.items():
-                        query = query.eq(key, value)
-                
-                for key, value in kwargs.items():
+            if conditions:
+                for key, value in conditions.items():
                     query = query.eq(key, value)
 
-                if from_time is not None:
-                    query = query.gte("created_at", from_time.isoformat())
+            for key, value in kwargs.items():
+                query = query.eq(key, value)
 
-                query = query.order(order_by, desc=order_desc).limit(max_rows)
+            if from_time is not None:
+                query = query.gte("created_at", from_time.isoformat())
 
-                response = query.execute()
-                
-                # Handle the actual response format
-                if hasattr(response, 'data') and isinstance(response.data, list):
-                    data = response.data
-                else:
-                    logger.error(f"Unexpected response format from Supabase: {response}")
-                    return []
+            query = query.order(order_by, desc=order_desc).limit(max_rows)
 
-                # Return the data as a list of dictionaries
-                return data
-            except Exception as e:
-                logger.error(f"Error in get_multiple_rows: {str(e)}")
+            response = query.execute()
+
+            # Handle the actual response format
+            if hasattr(response, "data") and isinstance(response.data, list):
+                data = response.data
+            else:
+                logger.error(f"Unexpected response format from Supabase: {response}")
                 return []
+
+            # Return the data as a list of dictionaries
+            return data
+        except Exception as e:
+            logger.error(f"Error in get_multiple_rows: {str(e)}")
+            return []
 
     def delete(self, table_name: str, *conditions) -> bool:
         query = self.supabase.table(table_name).delete()
@@ -94,29 +100,31 @@ class SupabaseDB(Database):
         data, _ = query.execute()
         return bool(data and data[1])
 
-    def query(self, table_name: str, *conditions: Union[Tuple[str, str], Tuple[str, str, str]]) -> List[TableModel]:
-            query = self.supabase.table(table_name).select("*")
-            for condition in conditions:
-                if len(condition) == 2:
-                    key, value = condition
-                    query = query.eq(key, value)
-                elif len(condition) == 3:
-                    key, op, value = condition
-                    if op == '>':
-                        query = query.gt(key, value)
-                    elif op == '<':
-                        query = query.lt(key, value)
-                    elif op == '>=':
-                        query = query.gte(key, value)
-                    elif op == '<=':
-                        query = query.lte(key, value)
-                    elif op == '!=':
-                        query = query.neq(key, value)
-                    else:
-                        query = query.eq(key, value)
+    def query(
+        self, table_name: str, *conditions: Union[Tuple[str, str], Tuple[str, str, str]]
+    ) -> List[TableModel]:
+        query = self.supabase.table(table_name).select("*")
+        for condition in conditions:
+            if len(condition) == 2:
+                key, value = condition
+                query = query.eq(key, value)
+            elif len(condition) == 3:
+                key, op, value = condition
+                if op == ">":
+                    query = query.gt(key, value)
+                elif op == "<":
+                    query = query.lt(key, value)
+                elif op == ">=":
+                    query = query.gte(key, value)
+                elif op == "<=":
+                    query = query.lte(key, value)
+                elif op == "!=":
+                    query = query.neq(key, value)
                 else:
-                    logger.warning(f"Unexpected condition format: {condition}")
+                    query = query.eq(key, value)
+            else:
+                logger.warning(f"Unexpected condition format: {condition}")
 
-            data, _ = query.execute()
-            model_class = TABLE_MODEL_MAP[table_name]
-            return [model_class(**item) for item in data[1]] if data and data[1] else []
+        data, _ = query.execute()
+        model_class = TABLE_MODEL_MAP[table_name]
+        return [model_class(**item) for item in data[1]] if data and data[1] else []

@@ -19,17 +19,19 @@ from zootopia.server.redis import redis_client
 from config.config import config, Config
 
 
-class TaskScheduler:
+class BackgroundScheduler:
     def __init__(self, config: Config):
         self.config = config
         self.redis = redis_client
 
     def _calculate_response_delay(self):
+        """Algorithm for agent responsiveness. We can use agent proactivity, spread of recent messages, etc."""
         scenarios = [(0, 0.7), (5, 0.2), (10, 0.08), (15, 0.02)]
         delay, _ = random.choices(scenarios, weights=[s[1] for s in scenarios])[0]
         return delay + random.randint(0, 3)
 
     def schedule_respond(self, request_body: dict):
+        """This is called by /message endpoint"""
         try:
             context = MessageContextManager(self.config, request_body)
             message = context.database.insert(

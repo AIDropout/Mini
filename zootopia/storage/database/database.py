@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from zootopia.core.schema import TableModel
 
+
 class Database(ABC):
     @abstractmethod
     def insert(self, table_name: str, item: TableModel) -> TableModel:
@@ -18,7 +19,6 @@ class Database(ABC):
         pass
 
     @abstractmethod
-
     def get_multiple_rows(
         self,
         table_name: str,

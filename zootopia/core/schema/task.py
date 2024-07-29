@@ -3,14 +3,17 @@ from typing import ClassVar
 from zootopia.core.schema import ZootopiaMessage
 from enum import Enum
 
+
 class TaskType(Enum):
     RESPOND = "respond"
     REMIND = "remind"
     REVIVE = "revive"
 
+
 @dataclass
-class Task():
+class Task:
     recent_message_count: ClassVar[int] = 10
+
 
 @dataclass
 class RespondTask(Task):
@@ -24,17 +27,21 @@ class RespondTask(Task):
         return f"Processing user message: {self.user_message.content[:50]}"
 
     def __str__(self) -> str:
-        return (f"\n\nRespondTask:\n"
-                f"  Message: {self.message}\n"
-                f"  Instructions: {self.instructions}\n"
-                f"  Recent message count: {self.recent_message_count}\n")
-    
+        return (
+            f"\n\nRespondTask:\n"
+            f"  Message: {self.message}\n"
+            f"  Instructions: {self.instructions}\n"
+            f"  Recent message count: {self.recent_message_count}\n"
+        )
+
 
 @dataclass
 class RemindTask(Task):
     name: str
     type: TaskType = TaskType.REMIND
-    instructions: str = "This event was scheduled for this time. Send a message based on it."
+    instructions: str = (
+        "This event was scheduled for this time. Send a message based on it."
+    )
     recent_message_count: ClassVar[int] = 5
 
     @property
@@ -42,10 +49,12 @@ class RemindTask(Task):
         return "Executing remind task"
 
     def __str__(self) -> str:
-        return (f"\n\nRemindTask:\n"
-                f"  Message: {self.message}\n"
-                f"  Instructions: {self.instructions}\n"
-                f"  Recent message count: {self.recent_message_count}\n")
+        return (
+            f"\n\nRemindTask:\n"
+            f"  Message: {self.message}\n"
+            f"  Instructions: {self.instructions}\n"
+            f"  Recent message count: {self.recent_message_count}\n"
+        )
 
 
 @dataclass
@@ -59,7 +68,9 @@ class ReviveTask(Task):
         return "Reviving inactive chat"
 
     def __str__(self) -> str:
-        return (f"\n\nReviveTask:\n"
-                f"  Message: {self.message}\n"
-                f"  Instructions: {self.instructions}\n"
-                f"  Recent message count: {self.recent_message_count}\n")
+        return (
+            f"\n\nReviveTask:\n"
+            f"  Message: {self.message}\n"
+            f"  Instructions: {self.instructions}\n"
+            f"  Recent message count: {self.recent_message_count}\n"
+        )

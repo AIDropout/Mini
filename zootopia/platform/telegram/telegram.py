@@ -9,7 +9,7 @@ import aiohttp
 import telegram
 from pydantic import ValidationError
 from config.config import TelegramConfig
-from zootopia.platform.platform  import MessageProviderBase
+from zootopia.platform.platform import MessageProviderBase
 from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
@@ -17,7 +17,7 @@ from zootopia.core.schema import (
     TelegramMessage,
     _TelegramMessageDocument,
     _TelegramMessagePhoto,
-    TelegramMetadata
+    TelegramMetadata,
 )
 from zootopia.core.exceptions import MessageParsingError, SendMessageError, WebhookError
 from zootopia.core.logger import logger
@@ -44,8 +44,8 @@ class Telegram(MessageProviderBase):
                 request_body = json.loads(request_body.replace('"from"', '"from_'))
             elif isinstance(request_body, dict):
                 # If it's already a dict, just replace the 'from' key
-                if 'from' in request_body:
-                    request_body['from_'] = request_body.pop('from')
+                if "from" in request_body:
+                    request_body["from_"] = request_body.pop("from")
             else:
                 raise ValueError("Unsupported request_body type")
 
@@ -57,7 +57,8 @@ class Telegram(MessageProviderBase):
         try:
             message_type = MessageType.TEXT
             if isinstance(
-                telegram_message.message, (_TelegramMessagePhoto, _TelegramMessageDocument)
+                telegram_message.message,
+                (_TelegramMessagePhoto, _TelegramMessageDocument),
             ):
                 message_type = MessageType.FILE
 
@@ -69,7 +70,7 @@ class Telegram(MessageProviderBase):
             metadata = TelegramMetadata(
                 uid=telegram_message.message.from_.id,
                 user_name=user_name,
-                chat_id=telegram_message.message.chat.id
+                chat_id=telegram_message.message.chat.id,
             )
 
             cls._user_id = telegram_message.message.from_.id
@@ -82,7 +83,9 @@ class Telegram(MessageProviderBase):
             )
         except AttributeError as e:
             print(f"Error extracting data from Telegram message: {e}")
-            raise MessageParsingError(f"Missing attribute in Telegram message: {e}") from e
+            raise MessageParsingError(
+                f"Missing attribute in Telegram message: {e}"
+            ) from e
 
     async def download_file_from_message(
         self,
@@ -120,7 +123,9 @@ class Telegram(MessageProviderBase):
     async def send_message(self, message: str) -> Optional[str]:
         """Send a message to a Telegram recipient."""
         try:
-            sent_message = await self._bot.send_message(chat_id=self._user_id, text=message)
+            sent_message = await self._bot.send_message(
+                chat_id=self._user_id, text=message
+            )
             return str(sent_message.message_id)
         except Exception as e:
             raise SendMessageError(f"Error sending message: {e}") from e
