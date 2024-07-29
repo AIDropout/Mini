@@ -49,11 +49,10 @@ class BackgroundRunner:
                 self._log_diagnosis()
                 now = datetime.now().timestamp()
                 due_tasks = self.redis.zrangebyscore("scheduled", 0, now)
-
                 for t in due_tasks:
                     data = json.loads(t)
                     task_type = data["type"]
-                    logger.info(f"🟢 Processing scheduled task: {task_type}")
+                    logger.info(f"Processing scheduled task: {task_type}")
 
                     context, task = self.create_task_and_context(data)
                     if task is None or context is None:
@@ -69,6 +68,9 @@ class BackgroundRunner:
                 await asyncio.sleep(1)
             except Exception as e:
                 logger.error(f"Error in background task: {e}")
+                # Remove the problematic task from the schedule
+                # TODO: better error handling, re-trying
+                self.redis.zrem("scheduled", t)
 
             await asyncio.sleep(1)
 

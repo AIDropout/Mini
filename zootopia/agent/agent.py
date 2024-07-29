@@ -109,6 +109,7 @@ class Agent:
                     new_message=response_text
                 ))
 
+
                 logger.info(filter_result.message)
 
                 if filter_result.approved:
