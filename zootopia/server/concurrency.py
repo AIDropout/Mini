@@ -2,20 +2,20 @@
 
 import uuid
 from typing import Optional
-import redis.asyncio as redis
+from zootopia.server.redis import redis_client
 from zootopia.core.logger import logger
 from config.config import ConcurrencyManagerConfig
 from zootopia.core.exceptions import RequestCanceledException
 
 class ConcurrencyManager:
-    def __init__(self, redis_url: str, room_id: int):
-        self.redis: redis.Redis = redis.from_url(redis_url)
+    def __init__(self, room_id: int):
+        self.redis = redis_client
         self.room_id: int = room_id
         self.request_id: Optional[str] = None
 
     @classmethod
-    def from_config(cls, config: ConcurrencyManagerConfig, room_id: int) -> "ConcurrencyManager":
-        return cls(redis_url=config.REDIS_URL, room_id=room_id)
+    def from_config(cls, room_id: int) -> "ConcurrencyManager":
+        return cls(room_id=room_id)
 
     async def start_new(self) -> str:
         self.request_id = str(uuid.uuid4())

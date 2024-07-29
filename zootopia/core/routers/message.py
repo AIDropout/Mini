@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request, BackgroundTasks, HTTPException, Depends
 from zootopia.core.logger import logger
-from zootopia.server.redis import redis
 from zootopia.server.scheduler import TaskScheduler
 from config.config import config
 
@@ -8,7 +7,7 @@ router = APIRouter()
 
 
 def get_scheduler():
-    return TaskScheduler(config, redis)
+    return TaskScheduler(config)
 
 
 @router.post("/message")

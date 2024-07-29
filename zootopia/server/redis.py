@@ -1,3 +1,9 @@
+import redis
 from redis import Redis
+from config.config import config
 
-redis = Redis(host="localhost", port=6379, db=0)
+redis_url: str = config.BEHAVIORS_CONFIG.CONCURRENCY_MANAGER.REDIS_URL
+redis_client: Redis = redis.from_url(redis_url)
+
+def get_redis_client() -> Redis:
+    return redis_client

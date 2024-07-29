@@ -19,27 +19,6 @@ from zootopia.server.background import BackgroundRunner
 
 class ServerManager:
     @classmethod
-    def run_redis(cls) -> None:
-        try:
-            subprocess.run(["redis-server", "--daemonize", "yes"], check=True, capture_output=True, text=True)
-            logger.info("Redis started successfully.")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to start Redis. Error: {e.stderr}")
-        except FileNotFoundError:
-            logger.error("Redis-server command not found. Make sure it's installed and in your PATH.")
-    
-    @classmethod
-    def close_redis(cls) -> None:
-        try:
-            subprocess.run(["redis-cli", "shutdown"], check=True, capture_output=True, text=True)
-            logger.info("Redis stopped successfully.")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to stop Redis. Error: {e.stderr}")
-        except FileNotFoundError:
-            logger.error("Redis-cli command not found. Make sure it's installed and in your PATH.")
-        logger.info("Cleanup completed.")
-    
-    @classmethod
     def run_gunicorn(cls, app: str, workers: int = 4, port: int = 8000) -> None:
         command = [
             "gunicorn",
@@ -116,9 +95,6 @@ if __name__ == "__main__":
     if os.getenv('ENVIRONMENT', '').lower() == 'local':
         asyncio.run(configure_local_webhooks())
 
-    ServerManager.close_redis()
-    ServerManager.run_redis()
-    
     if use_gunicorn:
         ServerManager.close_gunicorn()
         ServerManager.run_gunicorn(app="main")

@@ -33,7 +33,7 @@ class Agent:
         self.filter = MessageFilter.from_config(filter_config)
         self.action = ActionManager.from_config(action_config, messaging_service)
         self.memory = MemoryManager.from_config(memory_config, database_service, room)
-        self.concurrency = ConcurrencyManager.from_config(task_config, room.id)
+        self.concurrency = ConcurrencyManager.from_config(room.id)
 
     @classmethod
     def from_config(cls, config: Config, context: BaseContextManager) -> "Agent":

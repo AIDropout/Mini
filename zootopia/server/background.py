@@ -9,13 +9,13 @@ from zootopia.core.schema import (
     RespondTask, MessageTableModel, Tables, TaskType, RemindTask, ReviveTask
 )
 from zootopia.agent.agent import Agent
-from zootopia.server.redis import redis, Redis
-from config.config import config
+from zootopia.server.redis import redis_client
+from config.config import Config
 
 class BackgroundRunner:
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Config):
         self.config = config
-        self.redis: Redis = redis
+        self.redis = redis_client
 
     def _log_diagnosis(self):
         now = datetime.now()

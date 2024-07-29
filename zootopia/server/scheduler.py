@@ -15,12 +15,12 @@ from zootopia.core.schema import (
     ReviveTask,
 )
 from zootopia.agent.agent import Agent
-from zootopia.server.redis import redis, Redis
+from zootopia.server.redis import redis_client
 from config.config import config, Config
 
 
 class TaskScheduler:
-    def __init__(self, config: Config, redis_client: Redis):
+    def __init__(self, config: Config):
         self.config = config
         self.redis = redis_client
 
