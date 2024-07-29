@@ -6,11 +6,17 @@ from typing import Dict, Any
 from zootopia.core.logger import logger
 from zootopia.context import MessageContextManager, CronContextManager
 from zootopia.core.schema import (
-    RespondTask, MessageTableModel, Tables, TaskType, RemindTask, ReviveTask
+    RespondTask,
+    MessageTableModel,
+    Tables,
+    TaskType,
+    RemindTask,
+    ReviveTask,
 )
 from zootopia.agent.agent import Agent
 from zootopia.server.redis import redis_client
 from config.config import Config
+
 
 class BackgroundRunner:
     def __init__(self, config: Config):
@@ -48,7 +54,7 @@ class BackgroundRunner:
                     data = json.loads(t)
                     task_type = data["type"]
                     logger.info(f"🟢 Processing scheduled task: {task_type}")
-                    
+
                     context, task = self.create_task_and_context(data)
                     if task is None or context is None:
                         self.redis.zrem("scheduled", t)
