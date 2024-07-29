@@ -13,7 +13,9 @@ from config.config import config
 from zootopia.platform.telegram.telegram import Telegram
 from zootopia.platform.sms.bird import BirdSMSProvider
 from zootopia.core.logger import logger
-from zootopia.core.routers import cron_router, message_router, signup_router
+from zootopia.core.routers import signup_router, message_router, cron_router
+
+from zootopia.server.background import process_scheduled_responses
 
 class ServerManager:
     @classmethod
@@ -70,7 +72,6 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 async def configure_local_webhooks() -> None:
-    print("hello world")
     ngrok_connection = ngrok.connect(addr="127.0.0.1:8000", proto="http")
     logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
 
@@ -90,47 +91,38 @@ async def configure_local_webhooks() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Before
+    background_task = asyncio.create_task(process_scheduled_responses())
+
     yield
     # After
     ngrok.kill()
+    # Cleanup: Cancel the background task when the app is shutting down
+    background_task.cancel()
+    try:
+        await background_task
+    except asyncio.CancelledError:
+        pass
 
-def create_app() -> FastAPI:
-    app = FastAPI(lifespan=lifespan)
-    app.add_middleware(LoggingMiddleware)
-    app.include_router(message_router)
-    app.include_router(signup_router)
-    app.include_router(cron_router)
-    return app
-
-app = create_app()
-
-def run_server(use_gunicorn: bool = False, app_module: str = "main") -> None:
-    if use_gunicorn:
-        ServerManager.close_redis()
-        ServerManager.close_gunicorn()
-        ServerManager.run_redis()
-        ServerManager.run_gunicorn(app=app_module)
-    else:
-        uvicorn.run(f"{app_module}:app", host="127.0.0.1", port=8000, reload=True)
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(LoggingMiddleware)
+app.include_router(message_router)
+app.include_router(signup_router)
+app.include_router(cron_router)
 
 if __name__ == "__main__":
-    env = os.getenv('ENVIRONMENT', '').lower()
-    use_gunicorn = env != 'production'
+    use_gunicorn = False
 
-    if env != 'production':
+    if os.getenv('ENVIRONMENT', '').lower() == 'local':
         asyncio.run(configure_local_webhooks())
 
+    ServerManager.close_redis()
+    ServerManager.run_redis()
+    
     if use_gunicorn:
-        ServerManager.close_redis()
         ServerManager.close_gunicorn()
-        ServerManager.run_redis()
         ServerManager.run_gunicorn(app="main")
     else:
-        # For production, you'd run this script with:
-        # gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
-        print("For production, run: gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app")
-        # uvicorn.run(f"main:app", host="127.0.0.1", port=8000, reload=True)
+        uvicorn.run(f"main:app", host="127.0.0.1", port=8000, reload=True)
 
     # gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
     # ps aux | grep gunicorn

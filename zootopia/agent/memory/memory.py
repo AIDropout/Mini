@@ -22,7 +22,6 @@ class MemoryManager:
             logger.info(f"🟢 Successfully stored '{message.content}', from_user {message.from_user}")
         except Exception as e:
             raise MessageInsertError(room_id=self.room_id, original_error=e, message=message_obj.content)
-            
     def get_recent_messages(self, count: int = 10) -> List[Dict[str, str]]:
         """
         Get the most recent messages for a given room ID.

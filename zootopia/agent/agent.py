@@ -1,4 +1,4 @@
-from zootopia.core.schema import ActionType, RoomTableModel, ZootopiaMessage, ChatTask, RespondChatTask, ReviveChatTask, ScheduledChatTask, MessageTableModel
+from zootopia.core.schema import ActionType, RoomTableModel, ZootopiaMessage, Task, RespondTask, ReviveTask, Task, MessageTableModel
 from config.config import Config, ActionManagerConfig, MemoryManagerConfig, FilterConfig, ConcurrencyManagerConfig
 from zootopia.platform.platform import MessageProviderBase
 from zootopia.storage.database.supabase import SupabaseDB
@@ -48,19 +48,31 @@ class Agent:
             agent_prompt=context.agent.prompt
         )
 
-    async def handle_chat_task(self, task: ChatTask) -> bool:
+    async def handle_chat_task(self, task: Task) -> bool:
         logger.info(f"🟢 {task}")
         await self.concurrency.start_new()
 
         try:
+            # Get recent messages
             recent_messages = self.memory.get_recent_messages(count=task.recent_message_count)
             
-            if isinstance(task, RespondChatTask):
+            # If responding to user, store user message
+            if isinstance(task, RespondTask):
                 self.memory.store_message(MessageTableModel(
                     room_id=self.room.id,
                     from_user=True,
                     content=task.user_message.content
                 ))
+
+                possible_actions = [
+                    ActionType.MESSAGE,
+                    ActionType.RECALL,
+                    ActionType.WEB_SEARCH,
+                ]
+
+                # TODO: Detect intent of message 
+                # - Save event to schedules table and add it to Redis scheduler
+
                 recent_messages.append({"role": "user", "content": task.user_message.content})
 
             system_prompt_template = """

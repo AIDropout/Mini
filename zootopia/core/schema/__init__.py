@@ -1,5 +1,5 @@
 from .action import ActionType, Action, ActionResult
-from .table import Tables, TableModel, AgentTableModel, UserTableModel, RoomTableModel, MessageTableModel
+from .table import Tables, TableModel, AgentTableModel, UserTableModel, RoomTableModel, MessageTableModel, TaskTableModel
 from .message import (
     MessageProvider,
     MessageType,
@@ -23,7 +23,7 @@ from .message import (
     _TelegramVenue
 )
 from .request import SignupRequestBase
-from .task import ChatTask, ChatTaskType, ReviveChatTask, RespondChatTask, ScheduledChatTask
+from .task import Task, TaskType, ReviveTask, RespondTask, RemindTask
 
 
 __all__ = [
@@ -36,7 +36,8 @@ __all__ = [
     'AgentTableModel',
     'UserTableModel',
     'RoomTableModel',
-    'MessageTableModel'
+    'MessageTableModel',
+    'TaskTableModel',
 
     'MessageProvider',
     'MessageType',
@@ -61,9 +62,9 @@ __all__ = [
 
     'SignupRequestBase',
 
-    'ChatTask',
-    'ChatTaskType',
-    'ReviveChatTask', 
-    'RespondChatTask', 
-    'ScheduledChatTask'
+    'Task',
+    'TaskType',
+    'ReviveTask', 
+    'RespondTask', 
+    'RemindTask',
 ]

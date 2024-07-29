@@ -1,24 +1,17 @@
-from fastapi import APIRouter, Request, HTTPException
-from config.config import config
-from zootopia.agent.agent import Agent
-from zootopia.context import MessageContextManager
+from fastapi import APIRouter, Request, BackgroundTasks, HTTPException
 from zootopia.core.logger import logger
-from zootopia.core.schema import RespondChatTask
+from zootopia.server.background import schedule_respond
 
 router = APIRouter()
 
 
 @router.post("/message")
-async def message_webhook(request: Request):
-    try: 
+async def message_webhook(request: Request, background_tasks: BackgroundTasks):
+    try:
         request_body = await request.json()
-        logger.info(f"Received request body: {request_body}")
-
-        context = MessageContextManager(config, request_body)
-        task = RespondChatTask(context.message)
-        agent = Agent.from_config(config, context)
-
-        await agent.handle_chat_task(task)
+        logger.info(f"]Received request body: {request_body}")
+        background_tasks.add_task(schedule_respond, request_body)
+        return {"status": "Message received and processing scheduled"}
     except Exception as e:
         logger.exception("Error in message_webhook")
         raise HTTPException(status_code=500, detail=str(e))

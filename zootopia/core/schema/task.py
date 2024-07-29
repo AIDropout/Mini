@@ -3,19 +3,19 @@ from typing import ClassVar
 from zootopia.core.schema import ZootopiaMessage
 from enum import Enum
 
-class ChatTaskType(Enum):
+class TaskType(Enum):
     RESPOND = "respond"
+    REMIND = "remind"
     REVIVE = "revive"
-    SCHEDULED = "scheduled"
 
 @dataclass
-class ChatTask():
+class Task():
     recent_message_count: ClassVar[int] = 10
 
 @dataclass
-class RespondChatTask(ChatTask):
+class RespondTask(Task):
     user_message: ZootopiaMessage
-    task: ChatTaskType = ChatTaskType.RESPOND
+    type: TaskType = TaskType.RESPOND
     instructions: str = "Respond to the user via a short text"
     recent_message_count: ClassVar[int] = 10
 
@@ -28,10 +28,29 @@ class RespondChatTask(ChatTask):
                 f"  Message: {self.message}\n"
                 f"  Instructions: {self.instructions}\n"
                 f"  Recent message count: {self.recent_message_count}\n")
+    
 
 @dataclass
-class ReviveChatTask(ChatTask):
-    task: ChatTaskType = ChatTaskType.REVIVE
+class RemindTask(Task):
+    name: str
+    type: TaskType = TaskType.REMIND
+    instructions: str = "This event was scheduled for this time. Send a message based on it."
+    recent_message_count: ClassVar[int] = 5
+
+    @property
+    def message(self) -> str:
+        return "Executing remind task"
+
+    def __str__(self) -> str:
+        return (f"\n\nRemindTask:\n"
+                f"  Message: {self.message}\n"
+                f"  Instructions: {self.instructions}\n"
+                f"  Recent message count: {self.recent_message_count}\n")
+
+
+@dataclass
+class ReviveTask(Task):
+    type: TaskType = TaskType.REVIVE
     instructions: str = "Re-engage the chat since it has been silent for a while."
     recent_message_count: ClassVar[int] = 5
 
@@ -41,22 +60,6 @@ class ReviveChatTask(ChatTask):
 
     def __str__(self) -> str:
         return (f"\n\nReviveTask:\n"
-                f"  Message: {self.message}\n"
-                f"  Instructions: {self.instructions}\n"
-                f"  Recent message count: {self.recent_message_count}\n")
-
-@dataclass
-class ScheduledChatTask(ChatTask):
-    task: ChatTaskType = ChatTaskType.SCHEDULED
-    instructions: str = "This event was scheduled for this time. Send a message based on it."
-    recent_message_count: ClassVar[int] = 5
-
-    @property
-    def message(self) -> str:
-        return "Executing scheduled task"
-
-    def __str__(self) -> str:
-        return (f"\n\nScheduledTask:\n"
                 f"  Message: {self.message}\n"
                 f"  Instructions: {self.instructions}\n"
                 f"  Recent message count: {self.recent_message_count}\n")

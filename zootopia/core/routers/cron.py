@@ -5,7 +5,7 @@ from zootopia.context import CronContextManager
 from zootopia.core.logger import logger
 from zootopia.storage.database.supabase import SupabaseDB
 from datetime import datetime, timedelta, timezone
-from zootopia.core.schema import Tables, ReviveChatTask
+from zootopia.core.schema import Tables, ReviveTask
 import traceback
 import random
 from datetime import datetime, timedelta
@@ -16,7 +16,7 @@ router = APIRouter()
 async def process_send(agent_id: int, user_id: int, room_id: int):
     context = CronContextManager(config, agent_id, user_id, room_id)
     agent = Agent.from_config(config, context)
-    task = ReviveChatTask()
+    task = ReviveTask()
     await agent.handle_chat_task(task)
 
 def should_send_proactive_message(
@@ -59,7 +59,7 @@ async def cron_webhook(
     
     Sends a message based on a room's time since last message + proactivity of that particular room.
 
-    TODO: Send messages for scheduled events
+    TODO: Send messages for remind events
     
     """
     try: 

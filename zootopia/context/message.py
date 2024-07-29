@@ -1,6 +1,6 @@
 from zootopia.platform.sms.bird import BirdSMSProvider
 from zootopia.platform.telegram.telegram import Telegram
-from zootopia.core.schema import ZootopiaMessage, MessageProvider, Tables, UserTableModel, ChatTaskType
+from zootopia.core.schema import ZootopiaMessage, MessageProvider, Tables, UserTableModel, TaskType
 from zootopia.core.exceptions import AgentNotFoundError
 from zootopia.context import BaseContextManager
 from zootopia.platform.platform import MessageProviderBase
@@ -10,7 +10,7 @@ class MessageContextManager(BaseContextManager):
     def __init__(self, config: Config, request_body: dict):
         super().__init__(config)
         self.messaging_service = self.get_messaging_service(request_body)
-        self.message = self.messaging_service.receive_message(request_body)
+        self.message: ZootopiaMessage = self.messaging_service.receive_message(request_body)
         self.user, self.agent = self._get_user_and_agent_from_db(self.message)
         self.room = self._get_or_create_room(self.user, self.agent)
 
