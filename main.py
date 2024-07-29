@@ -15,7 +15,7 @@ from zootopia.platform.sms.bird import BirdSMSProvider
 from zootopia.core.logger import logger
 from zootopia.core.routers import signup_router, message_router, cron_router
 
-from zootopia.server.background import process_scheduled_responses
+from zootopia.server.background import BackgroundRunner
 
 class ServerManager:
     @classmethod
@@ -91,7 +91,8 @@ async def configure_local_webhooks() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    background_task = asyncio.create_task(process_scheduled_responses())
+    runner = BackgroundRunner(config)
+    background_task = asyncio.create_task(runner.run())
 
     yield
     # After
