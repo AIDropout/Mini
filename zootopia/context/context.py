@@ -1,5 +1,5 @@
 from typing import Optional
-from config.config import Config, SupabaseConfig, MessagingConfig
+from config.config import config, Config, SupabaseConfig, MessagingConfig
 from zootopia.core.schema import AgentTableModel, RoomTableModel, UserTableModel, Tables
 from zootopia.storage.database.supabase import SupabaseDB
 from zootopia.platform.platform import MessageProviderBase

@@ -1,3 +1,5 @@
+"""Initialized by main:app"""
+
 from redis import ConnectionPool, Redis
 from zootopia.core.logger import logger
 from config.config import config
@@ -22,6 +24,16 @@ class RedisManager:
         if self.pool:
             self.pool.disconnect()
             logger.info("Redis connection pool closed")
+
+    def check_connection(self) -> bool:
+        try:
+            client = self.get_client()
+            client.ping()
+            logger.info("Redis connection successful")
+            return True
+        except Exception as e:
+            logger.error(f"Redis connection failed: {str(e)}")
+            return False
 
 
 redis_manager = RedisManager()

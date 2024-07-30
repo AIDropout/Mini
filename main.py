@@ -59,6 +59,7 @@ async def configure_local_webhooks() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    redis_manager.initialize()
     yield
     ngrok.kill()
     redis_manager.close()
@@ -71,14 +72,17 @@ app.include_router(signup_router)
 app.include_router(cron_router)
 
 """
-Gunicorn is used in local to test concurrency manager (since multiple workers)
-To view ports run: ps aux | grep gunicorn
-To kill gunicorn run: pkill -f gunicorn
+Gunicorn used to simulate prod env (since multiple workers)
+- To view ports run: ps aux | grep gunicorn
+- To kill gunicorn run: pkill -f gunicorn
 
 Celery
-View celery tasks via Flower: celery -A zootopia.server.celery.celery flower
+- celery -A zootopia.server.celery.celery worker --loglevel=info -n worker1@%h
 
-celery -A zootopia.server.celery.celery worker --loglevel=info -n worker1@%h
+Flower
+- export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/ZOOTOPIA/ZOOTOPIA
+- View celery tasks via Flower: celery -A zootopia.server.celery.celery 
+flower
 
 TODO: add celery run command to prod
 """

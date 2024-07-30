@@ -4,21 +4,36 @@ from zootopia.core.schema import RespondTask, RemindTask, ReviveTask, TaskType
 from zootopia.agent.agent import Agent
 from config.config import config
 from zootopia.core.logger import logger
-import json
 import asyncio
+from datetime import datetime
+
+"""
+Database
+
+scheduled
 
 
-@shared_task(bind=True, max_retries=3)
+
+created_at
+run_at
+is_complete
+type - respond, remind, revive
+context
+
+
+
+
+"""
+
+
+
+
+@shared_task(bind=True, max_retries=2)
 def process_task(self, data: dict):
+    logger.info(f"🔴🔴🔴 running at {datetime.now()}")
     try:
-        # If data is bytes, decode it to a dictionary
-        if isinstance(data, bytes):
-            data = json.loads(data.decode("utf-8"))
-        elif not isinstance(data, dict):
-            raise ValueError(f"Expected dict or bytes, got {type(data)}")
-
         context, task = create_task_and_context(data)
-        if task is None or context is None:
+        if not context or not task:
             logger.warning(f"Invalid task data: {data}")
             return
 

@@ -1,5 +1,5 @@
 from .action import ActionType, Action, ActionResult
-from .table import Tables, TableModel, AgentTableModel, UserTableModel, RoomTableModel, MessageTableModel, TaskTableModel
+from .table import Tables, TableModel, AgentTableModel, UserTableModel, RoomTableModel, MessageTableModel, ScheduleTableModel
 from .message import (
     MessageProvider,
     MessageType,
@@ -37,7 +37,7 @@ __all__ = [
     'UserTableModel',
     'RoomTableModel',
     'MessageTableModel',
-    'TaskTableModel',
+    'ScheduleTableModel',
 
     'MessageProvider',
     'MessageType',
