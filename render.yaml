@@ -4,7 +4,8 @@ services:
     region: ohio
     runtime: python
     buildCommand: "pip install uv && uv pip install -r requirements.txt"
-    startCommand: "celery --app tasks worker --loglevel info --concurrency 4"
+    startCommand: "celery -A zootopia.server.celery.celery worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-2} -n worker@%h"
+
     autoDeploy: false
     envVars:
       - key: REDIS_URL
