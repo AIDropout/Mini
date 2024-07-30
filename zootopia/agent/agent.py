@@ -22,7 +22,6 @@ from zootopia.context import BaseContextManager
 from zootopia.agent.filter import MessageFilter, FilterInput, FilterResult
 from zootopia.agent.action import ActionManager
 from zootopia.agent.memory import MemoryManager
-from zootopia.server.concurrency import ConcurrencyManager
 
 from zootopia.core.logger import logger
 from zootopia.core.utils.utils import get_current_time_readable
@@ -45,7 +44,6 @@ class Agent:
         self.filter = MessageFilter.from_config(filter_config)
         self.action = ActionManager.from_config(action_config, messaging_service)
         self.memory = MemoryManager.from_config(memory_config, database_service, room)
-        self.concurrency = ConcurrencyManager.from_config(room.id)
 
     @classmethod
     def from_config(cls, config: Config, context: BaseContextManager) -> "Agent":
@@ -56,13 +54,11 @@ class Agent:
             filter_config=config.BEHAVIORS_CONFIG.FILTER,
             action_config=config.BEHAVIORS_CONFIG.ACTION_MANAGER,
             memory_config=config.BEHAVIORS_CONFIG.MEMORY_MANAGER,
-            task_config=config.BEHAVIORS_CONFIG.CONCURRENCY_MANAGER,
             agent_prompt=context.agent.prompt,
         )
 
     async def handle_chat_task(self, task: Task) -> bool:
         logger.info(f"🟢 {task}")
-        await self.concurrency.start_new()
 
         try:
             # Get recent messages
@@ -101,7 +97,6 @@ class Agent:
             prompt_addition = ""
 
             for attempt in range(max_attempts):
-                await self.concurrency.verify_is_latest_request()
 
                 system_prompt = system_prompt_template.format(
                     agent_prompt=self.agent_prompt,
@@ -132,7 +127,6 @@ class Agent:
 
                 # If approved by filter, continue sending and storing
                 if filter_result.approved:
-                    await self.concurrency.verify_is_latest_request()
                     await self.action.send_message(response_text)
                     self.memory.store_message(
                         MessageTableModel(

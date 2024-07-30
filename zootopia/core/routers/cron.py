@@ -9,7 +9,7 @@ from zootopia.core.schema import Tables, ReviveTask
 import traceback
 import random
 from datetime import datetime, timedelta
-from zootopia.server.auth import verify_api_key
+from zootopia.core.routers.auth import verify_api_key
 
 router = APIRouter()
 
