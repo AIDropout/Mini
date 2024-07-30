@@ -7,9 +7,9 @@ services:
     startCommand: "celery --app tasks worker --loglevel info --concurrency 4"
     autoDeploy: false
     envVars:
-      - key: CELERY_BROKER_URL
+      - key: REDIS_URL
         fromService:
-          name: celery-redis
+          name: redis
           type: redis
           property: connectionString
   - type: web
@@ -20,9 +20,9 @@ services:
     startCommand: "gunicorn -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT --timeout 120 -w 4"
     autoDeploy: false
     envVars:
-      - key: CELERY_BROKER_URL
+      - key: REDIS_URL
         fromService:
-          name: celery-redis
+          name: redis
           type: redis
           property: connectionString
   - type: web
@@ -34,13 +34,13 @@ services:
     startCommand: "celery flower --app tasks --loglevel info"
     autoDeploy: false
     envVars:
-      - key: CELERY_BROKER_URL
+      - key: REDIS_URL
         fromService:
           type: redis
-          name: celery-redis
+          name: redis
           property: connectionString
   - type: redis
-    name: celery-redis
+    name: redis
     region: ohio
     plan: free 
     maxmemoryPolicy: noeviction # recommended policy for queues
