@@ -5,14 +5,7 @@ services:
     runtime: python
     buildCommand: "pip install uv && uv pip install -r requirements.txt"
     startCommand: "celery -A zootopia.server.celery.celery worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-2} -n worker@%h"
-
     autoDeploy: false
-    envVars:
-      - key: REDIS_URL
-        fromService:
-          name: redis
-          type: redis
-          property: connectionString
   - type: web
     name: zootopia
     region: ohio
@@ -20,12 +13,6 @@ services:
     buildCommand: "pip install uv && uv pip install -r requirements.txt"
     startCommand: "gunicorn -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT --timeout 120 -w 4"
     autoDeploy: false
-    envVars:
-      - key: REDIS_URL
-        fromService:
-          name: redis
-          type: redis
-          property: connectionString
   - type: web
     name: flower
     region: ohio
@@ -34,12 +21,6 @@ services:
     buildCommand: "pip install uv && uv pip install -r requirements.txt"
     startCommand: "celery flower --app tasks --loglevel info"
     autoDeploy: false
-    envVars:
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: redis
-          property: connectionString
   - type: redis
     name: redis
     region: ohio
