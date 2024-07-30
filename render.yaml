@@ -14,7 +14,7 @@ services:
           type: redis
           property: connectionString
   - type: web
-    name: app
+    name: zootopia
     region: ohio
     runtime: python
     buildCommand: "pip install uv && uv pip install -r requirements.txt"
