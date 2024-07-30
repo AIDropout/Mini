@@ -16,8 +16,8 @@ services:
     name: app
     region: ohio
     runtime: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    buildCommand: "pip install uv && uv pip install -r requirements.txt"
+    startCommand: "gunicorn -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT --timeout 120 -w 4"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL
@@ -30,7 +30,7 @@ services:
     region: ohio
     plan: free
     runtime: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install uv && uv pip install -r requirements.txt"
     startCommand: "celery flower --app tasks --loglevel info"
     autoDeploy: false
     envVars:
@@ -42,6 +42,6 @@ services:
   - type: redis
     name: celery-redis
     region: ohio
-    plan: starter # we choose a plan with persistence to ensure tasks are not lost upon restart
+    plan: free 
     maxmemoryPolicy: noeviction # recommended policy for queues
     ipAllowList: [] # only allow internal connections
