@@ -42,7 +42,7 @@ class Tables(Enum):
     SCHEDULE__created_at = "created_at"
     SCHEDULE__run_at = "run_at"
     SCHEDULE__type = "type"  # respond, remind, revive
-    SCHEDULE__context = "context"
+    SCHEDULE__info = "info"
     SCHEDULE__complete = "complete"
 
 
@@ -100,7 +100,7 @@ class ScheduleTableModel(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
     run_at: datetime
     type: str = Field(default="respond")  # respond, remind, revive
-    context: Optional[str] = Field(default=None)
+    info: Optional[str] = Field(default=None)
     complete: bool = Field(default=False)
 
 

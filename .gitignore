@@ -17,3 +17,9 @@ ignore
 app.log
 
 temp.py
+
+# Ignore Celery-related files
+celery@*
+
+# Ignore Redis dump file
+dump.rdb

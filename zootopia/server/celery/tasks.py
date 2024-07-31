@@ -1,28 +1,22 @@
 from celery import shared_task
-from zootopia.context import MessageContextManager, CronContextManager
+from zootopia.controller.context import MessageContextManager, CronContextManager
 from zootopia.core.schema import RespondTask, RemindTask, ReviveTask, TaskType
-from zootopia.agent.agent import Agent
-from config.config import config
+from zootopia.controller.agent.agent import Agent
+from zootopia.core.config import config
 from zootopia.core.logger import logger
 import asyncio
 from datetime import datetime
 
 """
-Database
-
-scheduled
-
-
+scheduled table
 
 created_at
 run_at
 is_complete
 type - respond, remind, revive
-context
+data - 
 
 """
-
-
 
 
 @shared_task(bind=True, max_retries=2)
@@ -34,7 +28,7 @@ def process_task(self, data: dict):
             logger.warning(f"Invalid task data: {data}")
             return
 
-        agent = Agent.from_config(config, context)
+        agent = Agent.from_context(context)
         success = asyncio.run(agent.handle_chat_task(task))
 
         if not success:
@@ -47,10 +41,10 @@ def process_task(self, data: dict):
 def create_task_and_context(data: dict):
     task_type = data["type"]
     if task_type == TaskType.RESPOND.value:
-        context = MessageContextManager(config, data["original_request"])
+        context = MessageContextManager(data["original_request"])
         task = RespondTask(context.message)
     elif task_type == TaskType.REMIND.value:
-        context = CronContextManager(config, data["room_id"])
+        context = CronContextManager(data["room_id"])
         task = RemindTask()
     elif task_type == TaskType.REVIVE.value:
         context = None

@@ -30,7 +30,8 @@ Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` 
 ### Behaviors
 - [x] Proactive messages
 - [x] Filtering messages
-- [x] Human-like responsiveness (or unresponsiveness... 😜)
+- [x] Reading multiple rapid messages before responding
+- [x] Human-like responsiveness (& unresponsiveness... 😜)
 - [ ] Scheduled messages
 - [ ] User preference tracking
 - [ ] Human-like memory

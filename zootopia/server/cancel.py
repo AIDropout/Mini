@@ -1,5 +1,5 @@
 from zootopia.server.celery import celery_app
-from zootopia.server.redis import redis_manager
+from zootopia.server.redis.redis import redis_manager
 from zootopia.core.logger import logger
 
 def cancel_existing_task(room_id: str) -> bool:

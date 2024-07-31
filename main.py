@@ -5,12 +5,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from pyngrok import ngrok
 from starlette.middleware.base import BaseHTTPMiddleware
-from config.config import config
-from zootopia.platform.telegram.telegram import Telegram
-from zootopia.platform.sms.bird import BirdSMSProvider
+
+from zootopia.api import router as api_router
+from zootopia.core.config import config
 from zootopia.core.logger import logger
-from zootopia.core.routers import signup_router, message_router, cron_router
-from zootopia.server.redis import redis_manager
+
+from zootopia.services import Telegram, BirdSMSProvider
+from zootopia.server.redis.redis import redis_manager
 
 
 LOCAL_URL = "127.0.0.1"
@@ -43,8 +44,8 @@ async def configure_local_webhooks() -> None:
     logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
 
     webhook = f"{ngrok_connection.public_url}/message"
-    _telegram = Telegram.from_config(config.MESSAGING_CONFIG.TELEGRAM)
-    _bird = BirdSMSProvider.from_config(config.MESSAGING_CONFIG.BIRD)
+    _telegram = Telegram()
+    _bird = BirdSMSProvider()
 
     if bird_dev_channel_id := os.getenv("BIRD_DEV_CHANNEL_ID"):
         _bird.set_channel_id(bird_dev_channel_id)
@@ -67,9 +68,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(LoggingMiddleware)
-app.include_router(message_router)
-app.include_router(signup_router)
-app.include_router(cron_router)
+app.include_router(api_router)
+
 
 """
 Gunicorn used to simulate prod env (since multiple workers)

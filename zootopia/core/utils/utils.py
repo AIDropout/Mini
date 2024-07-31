@@ -1,24 +1,9 @@
 import json
 import re
 from datetime import datetime
-from config.config import config
-
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel, ValidationError
-
-
-def load_yaml_config(
-    config_path: str,
-    config_type: BaseModel,
-) -> BaseModel:
-    """Loads configuration from a YAML file."""
-    with open(config_path, "r", encoding="utf-8") as config_file:
-        config_data = yaml.safe_load(config_file)
-    try:
-        return config_type(**config_data)
-    except ValidationError as e:
-        raise ValueError(f"Error parsing configuration: {e}") from e
 
 
 def render_jinja_template(template_name: str, template_dir: str, **kwargs) -> str:
