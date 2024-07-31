@@ -25,15 +25,19 @@ class RedisManager:
             self.pool.disconnect()
             logger.info("Redis connection pool closed")
 
-    def check_connection(self) -> bool:
-        try:
-            client = self.get_client()
-            client.ping()
-            logger.info("Redis connection successful")
-            return True
-        except Exception as e:
-            logger.error(f"Redis connection failed: {str(e)}")
-            return False
+    def get_scheduled_task(self, room_id: str) -> str:
+        """Get the scheduled task ID for a given room."""
+        return self.get_client().get(f"scheduled_task:{room_id}")
+
+    def delete_scheduled_task(self, room_id: str) -> None:
+        """Delete the scheduled task for a given room."""
+        self.get_client().delete(f"scheduled_task:{room_id}")
+
+    def set_scheduled_task(self, room_id: str, task_id: str, expiry: int) -> None:
+        """Set a scheduled task for a given room with an expiry time."""
+        client = self.get_client()
+        client.set(f"scheduled_task:{room_id}", task_id)
+        client.expire(f"scheduled_task:{room_id}", expiry)
 
 
 redis_manager = RedisManager()

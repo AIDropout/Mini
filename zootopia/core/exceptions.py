@@ -54,7 +54,7 @@ class MessageInsertError(Exception):
 
 
 class RequestCanceledException(Exception):
-    def __init__(self, request_id: int, room_id: int):
+    def __init__(self, room_id: int):
         super().__init__(
-            f"🔴 Request '{request_id} in room '{room_id}' canceled due to new task"
+            f"🟠 Previous request in room '{room_id}' canceled due to this task"
         )

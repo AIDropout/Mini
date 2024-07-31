@@ -20,9 +20,6 @@ is_complete
 type - respond, remind, revive
 context
 
-
-
-
 """
 
 

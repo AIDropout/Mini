@@ -77,7 +77,7 @@ Gunicorn used to simulate prod env (since multiple workers)
 - To kill gunicorn run: pkill -f gunicorn
 
 Celery
-- celery -A zootopia.server.celery.celery worker --loglevel=info -n worker1@%h
+- celery -A zootopia.server.celery.celery worker -n worker1@%h
 
 Flower
 - export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/ZOOTOPIA/ZOOTOPIA
@@ -99,7 +99,6 @@ if __name__ == "__main__":
         "-A",
         "zootopia.server.celery.celery",
         "worker",
-        "--loglevel=info",
         "-n",
         "worker1@%h",
     ]
