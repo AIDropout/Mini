@@ -19,7 +19,7 @@ class FilterInput():
 @dataclass
 class FilterResult:
     from_user: bool
-    new_message: str
+    analyzed_message: str
     approved: bool
     prompt_addition: str = ""
 
@@ -28,7 +28,7 @@ class FilterResult:
         if self.approved:
             return f"🟢 LLM response APPROVED by filter"
         else:
-            truncated_message = self.new_message[:50] + "..." if len(self.new_message) > 50 else self.new_message
+            truncated_message = self.analyzed_message[:50] + "..." if len(self.analyzed_message) > 50 else self.analyzed_message
             truncated_addition = self.prompt_addition[:50] + "..." if len(self.prompt_addition) > 50 else self.prompt_addition
             return f"🔴 LLM response [{truncated_message}] FAILED with prompt addition [{truncated_addition}]"
         
@@ -80,9 +80,9 @@ class MessageFilter:
         
         try:
             result = json.loads(response)
-            return FilterResult(from_user=False, new_message=input.new_message, approved=result['approved'], prompt_addition=result.get('prompt_addition', ""))
+            return FilterResult(from_user=False, analyzed_message=input.new_message, approved=result['approved'], prompt_addition=result.get('prompt_addition', ""))
         except json.JSONDecodeError:
-            return FilterResult(from_user=False, new_message=input.new_message, approved=False, prompt_addition="Error parsing filter response. Please regenerate.")
+            return FilterResult(from_user=False, analyzed_message=input.new_message, approved=False, prompt_addition="Error parsing filter response. Please regenerate.")
     
 
     

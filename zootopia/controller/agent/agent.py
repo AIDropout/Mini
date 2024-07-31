@@ -1,7 +1,5 @@
 from zootopia.core.schema import (
-    ActionType,
     RoomTableModel,
-    ZootopiaMessage,
     Task,
     RespondTask,
     ReviveTask,
@@ -14,7 +12,7 @@ from zootopia.database import SupabaseDB
 
 from zootopia.core.exceptions import RequestCanceledException
 from zootopia.controller.context import BaseContextManager
-from zootopia.controller.agent.filter import MessageFilter, FilterInput, FilterResult
+from zootopia.controller.agent.filter import MessageFilter, FilterInput
 from zootopia.controller.agent.action import ActionManager
 from zootopia.controller.agent.memory import MemoryManager
 
@@ -57,19 +55,21 @@ class Agent:
 
             # If responding to user, store user message
             if isinstance(task, RespondTask):
+                msg = task.user_message.content
+
                 self.memory.store_message(
                     MessageTableModel(
                         room_id=self.room.id,
                         from_user=True,
-                        content=task.user_message.content,
+                        content=msg,
                     )
                 )
 
-                # TODO: Detect intent of message
-                # - Save event to schedules table and add it to Redis scheduler
+                # Save event to schedules table and add it to Redis scheduler
+                # self.action.detect_intent(text=msg)
 
                 recent_messages.append(
-                    {"role": "user", "content": task.user_message.content}
+                    {"role": "user", "content": msg}
                 )
 
             system_prompt_template = """
@@ -79,6 +79,8 @@ class Agent:
 
             It is now {current_time}
             {prompt_addition}
+
+            You can send multiple messages by separating messages by a pipe symbol. Only if needed
             """
 
             # A separate LLM checks to see if LLM response meets criteria
@@ -116,7 +118,7 @@ class Agent:
 
                 # If approved by filter, continue sending and storing
                 if filter_result.approved:
-                    await self.action.send_message(response_text)
+                    await self.action.handle_message_send(response_text)
                     self.memory.store_message(
                         MessageTableModel(
                             room_id=self.room.id, from_user=False, content=response_text

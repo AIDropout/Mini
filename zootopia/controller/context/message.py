@@ -31,7 +31,7 @@ class MessageContextManager(BaseContextManager):
         elif "update_id" in request_body:
             return Telegram()
         else:
-            raise NotImplementedError("Messaging platform not implemented yet.")
+            return BirdSMSProvider()
 
     def _get_user_and_agent_from_db(self, message: ZootopiaMessage):
         user = None

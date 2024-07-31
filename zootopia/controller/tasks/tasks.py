@@ -6,17 +6,7 @@ from zootopia.core.config import config
 from zootopia.core.logger import logger
 import asyncio
 from datetime import datetime
-
-"""
-scheduled table
-
-created_at
-run_at
-is_complete
-type - respond, remind, revive
-data - 
-
-"""
+from zootopia.server.cancel import cancel_existing_task
 
 
 @shared_task(bind=True, max_retries=2)
@@ -32,6 +22,8 @@ def process_task(self, data: dict):
         success = asyncio.run(agent.handle_chat_task(task))
 
         if not success:
+            cancel_existing_task(context.room.id)
+        else:
             raise Exception("Task processing failed")
     except Exception as exc:
         logger.error(f"Error processing task: {exc}")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
 from zootopia.core.logger import logger
-from zootopia.server.message_handler import handle_message
+from zootopia.controller.tasks.respond import handle_respond
 
 router = APIRouter()
 
@@ -11,7 +11,7 @@ async def message_webhook(
 ):
     try:
         request_body = await request.json()
-        handle_message(request_body)
+        handle_respond(request_body)
         return {"status": "Message received and processing scheduled"}
     except Exception as e:
         logger.exception("Error in message_webhook")

@@ -11,12 +11,12 @@ from zootopia.core.schema import (
     TaskType,
 )
 
-from zootopia.server.celery.tasks import process_task
+from zootopia.controller.tasks.tasks import process_task
 from zootopia.server.redis.redis import redis_manager
 from zootopia.server.cancel import cancel_existing_task
 
 
-def handle_message(request_body: dict):
+def handle_respond(request_body: dict):
     """This is called by /message endpoint.
 
     1. Inserts the user message

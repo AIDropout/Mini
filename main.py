@@ -80,8 +80,7 @@ Celery
 
 Flower
 - export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/ZOOTOPIA/ZOOTOPIA
-- View celery tasks via Flower: celery -A zootopia.server.celery.celery 
-flower
+- View celery tasks via Flower: celery -A zootopia.server.celery.celery flower
 
 TODO: add celery run command to prod
 """
