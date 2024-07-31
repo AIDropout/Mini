@@ -7,7 +7,6 @@ from pyngrok import ngrok
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from zootopia.api import router as api_router
-from zootopia.core.config import config
 from zootopia.core.logger import logger
 
 from zootopia.services import Telegram, BirdSMSProvider
@@ -18,7 +17,7 @@ LOCAL_URL = "127.0.0.1"
 PORT = 8000
 
 
-def stop_existing_servers():
+def stop_existing_processes():
     try:
         pids = subprocess.check_output(["lsof", "-t", f"-i:{PORT}"]).split()
         for pid in pids:
@@ -91,7 +90,7 @@ if __name__ == "__main__":
 
     asyncio.run(configure_local_webhooks())
 
-    stop_existing_servers()
+    stop_existing_processes()
 
     # Start Celery server
     celery_command = [
