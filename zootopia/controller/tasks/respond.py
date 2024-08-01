@@ -36,13 +36,13 @@ def handle_respond(request_body: dict):
 
         """Formulate and schedule response as a task"""
         scheduled_task_info = ScheduledTaskInfo(
-            task=RespondTask(room_id=context.room.id, user_message=context.message),
+            task=RespondTask(user_message=context.message, room_id=context.room.id),
             delay=delay,
             original_request=request_body,
         )
 
         TaskScheduler.schedule_task(
-            task_data=scheduled_task_info.to_dict(), delay=delay
+            task_data=scheduled_task_info.to_dict(), delay=delay, db=context.database
         )
 
     except Exception as e:

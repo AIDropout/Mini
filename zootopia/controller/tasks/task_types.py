@@ -10,9 +10,9 @@ from abc import ABC, abstractmethod
 
 @dataclass
 class BaseTask(ABC):
-    type: TaskType
-    room_id: int
-    instructions: str
+    room_id: ClassVar[int]
+    type: ClassVar[TaskType]
+    instructions: ClassVar[str]
     recent_message_count: ClassVar[int] = 10
 
     @property
@@ -33,8 +33,9 @@ class BaseTask(ABC):
 @dataclass
 class RespondTask(BaseTask):
     user_message: ZootopiaMessage
-    type: TaskType = TaskType.RESPOND
-    instructions: str = "Respond to the user via a short text"
+    room_id: int
+    type: ClassVar[TaskType] = TaskType.RESPOND
+    instructions: ClassVar[str] = "Respond to the user via a short text"
     recent_message_count: ClassVar[int] = 10
 
     @property
@@ -45,8 +46,8 @@ class RespondTask(BaseTask):
 @dataclass
 class RemindTask(BaseTask):
     name: str
-    type: TaskType = TaskType.REMIND
-    instructions: str = (
+    type: ClassVar[TaskType] = TaskType.REMIND
+    instructions: ClassVar[str] = (
         "This event was scheduled for this time. Send a message based on it."
     )
     recent_message_count: ClassVar[int] = 5
@@ -58,8 +59,9 @@ class RemindTask(BaseTask):
 
 @dataclass
 class ReviveTask(BaseTask):
-    type: TaskType = TaskType.REVIVE
-    instructions: str = "Re-engage the chat since it has been silent for a while."
+    room_id: int
+    type: ClassVar[TaskType] = TaskType.REVIVE
+    instructions: ClassVar[str] = "Re-engage the chat since it has been silent for a while."
     recent_message_count: ClassVar[int] = 5
 
     @property

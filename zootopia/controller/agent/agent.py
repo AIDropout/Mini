@@ -2,7 +2,7 @@ from zootopia.core.schema import (
     RoomTableModel,
     MessageTableModel,
 )
-from zootopia.controller.tasks.tasks import Task, RespondTask, ReviveTask, RemindTask
+from zootopia.controller.tasks.task_types import BaseTask, RespondTask, ReviveTask, RemindTask
 
 from zootopia.services import MessageProvider
 from zootopia.database import SupabaseDB
@@ -14,7 +14,7 @@ from zootopia.controller.agent.action import ActionManager
 from zootopia.controller.agent.memory import MemoryManager
 
 from zootopia.core.logger import logger
-from zootopia.core.utils.utils import get_current_time_readable
+from zootopia.utils.time_utils import get_current_time_readable
 
 
 class Agent:
@@ -24,6 +24,7 @@ class Agent:
         database_service: SupabaseDB,
         room: RoomTableModel,
         agent_prompt: str,
+        disable_filtering: bool = False,
     ) -> None:
         self.agent_prompt = agent_prompt
         self.room = room
@@ -31,17 +32,20 @@ class Agent:
         self.filter = MessageFilter()
         self.action = ActionManager(messaging_service)
         self.memory = MemoryManager(database_service, room)
+        self.disable_filtering = disable_filtering
+
 
     @classmethod
-    def from_context(cls, context: BaseContextManager) -> "Agent":
+    def from_context(cls, context: BaseContextManager, disable_filtering: bool = False) -> "Agent":
         return cls(
             messaging_service=context.messaging_service,
             database_service=context.database,
             room=context.room,
             agent_prompt=context.agent.prompt,
+            disable_filtering=disable_filtering, 
         )
 
-    async def handle_chat_task(self, task: Task) -> bool:
+    async def handle_chat_task(self, task: BaseTask) -> bool:
         logger.info(f"🟢 {task}")
 
         try:
@@ -76,8 +80,6 @@ class Agent:
 
             It is now {current_time}
             {prompt_addition}
-
-            You can send multiple messages by separating messages by a pipe symbol. Only if needed
             """
 
             # A separate LLM checks to see if LLM response meets criteria
@@ -102,14 +104,18 @@ class Agent:
                     recent_messages, system_prompt
                 )
 
-                filter_result = self.filter.verify(
-                    FilterInput(
-                        from_user=False,
-                        agent_prompt=self.agent_prompt,
-                        messages=recent_messages,
-                        new_message=response_text,
+                filter_result = None
+                if self.disable_filtering:
+                    filter_result = FilterInput(approved=True, message="Filtering disabled")
+                else:
+                    filter_result = self.filter.verify(
+                        FilterInput(
+                            from_user=False,
+                            agent_prompt=self.agent_prompt,
+                            messages=recent_messages,
+                            new_message=response_text,
+                        )
                     )
-                )
 
                 logger.info(filter_result.message)
 

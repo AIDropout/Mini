@@ -20,7 +20,7 @@ class TaskScheduler:
         If delay > 1 hour, schedule as a long-term task
         """
         if delay <= 3600:  # 1 hour in seconds
-            TaskScheduler().schedule_short_term_task(task_data, delay)
+            TaskScheduler(db).schedule_short_term_task(task_data, delay)
         else:
             if not db:
                 raise ValueError(

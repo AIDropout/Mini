@@ -13,7 +13,22 @@ from zootopia.server.cancel import cancel_existing_task
 def process_task(self, data: dict):
     logger.info(f"🔴🔴🔴 running at {datetime.now()}")
     try:
-        context, task = create_task_and_context(data)
+        context, task = None
+
+        task_type = data["type"]
+        if task_type == TaskType.RESPOND.value:
+            context = MessageContextManager(request_body=data["original_request"])
+            task = RespondTask(user_message=context.message, room_id=data["room_id"])
+        elif task_type == TaskType.REMIND.value:
+            context = CronContextManager(data["room_id"])
+            task = RemindTask()
+        elif task_type == TaskType.REVIVE.value:
+            context = CronContextManager(data["room_id"])
+            task = ReviveTask(room_id=data["room_id"])
+        else:
+            logger.warning(f"Unknown task type: {task_type}")
+            return
+
         if not context or not task:
             logger.warning(f"Invalid task data: {data}")
             return
@@ -23,25 +38,9 @@ def process_task(self, data: dict):
 
         if not success:
             cancel_existing_task(context.room.id)
-        else:
-            raise Exception("Task processing failed")
+
     except Exception as exc:
         logger.error(f"Error processing task: {exc}")
         self.retry(exc=exc, countdown=60)
 
 
-def create_task_and_context(data: dict):
-    task_type = data["type"]
-    if task_type == TaskType.RESPOND.value:
-        context = MessageContextManager(data["original_request"])
-        task = RespondTask(context.message)
-    elif task_type == TaskType.REMIND.value:
-        context = CronContextManager(data["room_id"])
-        task = RemindTask()
-    elif task_type == TaskType.REVIVE.value:
-        context = None
-        task = ReviveTask()
-    else:
-        logger.warning(f"Unknown task type: {task_type}")
-        return None, None
-    return context, task
