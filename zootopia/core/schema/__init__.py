@@ -23,7 +23,7 @@ from .message import (
     _TelegramVenue
 )
 from .request import SignupRequestBase
-from .task import Task, TaskType, ReviveTask, RespondTask, RemindTask
+from .task import TaskType
 
 
 __all__ = [
@@ -62,9 +62,5 @@ __all__ = [
 
     'SignupRequestBase',
 
-    'Task',
     'TaskType',
-    'ReviveTask', 
-    'RespondTask', 
-    'RemindTask',
 ]

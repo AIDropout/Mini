@@ -128,6 +128,7 @@ pycodestyle==2.12.0
 pycparser==2.22
 pydantic==2.7.4
 pydantic-core==2.18.4
+pydantic-settings==2.4.0
 pydeck==0.9.1
 pydrive2==1.19.0
 pyee==11.0.1

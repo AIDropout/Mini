@@ -9,6 +9,7 @@ router = APIRouter()
 async def message_webhook(
     request: Request,
 ):
+    """Endpoint hit incoming user messages."""
     try:
         request_body = await request.json()
         handle_respond(request_body)

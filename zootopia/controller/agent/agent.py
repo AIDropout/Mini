@@ -1,11 +1,8 @@
 from zootopia.core.schema import (
     RoomTableModel,
-    Task,
-    RespondTask,
-    ReviveTask,
-    Task,
     MessageTableModel,
 )
+from zootopia.controller.tasks.tasks import Task, RespondTask, ReviveTask, RemindTask
 
 from zootopia.services import MessageProvider
 from zootopia.database import SupabaseDB
