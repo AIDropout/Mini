@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
-from typing import List
+from zootopia.core.schema import MessageTableModel
 from zootopia.core.logger import logger
+from typing import List
 import random
 
 
@@ -8,7 +9,8 @@ def get_current_time_readable() -> str:
     current_time = datetime.now()
     return current_time.strftime("%-I:%M%p %A, %b %-d, %Y")
 
-def calculate_response_delay(messages: List[dict]) -> int:
+def calculate_response_delay(messages: List[MessageTableModel]) -> int:
+    
     """Calculate delay in seconds of response based on various factors"""
     if len(messages) < 2:
         return 5  # Default delay if not enough messages
@@ -33,6 +35,9 @@ def calculate_response_delay(messages: List[dict]) -> int:
         return 5  # Default delay if we couldn't calculate any time differences
 
     avg_time_between_messages = sum(time_diffs) / len(time_diffs)
+    print("🟡🟡🟡🟡")
+    print("Average time between messages")
+
 
     # Adjust delay based on message frequency
     if avg_time_between_messages < 5:

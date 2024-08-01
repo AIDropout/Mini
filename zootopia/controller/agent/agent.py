@@ -9,7 +9,7 @@ from zootopia.database import SupabaseDB
 
 from zootopia.core.exceptions import RequestCanceledException
 from zootopia.controller.context import BaseContextManager
-from zootopia.controller.agent.filter import MessageFilter, FilterInput
+from zootopia.controller.agent.steps.filter import MessageFilter, FilterInput
 from zootopia.controller.agent.action import ActionManager
 from zootopia.controller.agent.memory import MemoryManager
 
@@ -65,6 +65,9 @@ class Agent:
                         content=msg,
                     )
                 )
+
+                # Have agent decide whether it should respond
+                
 
                 # Save event to schedules table and add it to Redis scheduler
                 # self.action.detect_intent(text=msg)

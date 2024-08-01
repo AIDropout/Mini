@@ -13,7 +13,8 @@ from zootopia.server.cancel import cancel_existing_task
 def process_task(self, data: dict):
     logger.info(f"🔴🔴🔴 running at {datetime.now()}")
     try:
-        context, task = None
+        context = None
+        task = None
 
         task_type = data["type"]
         if task_type == TaskType.RESPOND.value:
