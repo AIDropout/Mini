@@ -23,7 +23,7 @@ async def signup_webhook(request: SignupRequestBase, api_key: str = Security(ver
         context.database.insert(table_name=Tables.MESSAGES.value, item=MessageTableModel(
             room_id=room.id,
             from_user=False,
-            message=agent.first_message
+            content=agent.first_message
         ))
         
     except RoomAlreadyExistsError as rae:
