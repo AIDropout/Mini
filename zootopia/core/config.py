@@ -20,6 +20,7 @@ class Config(BaseSettings):
     GOOGLE_CLIENT_ID: str = Field(..., env="GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: str = Field(..., env="GOOGLE_CLIENT_SECRET")
     FILTER_LLM: str = Field("groq/llama-3.1-70b-versatile", env="FILTER_LLM")
+    SKIP_LLM: str = Field("groq/llama-3.1-70b-versatile", env="SKIP_LLM")
     ACTION_MANAGER_LLM: str = Field("claude-3-5-sonnet-20240620", env="ACTION_MANAGER_LLM")
     INTENT_MANAGER_LLM: str = Field("claude-3-5-sonnet-20240620", env="INTENT_MANAGER_LLM")
     MEMORY_MANAGER_LLM: str = Field("claude-3-5-sonnet-20240620", env="MEMORY_MANAGER_LLM")

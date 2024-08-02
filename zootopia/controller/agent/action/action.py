@@ -1,7 +1,7 @@
 """Note: Actions are currently not implemented. None of the action files are being used."""
 
 from typing import List, Dict, Optional
-from zootopia.core.schema import Action, ActionType, ActionResult, MessageTableModel
+from zootopia.core.schema import MessageTableModel
 from zootopia.core.logger import logger
 from zootopia.services import LLM
 from zootopia.core.config import config
@@ -73,61 +73,3 @@ class ActionManager:
             messages=[{"role": "user", "content": "Determine."}],
             system_prompt=system_prompt,
         )
-
-    def detect_intent(self, text: str):
-
-        template = """
-        Your task is to analyze the given text and determine if there's a need to schedule a response or reminder in the future.
-
-        If a scheduling intent is detected, respond with a JSON object containing the following information:
-        {
-            "intent": "schedule",
-            "name": "Tell John happy birthday",
-            "run_at": "YYYY-MM-DD HH:MM:SS"
-        }
-
-        If no scheduling intent is detected, respond with an empty JSON object:
-        {}
-
-        Ensure that the "run_at" field is a valid date and time in the future, formatted as specified.
-
-        Example:
-        User input: "Remind me to call John tomorrow at 2 PM"
-        Response:
-        {
-            "intent": "schedule",
-            "name": "Call John",
-            "run_at": "2024-08-01 14:00:00"
-        }
-
-        Only include the JSON object in your response, without any additional text.
-        """
-
-        json_schema = {
-            "schedule": {
-                "type": "object",
-                "properties": {
-                    "intent": {"type": "string"},
-                    "name": {"type": "string"},
-                    "run_at": {"type": "string"}
-                }
-            },
-            "other_intents": {
-                "type": "object"
-            }
-        }
-
-        response_format = {}
-
-        system_prompt = template.format(response_format=response_format)
-
-        response_dict = self.llm.generate_response(
-            messages=[{"role": "user", "content": "Verify the message."}],
-            system_prompt=system_prompt,
-            json_mode=True,
-        )
-
-        model = DynamicResponseModel.create_model_from_json(json_schema)
-        return model(**response_dict)
-
-

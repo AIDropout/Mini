@@ -4,14 +4,12 @@ from zootopia.core.schema import (
 )
 from zootopia.controller.tasks.task_types import BaseTask, RespondTask, ReviveTask, RemindTask
 
-from zootopia.services import MessageProvider
-from zootopia.database import SupabaseDB
-
+from zootopia.services import MessageProvider, SupabaseDB
 from zootopia.core.exceptions import RequestCanceledException
 from zootopia.controller.context import BaseContextManager
-from zootopia.controller.agent.steps.filter import MessageFilter, FilterInput
+from zootopia.controller.agent.intent import MessageFilter, FilterIntentInput, FilterIntentResult
 from zootopia.controller.agent.action import ActionManager
-from zootopia.controller.agent.memory import MemoryManager
+from zootopia.memory import MemoryManager
 
 from zootopia.core.logger import logger
 from zootopia.utils.time_utils import get_current_time_readable
@@ -82,7 +80,8 @@ class Agent:
             Your task: {instructions}
 
             It is now {current_time}
-            {prompt_addition}
+
+            Prompt addition: {prompt_addition}
             """
 
             # A separate LLM checks to see if LLM response meets criteria
@@ -109,10 +108,10 @@ class Agent:
 
                 filter_result = None
                 if self.disable_filtering:
-                    filter_result = FilterInput(approved=True, message="Filtering disabled")
+                    filter_result = FilterIntentResult(approved=True, message="Filtering disabled")
                 else:
-                    filter_result = self.filter.verify(
-                        FilterInput(
+                    filter_result: FilterIntentResult = self.filter.verify(
+                        FilterIntentInput(
                             from_user=False,
                             agent_prompt=self.agent_prompt,
                             messages=recent_messages,

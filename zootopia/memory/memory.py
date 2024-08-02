@@ -1,7 +1,7 @@
 from zootopia.core.logger import logger
 from zootopia.core.schema import Tables, MessageTableModel, RoomTableModel
 from typing import List, Dict
-from zootopia.database import SupabaseDB
+from zootopia.services import SupabaseDB
 from zootopia.core.exceptions import MessageInsertError
 
 

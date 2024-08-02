@@ -97,8 +97,7 @@ class LLM:
 
         return prepared_messages
     
-
-    def _clean_and_parse_llm_json_output(llm_output: str) -> dict:
+    def _clean_and_parse_llm_json_output(self, llm_output: str) -> dict:
         """
         Cleans up the output of an LLM and returns a JSON object.
 

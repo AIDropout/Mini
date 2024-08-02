@@ -1,7 +1,6 @@
 from typing import Optional
 from zootopia.core.schema import AgentTableModel, RoomTableModel, UserTableModel, Tables
-from zootopia.database import SupabaseDB
-from zootopia.services import MessageProvider
+from zootopia.services import MessageProvider, SupabaseDB
 
 """
 "ContextManagers" initialize and hold the utilities needed for an agents & its modules.

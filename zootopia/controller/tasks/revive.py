@@ -1,6 +1,6 @@
 from fastapi import BackgroundTasks
 from zootopia.core.logger import logger
-from zootopia.database import SupabaseDB
+from zootopia.services import SupabaseDB
 from zootopia.core.schema import (
     Tables,
     AgentTableModel,
