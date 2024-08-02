@@ -10,6 +10,10 @@ class RoomAlreadyExistsError(Exception):
         )
 
 
+class LLMResponseParsingError(Exception):
+    def __init__(self, message="Failed to parse LLM response"):
+        super().__init__(message)
+
 class AgentNotFoundError(Exception):
     def __init__(self, message):
         super().__init__(message)

@@ -43,7 +43,7 @@ class Agent:
                 message_count=3, confidence_threshold=Confidence.MEDIUM, enabled=True
             ),
             IntentType.SKIP: IntentConfig(
-                message_count=3, confidence_threshold=Confidence.LOW, enabled=True
+                message_count=3, confidence_threshold=Confidence.HIGH, enabled=True
             ),
         }
         self.intent_config = IntentConfigManager(intent_configs or default_configs)
@@ -58,10 +58,10 @@ class Agent:
                 count=task.recent_message_count
             )
 
-            # If responding to user, store user message
             if isinstance(task, RespondTask):
                 msg = task.user_message.content
 
+                # If responding to user, store user message
                 self.memory.store_message(
                     MessageTableModel(
                         room_id=self.room.id,
@@ -71,6 +71,7 @@ class Agent:
                 )
 
                 # # Process skip intent
+                # # TODO: 
                 # if self.intent_config.is_enabled(IntentType.SKIP):
                 #     skip_intent = self.intent_factory.create(IntentType.SKIP)
                 #     if skip_intent:
@@ -78,9 +79,13 @@ class Agent:
                 #             IntentType.SKIP, all_recent_messages
                 #         )
                 #         skip_result: SkipIntentResult = skip_intent.process(
-                #             input=SkipIntentInput(text=msg),
+                #             input=SkipIntentInput(
+                #                 agent_prompt=self.agent_prompt,
+                #                 messages=skip_messages,
+                #                 message=msg,
+                #             ),
                 #             confidence_threshold=self.intent_config.get_confidence_threshold(
-                #                 IntentType.SKIP
+                #                 IntentType.SKIP,
                 #             ),
                 #         )
                 #         logger.info(skip_result.message)
@@ -94,17 +99,22 @@ class Agent:
 
                 all_recent_messages.append({"role": "user", "content": msg})
 
+            # Create the prompt for the agent message
             system_prompt_template = """
             {agent_prompt}
 
             Your task: {instructions}
+
+            - Carefully consider the context of recent messages to:
+            a) Avoid repeating information already provided.
+            b) Identify opportunities to drive the conversation forward, keeping it fresh and lively.
 
             It is now {current_time}
 
             Prompt addition: {prompt_addition}
             """
 
-            # A separate LLM checks to see if LLM response meets criteria
+            # Use Filter intent to ensure quality of agent response
             max_attempts = 2
             prompt_addition = ""
 
@@ -126,57 +136,53 @@ class Agent:
                 )
 
                 filter_result = None
-                if not self.intent_config.is_enabled(IntentType.FILTER):
-                    filter_result = FilterIntentResult(
-                        from_user=False,
-                        analyzed_message=response_text,
-                        approved=True,
-                        confidence=Confidence.HIGH,
-                        prompt_addition="Filtering disabled",
+            if not self.intent_config.is_enabled(IntentType.FILTER):
+                filter_result = FilterIntentResult(
+                    from_user=False,
+                    analyzed_message=response_text,
+                    approved=True,
+                    confidence=Confidence.HIGH,
+                    proposed_message="",
+                )
+            else:
+                filter_intent = self.intent_factory.create(IntentType.FILTER)
+                if filter_intent:
+                    filter_messages = self.intent_config.get_past_messages(
+                        IntentType.FILTER, all_recent_messages
+                    )
+                    filter_result: FilterIntentResult = filter_intent.process(
+                        input=FilterIntentInput(
+                            from_user=False,
+                            agent_prompt=self.agent_prompt,
+                            messages=filter_messages,
+                            message=response_text,
+                        ),
+                        confidence_threshold=self.intent_config.get_confidence_threshold(
+                            IntentType.FILTER
+                        ),
                     )
                 else:
-                    filter_intent = self.intent_factory.create(IntentType.FILTER)
-                    if filter_intent:
-                        filter_messages = self.intent_config.get_past_messages(
-                            IntentType.FILTER, all_recent_messages
-                        )
-                        filter_result: FilterIntentResult = filter_intent.process(
-                            input=FilterIntentInput(
-                                from_user=False,
-                                agent_prompt=self.agent_prompt,
-                                messages=filter_messages,
-                                message=response_text,
-                            ),
-                            confidence_threshold=self.intent_config.get_confidence_threshold(
-                                IntentType.FILTER
-                            ),
-                        )
-                    else:
-                        logger.error("Failed to create FilterIntent")
-                        return False
-
-                logger.info(filter_result.message)
-
-                # If approved by filter, continue sending and storing
-                if filter_result.approved:
-                    await self.action.handle_message_send(response_text)
-                    self.memory.store_message(
-                        MessageTableModel(
-                            room_id=self.room.id, from_user=False, content=response_text
-                        )
-                    )
-                    return True
-
-                if attempt == max_attempts - 1:
-                    logger.warning(
-                        f"Max attempts ({max_attempts}) reached. Unable to generate appropriate response."
-                    )
+                    logger.error("Failed to create FilterIntent")
                     return False
 
-                # Prepare for next iteration if not approved
-                prompt_addition = filter_result.prompt_addition
+            logger.info(filter_result.message)
 
-            return False
+            # If approved by filter or if there's a high-confidence proposed message, send and store
+            if filter_result.approved:
+                final_message = response_text
+            elif filter_result.proposed_message:
+                final_message = filter_result.proposed_message
+            else:
+                logger.warning("Unable to generate appropriate response.")
+                return False
+
+            await self.action.handle_message_send(final_message)
+            self.memory.store_message(
+                MessageTableModel(
+                    room_id=self.room.id, from_user=False, content=final_message
+                )
+            )
+            return True
 
         except RequestCanceledException:
             logger.info(f"Request cancelled for room {self.room.id} due to new request")

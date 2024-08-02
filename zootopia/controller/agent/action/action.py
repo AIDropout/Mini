@@ -9,26 +9,6 @@ from zootopia.services import MessageProvider
 import random
 import asyncio
 from typing import List
-from zootopia.utils.utils import DynamicResponseModel
-
-from pydantic import BaseModel, Field
-
-
-class IntentFilters(BaseModel):
-    title: str
-    description: str
-
-
-class IntentConfig(BaseModel):
-    filters: List[IntentFilters]
-
-
-class LLMResponseStructure(BaseModel):
-    intent: dict = Field(
-        "{ (dict) A dictionary of intents as keys and their confidence levels "
-        "('high', 'medium', 'low') as values. Only include relavent intent keys. "
-        "It is possible no intents exist, making this an empty dictionary. }"
-    )
 
 
 class ActionManager:
@@ -53,23 +33,3 @@ class ActionManager:
             if i < len(messages) - 1:  # Don't delay after the last message
                 delay = random.uniform(0, 10)  # Random delay between 0 and 10 seconds
                 await asyncio.sleep(delay)
-
-    def should_respond(self, recent_messages: List[MessageTableModel]) -> bool:
-        """LLM looks at recent messages and determines if it should respond or not."""
-
-        template = """
-        Your task is to analyze the given text and determine if there's a need to schedule a response or reminder in the future.
-
-
-        """
-
-        # Format recent messages
-
-        response_format = {}
-
-        system_prompt = template.format(response_format=response_format)
-
-        json_output = self.llm.generate_response(
-            messages=[{"role": "user", "content": "Determine."}],
-            system_prompt=system_prompt,
-        )
