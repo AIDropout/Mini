@@ -32,11 +32,18 @@ Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` 
 - [x] Filtering messages
 - [x] Reading multiple rapid messages before responding
 - [x] Human-like responsiveness (& unresponsiveness... 😜)
+- [x] Quality checks and fixes its own prompt to re-generate a message
 - [ ] Scheduled messages
 - [ ] User preference tracking
 - [ ] Human-like memory
 - [ ] Vision
 - [ ] Tool use
+
+### Intents (with confidence thresholds)
+[x] Whether to fix its own prompt and re-generate a message
+[x] Whether to not respond to a message (e.g. "ok" or "bye")
+[x] Whether to schedule a reminder in the future
+
 
 ## 🛠️ Environment Setup
 Make sure Python, [ngrok](https://ngrok.com/), and [uv]() are installed.

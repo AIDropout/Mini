@@ -4,7 +4,12 @@ from abc import ABC
 from zootopia.services import LLM
 from zootopia.core.config import config
 import json
-from zootopia.controller.agent.intent import IntentInput, IntentOutput, IntentResult
+from zootopia.controller.agent.intent import (
+    IntentInput,
+    IntentOutput,
+    IntentResult,
+    ConfidenceScore,
+)
 
 
 @dataclass
@@ -24,6 +29,7 @@ class FilterIntentInput(IntentInput):
 @dataclass
 class FilterIntentOutput(IntentOutput):
     approved: bool
+    confidence: ConfidenceScore
     prompt_addition: str = ""
 
 
@@ -32,6 +38,7 @@ class FilterIntentResult(IntentResult):
     from_user: bool
     analyzed_message: str
     approved: bool
+    confidence: ConfidenceScore
     prompt_addition: str = ""
 
     @property
@@ -70,6 +77,8 @@ class MessageFilter:
     Guidelines:
     - Consider the conversation context and agent's role.
     - Your response must be in JSON format.
+    - Confidence score should be an integer between 0 and 100.
+
 
     Examples of typically inappropriate messages:
     - "I'm sorry I'm not comfortable..."
@@ -81,15 +90,24 @@ class MessageFilter:
 
     Respond in JSON:
     {output_format}
+
+    This will guide the next LLM iteration. For instance, if the character's response is deemed too silly, it should steer the next LLM's response to be less so. Ensure that the character does not admit to being an AI, acknowledge its training origins, or show lack of ego in future responses.
+
     """
 
     def __init__(self):
         self.llm = LLM(config.FILTER_LLM)
 
     def verify(
-        self, input: FilterIntentInput, max_retries: int = 3
+        self,
+        input: FilterIntentInput,
+        max_retries: int = 3,
+        confidence_threshold: Optional[ConfidenceScore] = None,
     ) -> FilterIntentResult:
-        output_format = json.dumps(FilterIntentOutput(approved=True).__dict__, indent=2)
+        output_format = json.dumps(
+            FilterIntentOutput(approved=True, confidence=ConfidenceScore(100)).__dict__,
+            indent=2,
+        )
 
         system_prompt = self.TEMPLATE.format(
             agent_prompt=input.agent_prompt,
@@ -106,8 +124,13 @@ class MessageFilter:
             )
 
             result = self._parse_response(response, input.new_message)
-            if result.approved or attempt == max_retries - 1:
-                return result
+            
+            if confidence_threshold is not None:
+                if result.approved and result.confidence.is_confident(confidence_threshold) or attempt == max_retries - 1:
+                    return result
+            else:
+                if result.approved or attempt == max_retries - 1:
+                    return result
 
             # If not approved and not the last attempt, update the system prompt
             system_prompt += f"\n\nPrevious attempt failed. Please try again. Error: {result.prompt_addition}"
@@ -118,11 +141,13 @@ class MessageFilter:
         self, response: Dict[str, Any], analyzed_message: str
     ) -> FilterIntentResult:
         try:
+            response["confidence"] = ConfidenceScore(response["confidence"])
             output = FilterIntentOutput(**response)
             return FilterIntentResult(
                 from_user=False,
                 analyzed_message=analyzed_message,
                 approved=output.approved,
+                confidence=output.confidence,
                 prompt_addition=output.prompt_addition,
             )
         except (ValueError, TypeError) as e:
@@ -130,5 +155,6 @@ class MessageFilter:
                 from_user=False,
                 analyzed_message=analyzed_message,
                 approved=False,
+                confidence=ConfidenceScore(0),
                 prompt_addition=f"Error parsing filter response: {str(e)}. Please regenerate.",
             )
