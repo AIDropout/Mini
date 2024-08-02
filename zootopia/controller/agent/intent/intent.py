@@ -1,20 +1,44 @@
 from dataclasses import dataclass
 from abc import ABC
+from enum import Enum
+from typing import Dict, List
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class ConfidenceScore:
-    score: int
+class Confidence(Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
 
-    def __post_init__(self):
-        if not (0 <= self.score <= 100):
-            raise ValueError("Confidence score must be between 0 and 100")
+    def __ge__(self, other: "Confidence") -> bool:
+        order = ["LOW", "MEDIUM", "HIGH"]
+        return order.index(self.value) >= order.index(other.value)
 
-    def is_confident(self, threshold: "ConfidenceScore") -> bool:
-        return self.score >= threshold
 
-    def __repr__(self) -> str:
-        return f"ConfidenceScore(score={self.score})"
+class IntentConfig(BaseModel):
+    message_count: int
+    confidence_threshold: Confidence
+    enabled: bool = True
+
+class IntentConfigManager:
+    def __init__(self, configs: Dict[str, IntentConfig]):
+        self.configs = configs
+        self.max_count = max(config.message_count for config in configs.values())
+
+    def get_past_messages(self, intent: str, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        config = self.configs.get(intent)
+        if not config or not config.enabled:
+            return []
+        return messages[-config.message_count:]
+
+    def is_enabled(self, intent: str) -> bool:
+        config = self.configs.get(intent)
+        return config.enabled if config else False
+
+    def get_confidence_threshold(self, intent: str) -> Confidence:
+        config = self.configs.get(intent)
+        return config.confidence_threshold if config else Confidence.MEDIUM
+
 
 
 @dataclass
@@ -24,7 +48,7 @@ class IntentInput(ABC):
     Contains data to be analyzed for intent.
     """
 
-    pass
+    new_message: str
 
 
 @dataclass
@@ -34,7 +58,7 @@ class IntentOutput(ABC):
     Defines structure of LLM or service response.
     """
 
-    pass
+    confidence: Confidence
 
 
 @dataclass
@@ -44,4 +68,5 @@ class IntentResult(ABC):
     Contains final, validated intent information.
     """
 
-    pass
+    confidence: Confidence
+    approved: bool

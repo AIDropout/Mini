@@ -5,7 +5,6 @@ from zootopia.core.logger import logger
 import re
 import json
 
-
 class LLM:
     """Class for Large Language Models (LLMs) usage powered by LiteLLM"""
 

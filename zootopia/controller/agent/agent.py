@@ -1,54 +1,63 @@
-from zootopia.core.schema import (
-    RoomTableModel,
-    MessageTableModel,
+from zootopia.core.schema import RoomTableModel, MessageTableModel, IntentType
+from zootopia.controller.tasks.task_types import (
+    BaseTask,
+    RespondTask,
+    ReviveTask,
+    RemindTask,
 )
-from zootopia.controller.tasks.task_types import BaseTask, RespondTask, ReviveTask, RemindTask
 
 from zootopia.services import MessageProvider, SupabaseDB
 from zootopia.core.exceptions import RequestCanceledException
 from zootopia.controller.context import BaseContextManager
-from zootopia.controller.agent.intent import MessageFilter, FilterIntentInput, FilterIntentResult
+from zootopia.controller.agent.intent import (
+    MessageFilter,
+    FilterIntentInput,
+    FilterIntentResult,
+    Confidence,
+    IntentConfig,
+    IntentConfigManager,
+)
+
 from zootopia.controller.agent.action import ActionManager
 from zootopia.memory import MemoryManager
 
 from zootopia.core.logger import logger
 from zootopia.utils.time_utils import get_current_time_readable
+from typing import Dict
 
 
 class Agent:
     def __init__(
         self,
-        messaging_service: MessageProvider,
-        database_service: SupabaseDB,
-        room: RoomTableModel,
-        agent_prompt: str,
-        disable_filtering: bool = False,
+        context: BaseContextManager,
+        intent_configs: Dict[str, IntentConfig] = None,
     ) -> None:
-        self.agent_prompt = agent_prompt
-        self.room = room
-        self.database_service = database_service
+        self.messaging_service: MessageProvider = context.messaging_service
+        self.database_service: SupabaseDB = context.database
+        self.room: RoomTableModel = context.room
+        self.agent_prompt: str = context.agent.prompt
         self.filter = MessageFilter()
-        self.action = ActionManager(messaging_service)
-        self.memory = MemoryManager(database_service, room)
-        self.disable_filtering = disable_filtering
-
-
-    @classmethod
-    def from_context(cls, context: BaseContextManager, disable_filtering: bool = False) -> "Agent":
-        return cls(
-            messaging_service=context.messaging_service,
-            database_service=context.database,
-            room=context.room,
-            agent_prompt=context.agent.prompt,
-            disable_filtering=disable_filtering, 
-        )
+        self.action = ActionManager(self.messaging_service)
+        self.memory = MemoryManager(self.database_service, self.room)
+        default_configs = {
+            IntentType.FILTER: IntentConfig(
+                message_count=5, confidence_threshold=Confidence.HIGH, enabled=True
+            ),
+            IntentType.SCHEDULE: IntentConfig(
+                message_count=7, confidence_threshold=Confidence.MEDIUM, enabled=True
+            ),
+            IntentType.SKIP: IntentConfig(
+                message_count=3, confidence_threshold=Confidence.LOW, enabled=True
+            ),
+        }
+        self.intent_config = IntentConfigManager(intent_configs or default_configs)
 
     async def handle_chat_task(self, task: BaseTask) -> bool:
         logger.info(f"🟢 {task}")
 
         try:
             # Get recent messages
-            recent_messages = self.memory.get_recent_messages(
+            all_recent_messages = self.memory.get_recent_messages(
                 count=task.recent_message_count
             )
 
@@ -65,14 +74,10 @@ class Agent:
                 )
 
                 # Have agent decide whether it should respond
-                
 
-                # Save event to schedules table and add it to Redis scheduler
-                # self.action.detect_intent(text=msg)
+                # Have agent decide whether to schedule something
 
-                recent_messages.append(
-                    {"role": "user", "content": msg}
-                )
+                all_recent_messages.append({"role": "user", "content": msg})
 
             system_prompt_template = """
             {agent_prompt}
@@ -100,23 +105,31 @@ class Agent:
                 logger.info(
                     f"🟢 System prompt (Attempt {attempt + 1}/{max_attempts}):\n{system_prompt}"
                 )
-                logger.info(f"🟢 Recent messages:\n{recent_messages}")
+                logger.info(f"🟢 Recent messages:\n{all_recent_messages}")
 
                 response_text = self.action.generate_message(
-                    recent_messages, system_prompt
+                    all_recent_messages, system_prompt
                 )
 
                 filter_result = None
-                if self.disable_filtering:
-                    filter_result = FilterIntentResult(approved=True, message="Filtering disabled")
+                if not self.intent_config.is_enabled(IntentType.FILTER):
+                    filter_result = FilterIntentResult(
+                        approved=True, message="Filtering disabled"
+                    )
                 else:
+                    filter_messages = self.intent_config.get_past_messages(
+                        IntentType.FILTER, all_recent_messages
+                    )
                     filter_result: FilterIntentResult = self.filter.verify(
-                        FilterIntentInput(
+                        input=FilterIntentInput(
                             from_user=False,
                             agent_prompt=self.agent_prompt,
-                            messages=recent_messages,
+                            messages=filter_messages,
                             new_message=response_text,
-                        )
+                        ),
+                        confidence_threshold=self.intent_config.get_confidence_threshold(
+                            IntentType.FILTER
+                        ),
                     )
 
                 logger.info(filter_result.message)

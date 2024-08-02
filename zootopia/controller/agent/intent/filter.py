@@ -1,6 +1,5 @@
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
-from abc import ABC
 from zootopia.services import LLM
 from zootopia.core.config import config
 import json
@@ -8,8 +7,11 @@ from zootopia.controller.agent.intent import (
     IntentInput,
     IntentOutput,
     IntentResult,
-    ConfidenceScore,
+    Confidence,
 )
+from zootopia.utils.utils import EnhancedJSONEncoder
+
+# from zootopia.core.logger import logger
 
 
 @dataclass
@@ -29,7 +31,6 @@ class FilterIntentInput(IntentInput):
 @dataclass
 class FilterIntentOutput(IntentOutput):
     approved: bool
-    confidence: ConfidenceScore
     prompt_addition: str = ""
 
 
@@ -37,14 +38,12 @@ class FilterIntentOutput(IntentOutput):
 class FilterIntentResult(IntentResult):
     from_user: bool
     analyzed_message: str
-    approved: bool
-    confidence: ConfidenceScore
     prompt_addition: str = ""
 
     @property
     def message(self) -> str:
         if self.approved:
-            return "🟢 LLM response APPROVED by filter"
+            return f"🟢 LLM response APPROVED by filter (Confidence: {self.confidence.name})"
         else:
             truncated_message = (
                 self.analyzed_message[:50] + "..."
@@ -56,12 +55,13 @@ class FilterIntentResult(IntentResult):
                 if len(self.prompt_addition) > 50
                 else self.prompt_addition
             )
-            return f"🔴 LLM response [{truncated_message}] FAILED with prompt addition [{truncated_addition}]"
+            return f"🔴 LLM response [{truncated_message}] FAILED with prompt addition [{truncated_addition}] (Confidence: {self.confidence.name})"
 
     def __repr__(self) -> str:
         return (
             f"FilterResult(from_user={self.from_user}, "
             f"approved={self.approved}, "
+            f"confidence={self.confidence.name}, "
             f"addition='{self.prompt_addition[:50]}...')"
         )
 
@@ -75,10 +75,8 @@ class MessageFilter:
     {new_message}
 
     Guidelines:
+    - Confidence level should be one of: LOW, MEDIUM, HIGH.
     - Consider the conversation context and agent's role.
-    - Your response must be in JSON format.
-    - Confidence score should be an integer between 0 and 100.
-
 
     Examples of typically inappropriate messages:
     - "I'm sorry I'm not comfortable..."
@@ -91,7 +89,7 @@ class MessageFilter:
     Respond in JSON:
     {output_format}
 
-    This will guide the next LLM iteration. For instance, if the character's response is deemed too silly, it should steer the next LLM's response to be less so. Ensure that the character does not admit to being an AI, acknowledge its training origins, or show lack of ego in future responses.
+    This will guide the next LLM iteration. For instance, if the character's response is deemed too silly, it should steer the next LLM's response to be less so. Ensure that the character does not admit to being an AI, acknowledge its training origins, or show lack of ego in future responses. 
 
     """
 
@@ -102,11 +100,12 @@ class MessageFilter:
         self,
         input: FilterIntentInput,
         max_retries: int = 3,
-        confidence_threshold: Optional[ConfidenceScore] = None,
+        confidence_threshold: Optional[Confidence] = None,
     ) -> FilterIntentResult:
         output_format = json.dumps(
-            FilterIntentOutput(approved=True, confidence=ConfidenceScore(100)).__dict__,
+            FilterIntentOutput(approved=True, confidence=Confidence.HIGH).__dict__,
             indent=2,
+            cls=EnhancedJSONEncoder,
         )
 
         system_prompt = self.TEMPLATE.format(
@@ -115,6 +114,8 @@ class MessageFilter:
             messages=input.messages,
             output_format=output_format,
         )
+        print("😈😈😈😈😈")
+        print(system_prompt)
 
         for attempt in range(max_retries):
             response = self.llm.generate_response(
@@ -124,13 +125,16 @@ class MessageFilter:
             )
 
             result = self._parse_response(response, input.new_message)
-            
+
             if confidence_threshold is not None:
-                if result.approved and result.confidence.is_confident(confidence_threshold) or attempt == max_retries - 1:
+                if result.approved and result.confidence >= confidence_threshold:
                     return result
             else:
-                if result.approved or attempt == max_retries - 1:
+                if result.approved:
                     return result
+
+            if attempt == max_retries - 1:
+                return result
 
             # If not approved and not the last attempt, update the system prompt
             system_prompt += f"\n\nPrevious attempt failed. Please try again. Error: {result.prompt_addition}"
@@ -141,8 +145,12 @@ class MessageFilter:
         self, response: Dict[str, Any], analyzed_message: str
     ) -> FilterIntentResult:
         try:
-            response["confidence"] = ConfidenceScore(response["confidence"])
-            output = FilterIntentOutput(**response)
+            confidence = Confidence[response["confidence"].upper()]
+            output = FilterIntentOutput(
+                approved=response["approved"],
+                confidence=confidence,
+                prompt_addition=response.get("prompt_addition", ""),
+            )
             return FilterIntentResult(
                 from_user=False,
                 analyzed_message=analyzed_message,
@@ -150,11 +158,11 @@ class MessageFilter:
                 confidence=output.confidence,
                 prompt_addition=output.prompt_addition,
             )
-        except (ValueError, TypeError) as e:
+        except (KeyError, ValueError) as e:
             return FilterIntentResult(
                 from_user=False,
                 analyzed_message=analyzed_message,
                 approved=False,
-                confidence=ConfidenceScore(0),
+                confidence=Confidence.LOW,
                 prompt_addition=f"Error parsing filter response: {str(e)}. Please regenerate.",
             )

@@ -1,10 +1,12 @@
-from .intent import IntentInput, IntentOutput, IntentResult, ConfidenceScore
+from .intent import IntentInput, IntentOutput, IntentResult, Confidence, IntentConfig, IntentConfigManager
 from .schedule import Scheduler, ScheduleIntentInput, ScheduleIntentOutput, ScheduleIntentResult
 from .filter import MessageFilter, FilterIntentInput, FilterIntentOutput, FilterIntentResult
 from .skip import SkipIntent, SkipIntentInput, SkipIntentOutput, SkipIntentResult
 
 __all__ = [
-    'ConfidenceScore',
+    'Confidence',
+    'IntentConfig',
+    'IntentConfigManager',
 
     # Base intent classes
     'IntentInput',

@@ -1,4 +1,5 @@
 from .action import ActionType, Action, ActionResult
+from .intent import IntentType
 from .table import Tables, TableModel, AgentTableModel, UserTableModel, RoomTableModel, MessageTableModel, ScheduleTableModel
 from .message import (
     MessageProvider,
@@ -30,6 +31,8 @@ __all__ = [
     'ActionType',
     'Action',
     'ActionResult',
+
+    'IntentType',
     
     'Tables',
     'TableModel',
