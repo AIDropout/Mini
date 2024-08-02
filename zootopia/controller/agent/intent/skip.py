@@ -1,24 +1,33 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
-from zootopia.core.schema import MessageTableModel
-from zootopia.services import LLM
-from zootopia.core.config import config
+from zootopia.core.schema import MessageTableModel, IntentType
 import json
+from zootopia.controller.agent.intent import (
+    IntentInput,
+    IntentOutput,
+    IntentResult,
+    Confidence,
+    IntentProcessor,
+    IntentFactory,
+)
+
 
 @dataclass
-class SkipIntentInput:
+class SkipIntentInput(IntentInput):
     recent_messages: List[MessageTableModel]
 
     def __repr__(self) -> str:
-        return f"ShouldRespondInput(recent_messages_count={len(self.recent_messages)})"
+        return f"SkipIntentInput(recent_messages_count={len(self.recent_messages)})"
+
 
 @dataclass
-class SkipIntentOutput:
+class SkipIntentOutput(IntentOutput):
     should_respond: bool
     reason: str
 
+
 @dataclass
-class SkipIntentResult:
+class SkipIntentResult(IntentResult):
     should_respond: bool
     reason: str
 
@@ -27,9 +36,11 @@ class SkipIntentResult:
         return f"{'🟢 Should respond' if self.should_respond else '🔴 Should not respond'}: {self.reason}"
 
     def __repr__(self) -> str:
-        return f"ShouldRespondResult(should_respond={self.should_respond}, reason='{self.reason[:50]}...')"
+        return f"SkipIntentResult(should_respond={self.should_respond}, reason='{self.reason[:50]}...')"
 
-class SkipIntent:
+
+@IntentFactory.register(IntentType.SKIP)
+class SkipIntent(IntentProcessor[SkipIntentInput, SkipIntentOutput, SkipIntentResult]):
     TEMPLATE: str = """
     Your task is to analyze the given conversation and determine if there's a need for a response.
 
@@ -38,7 +49,7 @@ class SkipIntent:
     - Respond if the user expresses a need or concern.
     - Don't respond to simple acknowledgments like "OK", "Alright", or "Got it".
     - Don't respond if the conversation appears to be concluding naturally.
-    - Consider the context of the entire conversation.
+    - Consider the context of recent messages.
 
     Recent messages:
     {messages}
@@ -47,39 +58,56 @@ class SkipIntent:
     {output_format}
     """
 
-    def __init__(self):
-        self.llm = LLM(config.SKIP_LLM)
+    def process(
+        self,
+        input: SkipIntentInput,
+        max_retries: int = 1,
+        confidence_threshold: Optional[Confidence] = None,
+    ) -> SkipIntentResult:
+        formatted_messages = "\n".join(
+            [
+                f"{'User' if msg.from_user else 'Assistant'}: {msg.content}"
+                for msg in input.recent_messages[
+                    -5:
+                ] 
+            ]
+        )
 
-    def should_respond(self, input: SkipIntentInput) -> SkipIntentResult:
-        formatted_messages = "\n".join([
-            f"{'User' if msg.from_user else 'Assistant'}: {msg.content}"
-            for msg in input.recent_messages[-5:]  # Consider last 5 messages for context
-        ])
-
-        output_format = json.dumps(SkipIntentOutput(should_respond=True, reason="").__dict__, indent=2)
+        output_format = json.dumps(
+            SkipIntentOutput(
+                confidence=Confidence.HIGH, should_respond=True, reason=""
+            ).__dict__,
+            indent=2,
+        )
 
         system_prompt = self.TEMPLATE.format(
-            messages=formatted_messages,
-            output_format=output_format
+            messages=formatted_messages, output_format=output_format
         )
 
-        response = self.llm.generate_response(
-            messages=[{"role": "user", "content": "Analyze the conversation and determine if a response is needed."}],
-            system_prompt=system_prompt,
-            json_mode=True
+        response = self._generate_llm_response(
+            system_prompt,
+            "Analyze the conversation and determine if a response is needed.",
+        )
+        return self._parse_response(
+            response, input.recent_messages, confidence_threshold
         )
 
-        return self._parse_response(response)
-
-    def _parse_response(self, response: Dict[str, Any]) -> SkipIntentResult:
+    def _parse_response(
+        self,
+        response: Dict[str, Any],
+        analyzed_data: List[MessageTableModel],
+        confidence_threshold: Optional[Confidence],
+    ) -> SkipIntentResult:
         try:
             output = SkipIntentOutput(**response)
             return SkipIntentResult(
+                approved=True,  # The SkipIntent doesn't use the 'approved' field in the same way as other intents
                 should_respond=output.should_respond,
-                reason=output.reason
+                reason=output.reason,
             )
-        except (ValueError, TypeError) as e:
+        except (KeyError, ValueError) as e:
             return SkipIntentResult(
+                approved=False,
                 should_respond=False,
-                reason=f"Error parsing LLM response: {str(e)}. Defaulting to not responding."
+                reason=f"Error parsing LLM response: {str(e)}. Defaulting to not responding.",
             )

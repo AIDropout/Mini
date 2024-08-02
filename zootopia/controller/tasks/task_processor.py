@@ -34,7 +34,7 @@ def process_task(self, data: dict):
             logger.warning(f"Invalid task data: {data}")
             return
 
-        agent = Agent.from_context(context)
+        agent = Agent(context)
         success = asyncio.run(agent.handle_chat_task(task))
 
         if not success:

@@ -1,12 +1,14 @@
-from .intent import IntentInput, IntentOutput, IntentResult, Confidence, IntentConfig, IntentConfigManager
-from .schedule import Scheduler, ScheduleIntentInput, ScheduleIntentOutput, ScheduleIntentResult
-from .filter import MessageFilter, FilterIntentInput, FilterIntentOutput, FilterIntentResult
+from .intent import IntentInput, IntentOutput, IntentResult, Confidence, IntentConfig, IntentConfigManager, IntentFactory, IntentProcessor
+from .schedule import ScheduleIntent, ScheduleIntentInput, ScheduleIntentOutput, ScheduleIntentResult
+from .filter import FilterIntentInput, FilterIntentOutput, FilterIntentResult
 from .skip import SkipIntent, SkipIntentInput, SkipIntentOutput, SkipIntentResult
 
 __all__ = [
     'Confidence',
     'IntentConfig',
     'IntentConfigManager',
+    'IntentFactory',
+    'IntentProcessor',
 
     # Base intent classes
     'IntentInput',
@@ -14,7 +16,7 @@ __all__ = [
     'IntentResult',
 
     # Schedule intent classes
-    'Scheduler',
+    'ScheduleIntent',
     'ScheduleIntentInput',
     'ScheduleIntentOutput',
     'ScheduleIntentResult',

@@ -2,25 +2,22 @@ from zootopia.core.schema import RoomTableModel, MessageTableModel, IntentType
 from zootopia.controller.tasks.task_types import (
     BaseTask,
     RespondTask,
-    ReviveTask,
-    RemindTask,
 )
-
 from zootopia.services import MessageProvider, SupabaseDB
 from zootopia.core.exceptions import RequestCanceledException
 from zootopia.controller.context import BaseContextManager
 from zootopia.controller.agent.intent import (
-    MessageFilter,
     FilterIntentInput,
     FilterIntentResult,
+    SkipIntentInput,
+    SkipIntentResult,
     Confidence,
     IntentConfig,
     IntentConfigManager,
+    IntentFactory,
 )
-
 from zootopia.controller.agent.action import ActionManager
 from zootopia.memory import MemoryManager
-
 from zootopia.core.logger import logger
 from zootopia.utils.time_utils import get_current_time_readable
 from typing import Dict
@@ -36,7 +33,6 @@ class Agent:
         self.database_service: SupabaseDB = context.database
         self.room: RoomTableModel = context.room
         self.agent_prompt: str = context.agent.prompt
-        self.filter = MessageFilter()
         self.action = ActionManager(self.messaging_service)
         self.memory = MemoryManager(self.database_service, self.room)
         default_configs = {
@@ -44,13 +40,14 @@ class Agent:
                 message_count=5, confidence_threshold=Confidence.HIGH, enabled=True
             ),
             IntentType.SCHEDULE: IntentConfig(
-                message_count=7, confidence_threshold=Confidence.MEDIUM, enabled=True
+                message_count=3, confidence_threshold=Confidence.MEDIUM, enabled=True
             ),
             IntentType.SKIP: IntentConfig(
                 message_count=3, confidence_threshold=Confidence.LOW, enabled=True
             ),
         }
         self.intent_config = IntentConfigManager(intent_configs or default_configs)
+        self.intent_factory = IntentFactory()
 
     async def handle_chat_task(self, task: BaseTask) -> bool:
         logger.info(f"🟢 {task}")
@@ -73,7 +70,25 @@ class Agent:
                     )
                 )
 
-                # Have agent decide whether it should respond
+                # # Process skip intent
+                # if self.intent_config.is_enabled(IntentType.SKIP):
+                #     skip_intent = self.intent_factory.create(IntentType.SKIP)
+                #     if skip_intent:
+                #         skip_messages = self.intent_config.get_past_messages(
+                #             IntentType.SKIP, all_recent_messages
+                #         )
+                #         skip_result: SkipIntentResult = skip_intent.process(
+                #             input=SkipIntentInput(text=msg),
+                #             confidence_threshold=self.intent_config.get_confidence_threshold(
+                #                 IntentType.SKIP
+                #             ),
+                #         )
+                #         logger.info(skip_result.message)
+                #         if skip_result.approved:
+                #             logger.info(
+                #                 f"Skipping response due to skip intent: {skip_result.reason}"
+                #             )
+                #             return True
 
                 # Have agent decide whether to schedule something
 
@@ -94,7 +109,6 @@ class Agent:
             prompt_addition = ""
 
             for attempt in range(max_attempts):
-
                 system_prompt = system_prompt_template.format(
                     agent_prompt=self.agent_prompt,
                     instructions=task.instructions,
@@ -114,23 +128,32 @@ class Agent:
                 filter_result = None
                 if not self.intent_config.is_enabled(IntentType.FILTER):
                     filter_result = FilterIntentResult(
-                        approved=True, message="Filtering disabled"
+                        from_user=False,
+                        analyzed_message=response_text,
+                        approved=True,
+                        confidence=Confidence.HIGH,
+                        prompt_addition="Filtering disabled",
                     )
                 else:
-                    filter_messages = self.intent_config.get_past_messages(
-                        IntentType.FILTER, all_recent_messages
-                    )
-                    filter_result: FilterIntentResult = self.filter.verify(
-                        input=FilterIntentInput(
-                            from_user=False,
-                            agent_prompt=self.agent_prompt,
-                            messages=filter_messages,
-                            new_message=response_text,
-                        ),
-                        confidence_threshold=self.intent_config.get_confidence_threshold(
-                            IntentType.FILTER
-                        ),
-                    )
+                    filter_intent = self.intent_factory.create(IntentType.FILTER)
+                    if filter_intent:
+                        filter_messages = self.intent_config.get_past_messages(
+                            IntentType.FILTER, all_recent_messages
+                        )
+                        filter_result: FilterIntentResult = filter_intent.process(
+                            input=FilterIntentInput(
+                                from_user=False,
+                                agent_prompt=self.agent_prompt,
+                                messages=filter_messages,
+                                message=response_text,
+                            ),
+                            confidence_threshold=self.intent_config.get_confidence_threshold(
+                                IntentType.FILTER
+                            ),
+                        )
+                    else:
+                        logger.error("Failed to create FilterIntent")
+                        return False
 
                 logger.info(filter_result.message)
 
