@@ -100,9 +100,9 @@ class ScheduleTableModel(BaseModel):
     room_id: int
     message_id: Optional[int]
     created_at: datetime = Field(default_factory=utc_now)
-    run_at: datetime
+    run_at: str
     type: str = Field(default="respond")  # respond, remind
-    info: Optional[str] = Field(default=None)
+    task: Optional[str] = Field(default=None)
     complete: bool = Field(default=False)
 
 

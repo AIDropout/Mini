@@ -1,4 +1,11 @@
-from zootopia.core.schema import RoomTableModel, MessageTableModel, IntentType
+from zootopia.core.schema import (
+    RoomTableModel,
+    MessageTableModel,
+    ScheduleTableModel,
+    IntentType,
+    Tables,
+    TaskType,
+)
 from zootopia.controller.tasks.task_types import (
     BaseTask,
     RespondTask,
@@ -15,6 +22,8 @@ from zootopia.controller.agent.intent import (
     IntentConfig,
     IntentConfigManager,
     IntentFactory,
+    ScheduleIntentInput,
+    ScheduleIntentResult,
 )
 from zootopia.controller.agent.action import ActionManager
 from zootopia.memory import MemoryManager
@@ -40,7 +49,7 @@ class Agent:
                 message_count=5, confidence_threshold=Confidence.HIGH, enabled=True
             ),
             IntentType.SCHEDULE: IntentConfig(
-                message_count=3, confidence_threshold=Confidence.MEDIUM, enabled=True
+                message_count=3, confidence_threshold=Confidence.MEDIUM, enabled=False
             ),
             IntentType.SKIP: IntentConfig(
                 message_count=3, confidence_threshold=Confidence.HIGH, enabled=True
@@ -62,7 +71,7 @@ class Agent:
                 msg = task.user_message.content
 
                 # If responding to user, store user message
-                self.memory.store_message(
+                inserted_message = self.memory.store_message(
                     MessageTableModel(
                         room_id=self.room.id,
                         from_user=True,
@@ -70,32 +79,47 @@ class Agent:
                     )
                 )
 
-                # # Process skip intent
-                # # TODO: 
-                # if self.intent_config.is_enabled(IntentType.SKIP):
-                #     skip_intent = self.intent_factory.create(IntentType.SKIP)
-                #     if skip_intent:
-                #         skip_messages = self.intent_config.get_past_messages(
-                #             IntentType.SKIP, all_recent_messages
-                #         )
-                #         skip_result: SkipIntentResult = skip_intent.process(
-                #             input=SkipIntentInput(
-                #                 agent_prompt=self.agent_prompt,
-                #                 messages=skip_messages,
-                #                 message=msg,
-                #             ),
-                #             confidence_threshold=self.intent_config.get_confidence_threshold(
-                #                 IntentType.SKIP,
-                #             ),
-                #         )
-                #         logger.info(skip_result.message)
-                #         if skip_result.approved:
-                #             logger.info(
-                #                 f"Skipping response due to skip intent: {skip_result.reason}"
-                #             )
-                #             return True
+                # Process schedule intent
+                if self.intent_config.is_enabled(IntentType.SCHEDULE):
+                    schedule_intent = self.intent_factory.create(IntentType.SCHEDULE)
+                    if schedule_intent:
 
-                # Have agent decide whether to schedule something
+                        existing_tasks = self.database_service.get_multiple_rows(
+                            table_name="schedule",
+                            conditions={"room_id": self.room.id},
+                            order_by="run_at",
+                            order_desc=False,
+                        )
+
+                        logger.info(
+                            f"Existing scheduled tasks for room {self.room.id}: {existing_tasks}"
+                        )
+
+                        schedule_result: ScheduleIntentResult = schedule_intent.process(
+                            input=ScheduleIntentInput(
+                                message=msg, existing_tasks=existing_tasks
+                            ),
+                            confidence_threshold=self.intent_config.get_confidence_threshold(
+                                IntentType.SCHEDULE
+                            ),
+                        )
+                        print("🍊🍊🍊🍊")
+                        print(schedule_result)
+
+                        if schedule_result.approved:
+                            inserted_task = self.database_service.insert(
+                                table_name=Tables.SCHEDULE.value,
+                                item=ScheduleTableModel(
+                                    room_id=self.room.id,
+                                    message_id=inserted_message.id,
+                                    run_at=schedule_result.run_at,
+                                    type=TaskType.REMIND.value,
+                                    task=schedule_result.task,
+                                    complete=False,
+                                ),
+                            )
+
+                            logger.info(f"Scheduled task: {inserted_task}")
 
                 all_recent_messages.append({"role": "user", "content": msg})
 
@@ -110,32 +134,23 @@ class Agent:
             b) Identify opportunities to drive the conversation forward, keeping it fresh and lively.
 
             It is now {current_time}
-
-            Prompt addition: {prompt_addition}
             """
 
             # Use Filter intent to ensure quality of agent response
-            max_attempts = 2
-            prompt_addition = ""
+            system_prompt = system_prompt_template.format(
+                agent_prompt=self.agent_prompt,
+                instructions=task.instructions,
+                current_time=get_current_time_readable(),
+            )
 
-            for attempt in range(max_attempts):
-                system_prompt = system_prompt_template.format(
-                    agent_prompt=self.agent_prompt,
-                    instructions=task.instructions,
-                    current_time=get_current_time_readable(),
-                    prompt_addition=prompt_addition,
-                )
+            logger.info(f"🟢 System prompt :\n{system_prompt}")
+            logger.info(f"🟢 Recent messages:\n{all_recent_messages}")
 
-                logger.info(
-                    f"🟢 System prompt (Attempt {attempt + 1}/{max_attempts}):\n{system_prompt}"
-                )
-                logger.info(f"🟢 Recent messages:\n{all_recent_messages}")
+            response_text = self.action.generate_message(
+                all_recent_messages, system_prompt
+            )
 
-                response_text = self.action.generate_message(
-                    all_recent_messages, system_prompt
-                )
-
-                filter_result = None
+            filter_result = None
             if not self.intent_config.is_enabled(IntentType.FILTER):
                 filter_result = FilterIntentResult(
                     from_user=False,

@@ -122,7 +122,7 @@ class IntentProcessor(Generic[I, O, R], ABC):
     def process(
         self,
         input: I,
-        max_retries: int = 3,
+        max_retries: int = 1,
         confidence_threshold: Optional[Confidence] = None,
     ) -> R:
         """

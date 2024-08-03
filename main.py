@@ -59,8 +59,19 @@ async def configure_local_webhooks() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Start Celery worker
+    celery_worker_process = subprocess.Popen([
+        "celery",
+        "-A",
+        "zootopia.server.celery.celery",
+        "worker",
+        "-n",
+        "worker1@%h",
+    ])
     redis_manager.initialize()
     yield
+    celery_worker_process.terminate()
+    celery_worker_process.wait()
     ngrok.kill()
     redis_manager.close()
 
@@ -86,21 +97,8 @@ TODO: add celery run command to prod
 """
 if __name__ == "__main__":
     use_gunicorn = False
-
     asyncio.run(configure_local_webhooks())
-
     stop_existing_processes()
-
-    # Start Celery server
-    celery_command = [
-        "celery",
-        "-A",
-        "zootopia.server.celery.celery",
-        "worker",
-        "-n",
-        "worker1@%h",
-    ]
-    subprocess.Popen(celery_command)
 
     if use_gunicorn:
         # Start Gunicorn server

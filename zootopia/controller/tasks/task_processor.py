@@ -37,8 +37,7 @@ def process_task(self, data: dict):
         agent = Agent(context)
         success = asyncio.run(agent.handle_chat_task(task))
 
-        if not success:
-            cancel_existing_task(context.room.id)
+        cancel_existing_task(context.room.id)
 
     except Exception as exc:
         logger.error(f"Error processing task: {exc}")

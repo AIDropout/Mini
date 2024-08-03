@@ -18,6 +18,7 @@ class MemoryManager:
             logger.info(
                 f"🟢 Successfully stored '{message.content}', from_user {message.from_user}"
             )
+            return message
         except Exception as e:
             raise MessageInsertError(
                 room_id=self.room_id, original_error=e, message=message_obj.content
