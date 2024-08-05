@@ -2,9 +2,11 @@ from zootopia.core.schema import (
     RoomTableModel,
     MessageTableModel,
     ScheduleTableModel,
-    IntentType,
+    AgentTableModel,
+    UserTableModel,
     Tables,
     TaskType,
+    IntentType,
 )
 from zootopia.controller.tasks.task_types import (
     BaseTask,
@@ -26,6 +28,7 @@ from zootopia.controller.agent.intent import (
     ScheduleIntentResult,
 )
 from zootopia.controller.agent.action import ActionManager
+from zootopia.controller.agent.subscribe import SubscribeManager
 from zootopia.memory import MemoryManager
 from zootopia.core.logger import logger
 from zootopia.utils.time_utils import get_current_time_readable
@@ -41,9 +44,14 @@ class Agent:
         self.messaging_service: MessageProvider = context.messaging_service
         self.database_service: SupabaseDB = context.database
         self.room: RoomTableModel = context.room
+        self.agent: AgentTableModel = context.agent
+        self.user: UserTableModel = context.user
         self.agent_prompt: str = context.agent.prompt
         self.action = ActionManager(self.messaging_service)
         self.memory = MemoryManager(self.database_service, self.room)
+        self.subscribe_manager = SubscribeManager(
+            self.database_service, self.action, self.memory, self.room, self.agent
+        )
         default_configs = {
             IntentType.FILTER: IntentConfig(
                 message_count=5, confidence_threshold=Confidence.HIGH, enabled=True
@@ -79,6 +87,9 @@ class Agent:
                     )
                 )
 
+                if not await self.subscribe_manager.should_continue_conversation():
+                    return True
+
                 # Process schedule intent
                 if self.intent_config.is_enabled(IntentType.SCHEDULE):
                     schedule_intent = self.intent_factory.create(IntentType.SCHEDULE)
@@ -103,8 +114,8 @@ class Agent:
                                 IntentType.SCHEDULE
                             ),
                         )
-                        print("🍊🍊🍊🍊")
-                        print(schedule_result)
+                        # print("🍊🍊🍊🍊")
+                        # print(schedule_result)
 
                         if schedule_result.approved:
                             inserted_task = self.database_service.insert(

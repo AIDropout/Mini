@@ -131,7 +131,6 @@ class ScheduleIntent(
     ) -> ScheduleIntentResult:
         try:
             output = ScheduleIntentOutput(**response)
-            print(output)
             confidence = Confidence[output.confidence.upper()]
             approved = (
                 confidence >= (confidence_threshold or Confidence.LOW)
