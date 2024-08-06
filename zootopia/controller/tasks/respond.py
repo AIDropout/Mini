@@ -24,7 +24,7 @@ def handle_respond(request_body: dict):
             Tables.MESSAGES.value,
             MessageTableModel(
                 room_id=context.room.id,
-                sender_id=context.agent.id,
+                sender_id=context.user.id,
                 content=context.message.content,
             ),
         )

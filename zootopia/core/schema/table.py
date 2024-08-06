@@ -33,13 +33,16 @@ class Tables(Enum):
     ROOMS__agent_id = "agent_id"
     ROOMS__agent_proactivity = "agent_proactivity"
     ROOMS__subscribe_msg_sent = "subscribe_msg_sent"
+    ROOMS__disabled_by_admin = "disabled_by_admin"
+    ROOMS__last_msg_sent_at = "last_msg_sent_at"
 
     MESSAGES = "messages"
     MESSAGES__id = "id"
-    MESSAGES__sender_id= "sender_id"
+    MESSAGES__sender_id = "sender_id"
     MESSAGES__room_id = "room_id"
     MESSAGES__created_at = "created_at"
     MESSAGES__message = "message"
+    MESSAGES__sent_by_admin = "sent_by_admin"
 
     SCHEDULE = "schedule"
     SCHEDULE__id = "id"
@@ -100,6 +103,10 @@ class RoomTableModel(BaseModel):
         description="Agent proactivity for a particular room (0 if a user has texted STOP)",
     )
     subscribe_msg_sent: bool = Field(default=False)
+    disabled_by_admin: bool = Field(default=False)
+    last_msg_sent_at: datetime = Field(
+        default_factory=utc_now, description="Time of last message sent by either agent or user"
+    )
 
 
 class MessageTableModel(BaseModel):
@@ -108,6 +115,7 @@ class MessageTableModel(BaseModel):
     room_id: int = Field(default=None)
     created_at: datetime = Field(default_factory=utc_now)
     content: str = Field(default=None)
+    sent_by_admin: bool = Field(default=False)
 
 
 class ScheduleTableModel(BaseModel):
