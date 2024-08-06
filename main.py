@@ -5,17 +5,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from pyngrok import ngrok
 from starlette.middleware.base import BaseHTTPMiddleware
-
+import psutil
+import gc
 from zootopia.api import router as api_router
 from zootopia.core.logger import logger
-
+from memory_profiler import profile
 from zootopia.services import Telegram, BirdSMSProvider
 from zootopia.server.redis.redis import redis_manager
 
 
 LOCAL_URL = "127.0.0.1"
 PORT = 8000
-
 
 def stop_existing_processes():
     try:
@@ -56,11 +56,9 @@ async def configure_local_webhooks() -> None:
 
     logger.info("Ngrok and webhooks successfully set up!")
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Start Celery worker
-    celery_worker_process = subprocess.Popen(
+@profile
+async def initialize_celery_worker():
+    return subprocess.Popen(
         [
             "celery",
             "-A",
@@ -71,16 +69,52 @@ async def lifespan(app: FastAPI):
             "--loglevel=ERROR",
         ],
     )
+
+@profile
+def initialize_redis_manager():
     redis_manager.initialize()
+
+@profile
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start Celery worker
+    log_memory_usage("Before app startup")
+
+    celery_worker_process = await initialize_celery_worker()
+    redis_manager.initialize()
+    log_memory_usage("After app startup")
+
+    periodic_task = asyncio.create_task(periodic_memory_check())
+
+
     yield
     celery_worker_process.terminate()
     celery_worker_process.wait()
     ngrok.kill()
     redis_manager.close()
+    periodic_task.cancel()
 
+
+def log_memory_usage(tag=""):
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    logger.info(f"{tag} Memory usage: {memory_info.rss / 1024 / 1024:.2f} MB")
+
+class EnhancedMemoryUsageMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        log_memory_usage(f"Before request: {request.url.path}")
+        response = await call_next(request)
+        log_memory_usage(f"After request: {request.url.path}")
+        return response
+
+async def periodic_memory_check():
+    while True:
+        log_memory_usage("Periodic check")
+        await asyncio.sleep(300)  # Check every 5 minutes
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(LoggingMiddleware)
+app.add_middleware(EnhancedMemoryUsageMiddleware)
 app.include_router(api_router)
 
 
@@ -99,7 +133,9 @@ Flower
 TODO: add celery run command to prod
 """
 if __name__ == "__main__":
-    use_gunicorn = False
+    log_memory_usage("Before server start")
+
+    use_gunicorn = True
     asyncio.run(configure_local_webhooks())
     stop_existing_processes()
 
@@ -121,3 +157,4 @@ if __name__ == "__main__":
         import uvicorn
 
         uvicorn.run("main:app", host=LOCAL_URL, port=PORT, reload=True)
+    log_memory_usage("After server start")
