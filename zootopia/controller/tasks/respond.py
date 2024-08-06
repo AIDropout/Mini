@@ -10,16 +10,21 @@ from zootopia.utils.time_utils import calculate_response_delay
 
 
 def handle_respond(request_body: dict):
-    """This is called by /message endpoint."""
+    """
+    Called by /message endpoint.
+    This function inserts the user message and 
+    schedules the task based on a calculated delay
+    """
+
     try:
         context = MessageContextManager(request_body)
 
         """Insert the user message"""
-        context.database.insert(
+        inserted_message = context.database.insert(
             Tables.MESSAGES.value,
             MessageTableModel(
                 room_id=context.room.id,
-                from_user=True,
+                sender_id=context.agent.id,
                 content=context.message.content,
             ),
         )

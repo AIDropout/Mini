@@ -1,5 +1,5 @@
 from zootopia.core.logger import logger
-from zootopia.core.schema import Tables, MessageTableModel, RoomTableModel
+from zootopia.core.schema import Tables, MessageTableModel, RoomTableModel, AgentTableModel
 from typing import List, Dict
 from zootopia.services import SupabaseDB
 from zootopia.core.exceptions import MessageInsertError
@@ -7,16 +7,18 @@ from zootopia.core.exceptions import MessageInsertError
 
 class MemoryManager:
 
-    def __init__(self, database_service: SupabaseDB, room: RoomTableModel):
+    def __init__(self, database_service: SupabaseDB, room: RoomTableModel, agent: AgentTableModel):
         self.database_service = database_service
         self.room_id = room.id
+        self.agent_id = agent.id
 
     def store_message(self, message_obj: MessageTableModel):
         """Inserts message into database"""
         try:
+            print("running store message")
             message = self.database_service.insert(Tables.MESSAGES.value, message_obj)
             logger.info(
-                f"🟢 Successfully stored '{message.content}', from_user {message.from_user}"
+                f"🟢 Successfully stored '{message.content}', sender_id {message.sender_id}"
             )
             return message
         except Exception as e:
@@ -51,7 +53,7 @@ class MemoryManager:
 
             return [
                 {
-                    "role": "user" if msg.from_user else "assistant",
+                    "role": "user" if msg.sender_id == self.agent_id else "assistant",
                     "content": msg.content,
                 }
                 for msg in message_models

@@ -48,7 +48,7 @@ class Agent:
         self.user: UserTableModel = context.user
         self.agent_prompt: str = context.agent.prompt
         self.action = ActionManager(self.messaging_service)
-        self.memory = MemoryManager(self.database_service, self.room)
+        self.memory = MemoryManager(self.database_service, self.room, self.agent)
         self.subscribe_manager = SubscribeManager(
             self.database_service, self.action, self.memory, self.room, self.agent
         )
@@ -70,22 +70,9 @@ class Agent:
         logger.info(f"🟢 {task}")
 
         try:
-            # Get recent messages
-            all_recent_messages = self.memory.get_recent_messages(
-                count=task.recent_message_count
-            )
-
+            # Handle user message for respond tasks
             if isinstance(task, RespondTask):
-                msg = task.user_message.content
-
-                # If responding to user, store user message
-                inserted_message = self.memory.store_message(
-                    MessageTableModel(
-                        room_id=self.room.id,
-                        from_user=True,
-                        content=msg,
-                    )
-                )
+                user_message = task.user_message.content # Was already inserted into database
 
                 if not await self.subscribe_manager.should_continue_conversation():
                     return True
@@ -108,7 +95,7 @@ class Agent:
 
                         schedule_result: ScheduleIntentResult = schedule_intent.process(
                             input=ScheduleIntentInput(
-                                message=msg, existing_tasks=existing_tasks
+                                message=user_message, existing_tasks=existing_tasks
                             ),
                             confidence_threshold=self.intent_config.get_confidence_threshold(
                                 IntentType.SCHEDULE
@@ -122,7 +109,6 @@ class Agent:
                                 table_name=Tables.SCHEDULE.value,
                                 item=ScheduleTableModel(
                                     room_id=self.room.id,
-                                    message_id=inserted_message.id,
                                     run_at=schedule_result.run_at,
                                     type=TaskType.REMIND.value,
                                     task=schedule_result.task,
@@ -132,7 +118,10 @@ class Agent:
 
                             logger.info(f"Scheduled task: {inserted_task}")
 
-                all_recent_messages.append({"role": "user", "content": msg})
+                # all_recent_messages.append({"role": "user", "content": user_message})
+            all_recent_messages = self.memory.get_recent_messages(
+                count=task.recent_message_count
+            )
 
             # Create the prompt for the agent message
             system_prompt_template = """
@@ -205,7 +194,7 @@ class Agent:
             await self.action.handle_message_send(final_message)
             self.memory.store_message(
                 MessageTableModel(
-                    room_id=self.room.id, from_user=False, content=final_message
+                    room_id=self.room.id, sender_id=self.agent.id, content=final_message
                 )
             )
             return True

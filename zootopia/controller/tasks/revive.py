@@ -68,7 +68,7 @@ def is_room_eligible_for_revival(db: SupabaseDB, room: RoomTableModel) -> bool:
     """
     Check if a room is eligible for revival based on subscription status.
     """
-    if not room.subscribe_message_sent:
+    if not room.subscribe_msg_sent:
         return True
 
     # Check for an active subscription

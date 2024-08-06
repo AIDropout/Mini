@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, TypeVar, Dict, Tuple, Union
+from typing import List, Optional, TypeVar, Dict, Tuple, Union, Any
 from supabase import create_client
 from zootopia.core.logger import logger
 from zootopia.core.config import config
@@ -20,13 +20,18 @@ class SupabaseDB:
         data, _ = self.supabase.table(table_name).insert(item_dict).execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
-    def update(self, table_name: str, item: TableModel, *conditions) -> TableModel:
+    def update(self, table_name: str, item: TableModel, condition_key: str, condition_value: Any) -> TableModel:
         query = self.supabase.table(table_name).update(item.model_dump())
-        for key, value in conditions:
-            query = query.eq(key, value)
+        
+        if not condition_key or not condition_value:
+            raise ValueError("Both condition_key and condition_value are required for update operation")
+        
+        query = query.eq(condition_key, condition_value)
+        
         data, _ = query.execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
+    
     def get_row(
         self,
         table_name: str,
@@ -34,9 +39,13 @@ class SupabaseDB:
         order_by: Optional[str] = None,
         order_desc: Optional[bool] = None,
     ) -> Optional[TableModel]:
+        print(conditions)
         query = self.supabase.table(table_name).select("*")
         for key, value in conditions.items():
-            query = query.eq(key, value)
+            if value is None:
+                query = query.is_(key, value)
+            else:
+                query = query.eq(key, value)
 
         if order_by:
             query = query.order(order_by, desc=order_desc)

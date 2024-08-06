@@ -22,7 +22,7 @@ async def signup_webhook(request: SignupRequestBase, api_key: str = Security(ver
         
         context.database.insert(table_name=Tables.MESSAGES.value, item=MessageTableModel(
             room_id=room.id,
-            from_user=False,
+            sender_id=agent.id,
             content=agent.first_message
         ))
         

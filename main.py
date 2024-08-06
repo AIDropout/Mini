@@ -60,14 +60,17 @@ async def configure_local_webhooks() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Start Celery worker
-    celery_worker_process = subprocess.Popen([
-        "celery",
-        "-A",
-        "zootopia.server.celery.celery",
-        "worker",
-        "-n",
-        "worker1@%h",
-    ])
+    celery_worker_process = subprocess.Popen(
+        [
+            "celery",
+            "-A",
+            "zootopia.server.celery.celery",
+            "worker",
+            "-n",
+            "worker1@%h",
+            "--loglevel=ERROR",
+        ],
+    )
     redis_manager.initialize()
     yield
     celery_worker_process.terminate()
