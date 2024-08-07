@@ -61,7 +61,9 @@ class RemindTask(BaseTask):
 class ReviveTask(BaseTask):
     room_id: int
     type: ClassVar[TaskType] = TaskType.REVIVE
-    instructions: ClassVar[str] = "Re-engage the chat since it has been silent for a while."
+    instructions: ClassVar[str] = (
+        "Re-engage the chat since it has been silent for a while."
+    )
     recent_message_count: ClassVar[int] = 5
 
     @property

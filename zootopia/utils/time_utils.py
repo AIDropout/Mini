@@ -5,20 +5,22 @@ from typing import List
 import random
 import pytz
 
+
 def get_current_time_cst_iso8601() -> str:
-    central_tz = pytz.timezone('America/Chicago')
+    central_tz = pytz.timezone("America/Chicago")
     current_time = datetime.now(central_tz)
     return current_time.strftime("%Y-%m-%d %H:%M:%S%z")
+
 
 def get_current_time_readable() -> str:
     current_time = datetime.now()
     return current_time.strftime("%-I:%M%p %A, %b %-d, %Y")
 
+
 def calculate_response_delay(messages: List[MessageTableModel]) -> int:
 
     # get recent message, determine urgency of reply
 
-    
     """Calculate delay in seconds of response based on various factors"""
     if len(messages) < 2:
         return 5  # Default delay if not enough messages
@@ -46,7 +48,6 @@ def calculate_response_delay(messages: List[MessageTableModel]) -> int:
     print("🟡🟡🟡🟡")
     print("Average time between messages")
 
-
     # Adjust delay based on message frequency
     if avg_time_between_messages < 5:
         return 10  # Longer delay for rapid messages
@@ -54,6 +55,7 @@ def calculate_response_delay(messages: List[MessageTableModel]) -> int:
         return 5
     else:
         return 3  # Quicker response for infrequent messages
+
 
 def should_send_proactive_message(
     agent_proactivity: float,

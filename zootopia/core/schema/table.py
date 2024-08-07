@@ -105,7 +105,8 @@ class RoomTableModel(BaseModel):
     subscribe_msg_sent: bool = Field(default=False)
     disabled_by_admin: bool = Field(default=False)
     last_msg_sent_at: datetime = Field(
-        default_factory=utc_now, description="Time of last message sent by either agent or user"
+        default_factory=utc_now,
+        description="Time of last message sent by either agent or user",
     )
 
 

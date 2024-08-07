@@ -42,5 +42,3 @@ def process_task(self, data: dict):
     except Exception as exc:
         logger.error(f"Error processing task: {exc}")
         self.retry(exc=exc, countdown=60)
-
-

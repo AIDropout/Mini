@@ -72,7 +72,9 @@ class Agent:
         try:
             # Handle user message for respond tasks
             if isinstance(task, RespondTask):
-                user_message = task.user_message.content # Was already inserted into database
+                user_message = (
+                    task.user_message.content
+                )  # Was already inserted into database
 
                 if not await self.subscribe_manager.should_continue_conversation():
                     return True

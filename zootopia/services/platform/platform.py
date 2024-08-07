@@ -5,6 +5,7 @@ from fastapi import Request
 
 from zootopia.core.schema import ZootopiaMessage
 
+
 class MessageProviderBase(ABC):
     @classmethod
     @abstractmethod

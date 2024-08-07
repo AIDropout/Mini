@@ -4,6 +4,7 @@ from redis import ConnectionPool, Redis
 from zootopia.core.logger import logger
 from zootopia.core.config import config
 
+
 class RedisManager:
     def __init__(self):
         self.pool = None

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class Config(BaseSettings):
     ZOOTOPIA_API_KEY: str = Field(..., env="ZOOTOPIA_API_KEY")
     SUPABASE_URL: str = Field(..., env="SUPABASE_URL")
@@ -21,18 +22,31 @@ class Config(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = Field(..., env="GOOGLE_CLIENT_SECRET")
     FILTER_LLM: str = Field("groq/llama-3.1-70b-versatile", env="FILTER_LLM")
     SKIP_LLM: str = Field("groq/llama-3.1-70b-versatile", env="SKIP_LLM")
-    ACTION_MANAGER_LLM: str = Field("claude-3-5-sonnet-20240620", env="ACTION_MANAGER_LLM")
-    INTENT_MANAGER_LLM: str = Field("claude-3-5-sonnet-20240620", env="INTENT_MANAGER_LLM")
-    MEMORY_MANAGER_LLM: str = Field("claude-3-5-sonnet-20240620", env="MEMORY_MANAGER_LLM")
+    ACTION_MANAGER_LLM: str = Field(
+        "claude-3-5-sonnet-20240620", env="ACTION_MANAGER_LLM"
+    )
+    INTENT_MANAGER_LLM: str = Field(
+        "claude-3-5-sonnet-20240620", env="INTENT_MANAGER_LLM"
+    )
+    MEMORY_MANAGER_LLM: str = Field(
+        "claude-3-5-sonnet-20240620", env="MEMORY_MANAGER_LLM"
+    )
     GOOGLE_AUTH_SCOPE: List[str] = Field(
-        default=["https://www.googleapis.com/auth/calendar", "https://www.googleapis.com/auth/drive.file"]
+        default=[
+            "https://www.googleapis.com/auth/calendar",
+            "https://www.googleapis.com/auth/drive.file",
+        ]
     )
     GOOGLE_CALENDAR_NAME: str = Field("Life Tracking")
-    GOOGLE_CALENDAR_DESCRIPTION: str = Field("Use this calendar to track what you do day to day.")
+    GOOGLE_CALENDAR_DESCRIPTION: str = Field(
+        "Use this calendar to track what you do day to day."
+    )
     GOOGLE_DRIVE_FOLDER_NAME: str = Field("Life Tracking")
     GOOGLE_FILE_NAME_FORMAT: str = Field("%m_%d_%y %H:%M")
 
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
 
 config = Config()
-

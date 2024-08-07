@@ -4,21 +4,20 @@ import subprocess
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from pyngrok import ngrok
-from starlette.middleware.base import BaseHTTPMiddleware
-import psutil
-import gc
 from zootopia.api import router as api_router
 from zootopia.core.logger import logger
-from memory_profiler import profile
 from zootopia.services import Telegram, BirdSMSProvider
 from zootopia.server.redis.redis import redis_manager
 
 
 LOCAL_URL = "127.0.0.1"
 PORT = 8000
-celery_worker_process = None
+USE_GUNICORN = False
+
 
 def stop_existing_processes():
+    """Stops all local server processes"""
+
     try:
         pids = subprocess.check_output(["lsof", "-t", f"-i:{PORT}"]).split()
         for pid in pids:
@@ -29,17 +28,9 @@ def stop_existing_processes():
         logger.info(f"No processes found using port {PORT}")
 
 
-class LoggingMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        logger.info(f"Request: {request.method} {request.url}")
-        logger.info(f"From: {request.client.host}")
-        logger.info(f"Headers: {request.headers}")
-        body = await request.body()
-        logger.info(f"Body: {body.decode()}")
-        return await call_next(request)
-
-
 async def configure_local_webhooks() -> None:
+    """Sets up an Ngrok public URL, and directs received Bird/Telegram messages to the URL"""
+
     ngrok_connection = ngrok.connect(addr=f"{LOCAL_URL}:{PORT}", proto="http")
     logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
 
@@ -57,83 +48,65 @@ async def configure_local_webhooks() -> None:
 
     logger.info("Ngrok and webhooks successfully set up!")
 
-@profile
-async def initialize_celery_worker():
-    return subprocess.Popen(
-        [
-            "celery",
-            "-A",
-            "zootopia.server.celery.celery",
-            "worker",
-            "-n",
-            "worker1@%h",
-            "--loglevel=ERROR",
-        ],
-    )
 
-@profile
-def initialize_redis_manager():
-    redis_manager.initialize()
-
-@profile
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Life cycle of FastAPI server"""
+    # Before Start
     redis_manager.initialize()
-    log_memory_usage("After app startup")
-    periodic_task = asyncio.create_task(periodic_memory_check())
-
     yield
-
+    # After end
     ngrok.kill()
     redis_manager.close()
-    periodic_task.cancel()
 
-
-def log_memory_usage(tag=""):
-    process = psutil.Process()
-    memory_info = process.memory_info()
-    logger.info(f"{tag} Memory usage: {memory_info.rss / 1024 / 1024:.2f} MB")
-
-class EnhancedMemoryUsageMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        log_memory_usage(f"Before request: {request.url.path}")
-        response = await call_next(request)
-        log_memory_usage(f"After request: {request.url.path}")
-        return response
-
-async def periodic_memory_check():
-    while True:
-        log_memory_usage("Periodic check")
-        await asyncio.sleep(300)  # Check every 5 minutes
 
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(EnhancedMemoryUsageMiddleware)
 app.include_router(api_router)
 
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Logging configuration for requests"""
+    logger.info(f"Request: {request.method} {request.url}")
+    logger.info(f"Headers: {request.headers}")
+    body = await request.body()
+    logger.info(f"Body: {body.decode()}")
+    response = await call_next(request)
+    logger.info(f"Response status: {response.status_code}")
+    return response
+
+
 """
-Gunicorn used to simulate prod env (since multiple workers)
-- To view ports run: ps aux | grep gunicorn
+How everything is setup:
+
+In production (Render.com), the start command is starting the celery servers and gunicorn workers
+
+In local, we can either use uvicorn or gunicorn (gunicorn to simulate prod environment) by setting USE_GUNICORN: bool
+
+To start local,
+- Open a terminal and start celery:
+celery -A zootopia.server.celery.celery worker -n worker1@%h
+- Open another terminal and run the main script
+python main.py
+
+Helpful commands:
+- To view gunicorn ports run: ps aux | grep gunicorn
 - To kill gunicorn run: pkill -f gunicorn
-
-Celery
-- celery -A zootopia.server.celery.celery worker -n worker1@%h
-
-Flower
+Flower (Flower hosts a localhost dashboard to view status of Celery tasks):
 - export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/ZOOTOPIA/ZOOTOPIA
 - View celery tasks via Flower: celery -A zootopia.server.celery.celery flower
 
-TODO: add celery run command to prod
 """
 if __name__ == "__main__":
-    log_memory_usage("Before server start")
+    """This main function is ONLY called when developing and running python main.py"""
 
-    use_gunicorn = False
+    # Set up a local server with a public url via ngrok
     asyncio.run(configure_local_webhooks())
+
+    # Stops all existing servers
     stop_existing_processes()
 
-    if use_gunicorn:
+    if USE_GUNICORN:
         # Start Gunicorn server
         gunicorn_command = [
             "gunicorn",
@@ -151,4 +124,3 @@ if __name__ == "__main__":
         import uvicorn
 
         uvicorn.run("main:app", host=LOCAL_URL, port=PORT, reload=True)
-    log_memory_usage("After server start")

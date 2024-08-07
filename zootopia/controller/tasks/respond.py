@@ -12,7 +12,7 @@ from zootopia.utils.time_utils import calculate_response_delay
 def handle_respond(request_body: dict):
     """
     Called by /message endpoint.
-    This function inserts the user message and 
+    This function inserts the user message and
     schedules the task based on a calculated delay
     """
 
@@ -52,5 +52,3 @@ def handle_respond(request_body: dict):
 
     except Exception as e:
         logger.exception(f"Exception in schedule respond: {e}")
-
-

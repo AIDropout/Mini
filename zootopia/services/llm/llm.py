@@ -5,6 +5,7 @@ from zootopia.core.logger import logger
 import re
 import json
 
+
 class LLM:
     """Class for Large Language Models (LLMs) usage powered by LiteLLM"""
 
@@ -95,7 +96,7 @@ class LLM:
             prepared_messages.append({"role": "user", "content": "[ignore]"})
 
         return prepared_messages
-    
+
     def _clean_and_parse_llm_json_output(self, llm_output: str) -> dict:
         """
         Cleans up the output of an LLM and returns a JSON object.

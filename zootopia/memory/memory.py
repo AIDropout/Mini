@@ -1,5 +1,10 @@
 from zootopia.core.logger import logger
-from zootopia.core.schema import Tables, MessageTableModel, RoomTableModel, AgentTableModel
+from zootopia.core.schema import (
+    Tables,
+    MessageTableModel,
+    RoomTableModel,
+    AgentTableModel,
+)
 from typing import List, Dict
 from zootopia.services import SupabaseDB
 from zootopia.core.exceptions import MessageInsertError
@@ -7,7 +12,9 @@ from zootopia.core.exceptions import MessageInsertError
 
 class MemoryManager:
 
-    def __init__(self, database_service: SupabaseDB, room: RoomTableModel, agent: AgentTableModel):
+    def __init__(
+        self, database_service: SupabaseDB, room: RoomTableModel, agent: AgentTableModel
+    ):
         self.database_service = database_service
         self.room_id = room.id
         self.agent_id = agent.id

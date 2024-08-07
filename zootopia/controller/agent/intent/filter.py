@@ -134,4 +134,3 @@ class FilterIntent(
         except (KeyError, ValueError) as e:
             logger.error(f"Error parsing filter intent response: {str(e)}")
             raise LLMResponseParsingError()
-

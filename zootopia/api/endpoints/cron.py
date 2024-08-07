@@ -15,7 +15,9 @@ async def cron_webhook(
 ):
     """Endpoint hit by Supabase cron job every x minutes."""
     try:
-        await handle_revive(background_tasks, dev_mode=is_ngrok_url(str(request.base_url)))
+        await handle_revive(
+            background_tasks, dev_mode=is_ngrok_url(str(request.base_url))
+        )
     except Exception as e:
         logger.exception(f"Error in cron webhook: {e}")
         raise HTTPException(status_code=500, detail=str(e))

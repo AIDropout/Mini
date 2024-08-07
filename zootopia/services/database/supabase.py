@@ -20,18 +20,25 @@ class SupabaseDB:
         data, _ = self.supabase.table(table_name).insert(item_dict).execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
-    def update(self, table_name: str, item: TableModel, condition_key: str, condition_value: Any) -> TableModel:
+    def update(
+        self,
+        table_name: str,
+        item: TableModel,
+        condition_key: str,
+        condition_value: Any,
+    ) -> TableModel:
         query = self.supabase.table(table_name).update(item.model_dump())
-        
+
         if not condition_key or not condition_value:
-            raise ValueError("Both condition_key and condition_value are required for update operation")
-        
+            raise ValueError(
+                "Both condition_key and condition_value are required for update operation"
+            )
+
         query = query.eq(condition_key, condition_value)
-        
+
         data, _ = query.execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
-    
     def get_row(
         self,
         table_name: str,

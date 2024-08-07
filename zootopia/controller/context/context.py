@@ -38,7 +38,9 @@ class BaseContextManager:
             room = RoomTableModel(user_id=user.id, agent_id=agent.id)
             print(f"Created RoomTableModel: {room}")
 
-            room_dict = room.model_dump()  # Convert to dictionary to ensure serialization
+            room_dict = (
+                room.model_dump()
+            )  # Convert to dictionary to ensure serialization
             print(f"RoomTableModel as dict: {room_dict}")
             room = self.database.insert(Tables.ROOMS.value, room)
 

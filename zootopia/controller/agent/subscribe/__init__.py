@@ -1,5 +1,3 @@
 from .subscribe import SubscribeManager
 
-__all__ = [
-    'SubscribeManager'
-]
+__all__ = ["SubscribeManager"]
