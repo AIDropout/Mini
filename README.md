@@ -70,7 +70,11 @@ Paste API keys into .env
 ## 🚀 Usage
 Run the project:
 ```bash
-python main.py
+   # 1. Open a terminal and start the celery server
+   celery -A zootopia.server.celery.celery worker -n worker1@%h
+
+   # 2. Run the FastAPI server
+    python main.py
 ```
 
 Interact with the demo:

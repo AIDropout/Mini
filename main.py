@@ -16,6 +16,7 @@ from zootopia.server.redis.redis import redis_manager
 
 LOCAL_URL = "127.0.0.1"
 PORT = 8000
+celery_worker_process = None
 
 def stop_existing_processes():
     try:
@@ -77,19 +78,12 @@ def initialize_redis_manager():
 @profile
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Start Celery worker
-    log_memory_usage("Before app startup")
-
-    celery_worker_process = await initialize_celery_worker()
     redis_manager.initialize()
     log_memory_usage("After app startup")
-
     periodic_task = asyncio.create_task(periodic_memory_check())
 
-
     yield
-    celery_worker_process.terminate()
-    celery_worker_process.wait()
+
     ngrok.kill()
     redis_manager.close()
     periodic_task.cancel()
@@ -135,7 +129,7 @@ TODO: add celery run command to prod
 if __name__ == "__main__":
     log_memory_usage("Before server start")
 
-    use_gunicorn = True
+    use_gunicorn = False
     asyncio.run(configure_local_webhooks())
     stop_existing_processes()
 
