@@ -16,7 +16,7 @@ USE_GUNICORN = False
 
 
 def stop_existing_processes():
-    """Stops all local server processes"""
+    """Stops all local server processes for main.py"""
 
     try:
         pids = subprocess.check_output(["lsof", "-t", f"-i:{PORT}"]).split()
@@ -52,10 +52,26 @@ async def configure_local_webhooks() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Life cycle of FastAPI server"""
+    celery_worker_process = None
     # Before Start
     redis_manager.initialize()
+    if os.getenv("ENVIRONMENT") == "local":
+        # Start Celery worker
+        celery_worker_process = subprocess.Popen(
+            [
+                "celery",
+                "-A",
+                "zootopia.server.celery.celery",
+                "worker",
+                "-n",
+                "worker1@%h",
+                "--loglevel=ERROR",
+            ],
+        )
+
     yield
     # After end
+    celery_worker_process.terminate()
     ngrok.kill()
     redis_manager.close()
 
@@ -105,6 +121,7 @@ if __name__ == "__main__":
 
     # Stops all existing servers
     stop_existing_processes()
+
 
     if USE_GUNICORN:
         # Start Gunicorn server

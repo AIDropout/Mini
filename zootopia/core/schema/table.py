@@ -1,7 +1,7 @@
 from enum import Enum
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, List, Optional, Type, Union, Any, Literal
 from pydantic import BaseModel, Field
 
 
@@ -41,8 +41,10 @@ class Tables(Enum):
     MESSAGES__sender_id = "sender_id"
     MESSAGES__room_id = "room_id"
     MESSAGES__created_at = "created_at"
-    MESSAGES__message = "message"
+    MESSAGES__content = "content"
+    MESSAGES__type = "type"
     MESSAGES__sent_by_admin = "sent_by_admin"
+    MESSAGES__log = "log"
 
     SCHEDULE = "schedule"
     SCHEDULE__id = "id"
@@ -116,7 +118,11 @@ class MessageTableModel(BaseModel):
     room_id: int = Field(default=None)
     created_at: datetime = Field(default_factory=utc_now)
     content: str = Field(default=None)
+    type: Literal["respond", "remind", "revive"] = Field(default="respond")
     sent_by_admin: bool = Field(default=False)
+    log: Dict[str, Any] = Field(
+        default_factory=dict, description="JSONB field for agent logs"
+    )
 
 
 class ScheduleTableModel(BaseModel):
@@ -125,7 +131,7 @@ class ScheduleTableModel(BaseModel):
     message_id: Optional[int]
     created_at: datetime = Field(default_factory=utc_now)
     run_at: str
-    type: str = Field(default="respond")  # respond, remind
+    type: Literal["respond", "remind", "revive"] = Field(default="respond")
     task: Optional[str] = Field(default=None)
     complete: bool = Field(default=False)
 

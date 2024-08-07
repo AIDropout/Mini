@@ -27,7 +27,10 @@ async def signup_webhook(
         context.database.insert(
             table_name=Tables.MESSAGES.value,
             item=MessageTableModel(
-                room_id=room.id, sender_id=agent.id, content=agent.first_message
+                room_id=room.id,
+                sender_id=agent.id,
+                content=agent.first_message,
+                type="revive",
             ),
         )
 

@@ -22,10 +22,7 @@ class BaseTask(ABC):
 
     def __str__(self) -> str:
         return (
-            f"\n\n{self.__class__.__name__}:\n"
-            f"  Type: {self.type.value}\n"
-            f"  Message: {self.message}\n"
-            f"  Instructions: {self.instructions}\n"
+            f"{self.__class__.__name__}"
             f"  Recent message count: {self.recent_message_count}\n"
         )
 

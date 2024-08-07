@@ -31,8 +31,10 @@ from zootopia.controller.agent.action import ActionManager
 from zootopia.controller.agent.subscribe import SubscribeManager
 from zootopia.memory import MemoryManager
 from zootopia.core.logger import logger
+from zootopia.core.event_logger import event_logger as el
 from zootopia.utils.time_utils import get_current_time_readable
 from typing import Dict
+from datetime import datetime
 
 
 class Agent:
@@ -67,7 +69,12 @@ class Agent:
         self.intent_factory = IntentFactory()
 
     async def handle_chat_task(self, task: BaseTask) -> bool:
-        logger.info(f"🟢 {task}")
+        """Core logic for generates and sending message"""
+
+        el.log(
+            level="info",
+            message=f"🩵 Processing task: {task}",
+        )
 
         try:
             # Handle user message for respond tasks
@@ -77,6 +84,10 @@ class Agent:
                 )  # Was already inserted into database
 
                 if not await self.subscribe_manager.should_continue_conversation():
+                    el.log(
+                        level="info",
+                        message=f"🩵 Subscribe manager says should end",
+                    )
                     return True
 
                 # Process schedule intent
@@ -91,8 +102,9 @@ class Agent:
                             order_desc=False,
                         )
 
-                        logger.info(
-                            f"Existing scheduled tasks for room {self.room.id}: {existing_tasks}"
+                        el.log(
+                            level="info",
+                            message=f"🩵 Existing scheduled tasks for room {self.room.id}: {existing_tasks}",
                         )
 
                         schedule_result: ScheduleIntentResult = schedule_intent.process(
@@ -103,8 +115,6 @@ class Agent:
                                 IntentType.SCHEDULE
                             ),
                         )
-                        # print("🍊🍊🍊🍊")
-                        # print(schedule_result)
 
                         if schedule_result.approved:
                             inserted_task = self.database_service.insert(
@@ -118,7 +128,10 @@ class Agent:
                                 ),
                             )
 
-                            logger.info(f"Scheduled task: {inserted_task}")
+                            el.log(
+                                level="info",
+                                message=f"🩵 Scheduled task: {inserted_task}",
+                            )
 
                 # all_recent_messages.append({"role": "user", "content": user_message})
             all_recent_messages = self.memory.get_recent_messages(
@@ -144,9 +157,11 @@ class Agent:
                 instructions=task.instructions,
                 current_time=get_current_time_readable(),
             )
-
-            logger.info(f"🟢 System prompt :\n{system_prompt}")
-            logger.info(f"🟢 Recent messages:\n{all_recent_messages}")
+            el.log(step="🩵 System prompt for agent", details=f"{system_prompt}")
+            el.log(
+                step="🩵 Recent message passed to agent",
+                details=f"{all_recent_messages}",
+            )
 
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
@@ -179,10 +194,15 @@ class Agent:
                         ),
                     )
                 else:
-                    logger.error("Failed to create FilterIntent")
+                    el.log(
+                        level="error",
+                        message=f"🩵 Failed to create FilterIntent.",
+                    )
                     return False
 
-            logger.info(filter_result.message)
+            el.log(
+                level="info", message=f"🩵 filter result msg: {filter_result.message}"
+            )
 
             # If approved by filter or if there's a high-confidence proposed message, send and store
             if filter_result.approved:
@@ -190,20 +210,35 @@ class Agent:
             elif filter_result.proposed_message:
                 final_message = filter_result.proposed_message
             else:
-                logger.warning("Unable to generate appropriate response.")
+                el.log(
+                    level="warning",
+                    message=f"🩵 Unable to generate appropriate response.",
+                )
                 return False
 
             await self.action.handle_message_send(final_message)
+
             self.memory.store_message(
                 MessageTableModel(
-                    room_id=self.room.id, sender_id=self.agent.id, content=final_message
+                    room_id=self.room.id,
+                    sender_id=self.agent.id,
+                    content=final_message,
+                    type=task.type.value,
+                    log=el.get_event_log(),
                 )
             )
             return True
 
         except RequestCanceledException:
-            logger.info(f"Request cancelled for room {self.room.id} due to new request")
+            el.log(
+                level="info",
+                message=f"🩵 Request cancelled for room {self.room.id} due to new request",
+            )
             return False
         except Exception as e:
-            logger.error(f"Unexpected error in processing chat: {str(e)}")
+            el.log(
+                level="error",
+                message=f"🩵 Unexpected error in processing chat: {str(e)}",
+                exception={e},
+            )
             return False
