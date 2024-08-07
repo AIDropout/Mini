@@ -60,7 +60,7 @@ class MemoryManager:
 
             return [
                 {
-                    "role": "user" if msg.sender_id == self.agent_id else "assistant",
+                    "role": "assistant" if msg.sender_id == self.agent_id else "user",
                     "content": msg.content,
                 }
                 for msg in message_models
