@@ -76,9 +76,7 @@ class Agent:
         try:
             # Handle user message for respond tasks
             if isinstance(task, RespondTask):
-                user_message = (
-                    task.user_message.content
-                )  # Was already inserted into database
+                user_message = task.user_message.content # Was already inserted into database
 
                 el.log(f"🩵 Responding to '{user_message}' in Room {task.room_id}")
 
@@ -92,9 +90,9 @@ class Agent:
                     if schedule_intent:
 
                         existing_tasks = self.database_service.get_multiple_rows(
-                            table_name="schedule",
-                            conditions={"room_id": self.room.id},
-                            order_by="run_at",
+                            table_name=Tables.SCHEDULE.value,
+                            conditions={Tables.SCHEDULE__room_id.value: self.room.id},
+                            order_by=Tables.SCHEDULE__run_at.value,
                             order_details=False,
                         )
 
@@ -125,7 +123,6 @@ class Agent:
 
                             el.log(f"🩵 Scheduled a task: {inserted_task}")
 
-                # all_recent_messages.append({"role": "user", "content": user_message})
             all_recent_messages = self.memory.get_recent_messages(
                 count=task.recent_message_count
             )

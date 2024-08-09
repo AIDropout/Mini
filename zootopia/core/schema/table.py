@@ -2,8 +2,8 @@ from enum import Enum
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, List, Optional, Type, Union, Any, Literal
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field, field_validator
+import json
 
 class Tables(Enum):
     """Tables available in the database."""
@@ -119,9 +119,18 @@ class MessageTableModel(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
     content: str = Field(default=None)
     sent_by_admin: bool = Field(default=False)
-    log: List[Dict[str, Any]] = Field(
-        default_factory=list, description="JSONB field for agent logs"
+    log: Optional[Union[List[Dict[str, Any]], str]] = Field(
+        default=None, description="JSONB field for agent logs"
     )
+
+    @field_validator("log", mode="before")
+    def parse_log(cls, value):
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return value  # Leave it as string if it can't be parsed
+        return value
 
 
 class ScheduleTableModel(BaseModel):
