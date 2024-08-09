@@ -52,6 +52,12 @@ class MemoryManager:
                 conditions={Tables.MESSAGES__room_id.value: self.room_id},
             )
 
+            if not messages or not isinstance(messages, list):
+                logger.error(
+                    f"Invalid or empty data fetched for room {self.room_id}: {messages}"
+                )
+                return []
+
             # Convert database results to MessageTableModel instances and then to dict format
             message_models = [
                 MessageTableModel.model_validate(message) for message in messages

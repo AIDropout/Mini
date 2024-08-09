@@ -60,7 +60,7 @@ class GDrive:
         Check if a folder with the given name exists in the specified parent folder.
         """
         query = (
-            f"title='{folder_name}' and mimeType='application/vnd.google-apps.folder' "
+            f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' "
             f"and '{parent_id}' in parents and trashed=false"
         )
         file_list = self.drive.ListFile({"q": query}).GetList()

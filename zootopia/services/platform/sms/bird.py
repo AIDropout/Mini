@@ -1,6 +1,6 @@
 """SMS Messaging class utilizing Bird API"""
 
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional, cast, Tuple
 import requests
 from zootopia.core.config import config
 from zootopia.core.logger import logger
@@ -66,12 +66,14 @@ class BirdSMSProvider(MessageProviderBase):
             raise MessageParsingError(f"Missing key in Bird message: {e}") from e
 
     # TODO: Get verification that message was actually sent
-    async def send_message(self, message: str) -> bool:
+    async def send_message(self, message: str) -> Tuple[bool, Dict[str, Any]]:
         """
         Send a Bird SMS message to the recipient.
 
         Returns:
-            bool: True if the message was successfully sent, False otherwise.
+            Tuple[bool, Dict[str, Any]]: A tuple containing:
+                - bool: True if the message was successfully sent, False otherwise.
+                - Dict[str, Any]: Additional details about the send operation.
         """
         try:
             url = f"{self._api_url}/workspaces/{self._workspace_id}/channels/{self._channel_id}/messages"
@@ -82,18 +84,21 @@ class BirdSMSProvider(MessageProviderBase):
             response = requests.post(url, headers=self._api_header, json=payload)
             response_data = response.json()
 
+            details = {
+                "channel_id": self._channel_id,
+                "phone_number": self._user_phone,
+                "message_length": len(message),
+                "status_code": response.status_code,
+                "response_data": response_data,
+            }
+
             if (
                 response.status_code == 202
                 and response_data.get("status") == "accepted"
             ):
-                logger.info("🟢 Bird message successfully sent")
-                return True
+                return True, details
             else:
-                logger.error(
-                    f"🔴 Failed to send Bird message. Status code: {response.status_code}"
-                )
-                logger.error(f"Failed Bird API Response: {response_data}")
-                return False
+                return False, details
         except Exception as e:
             logger.error(f"🔴 Error sending Bird message: {str(e)}")
             raise SendMessageError(f"Error sending message: {e}") from e

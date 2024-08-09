@@ -118,10 +118,9 @@ class MessageTableModel(BaseModel):
     room_id: int = Field(default=None)
     created_at: datetime = Field(default_factory=utc_now)
     content: str = Field(default=None)
-    type: Literal["respond", "remind", "revive"] = Field(default="respond")
     sent_by_admin: bool = Field(default=False)
-    log: Dict[str, Any] = Field(
-        default_factory=dict, description="JSONB field for agent logs"
+    log: List[Dict[str, Any]] = Field(
+        default_factory=list, description="JSONB field for agent logs"
     )
 
 

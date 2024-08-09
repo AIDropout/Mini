@@ -71,10 +71,7 @@ class Agent:
     async def handle_chat_task(self, task: BaseTask) -> bool:
         """Core logic for generates and sending message"""
 
-        el.log(
-            level="info",
-            message=f"🩵 Processing task: {task}",
-        )
+        el.log(f"🩵 Handling {task}")
 
         try:
             # Handle user message for respond tasks
@@ -83,11 +80,10 @@ class Agent:
                     task.user_message.content
                 )  # Was already inserted into database
 
+                el.log(f"🩵 Responding to '{user_message}' in Room {task.room_id}")
+
                 if not await self.subscribe_manager.should_continue_conversation():
-                    el.log(
-                        level="info",
-                        message=f"🩵 Subscribe manager says should end",
-                    )
+                    el.log("🩵 subscriber manager says should end")
                     return True
 
                 # Process schedule intent
@@ -99,12 +95,11 @@ class Agent:
                             table_name="schedule",
                             conditions={"room_id": self.room.id},
                             order_by="run_at",
-                            order_desc=False,
+                            order_details=False,
                         )
 
                         el.log(
-                            level="info",
-                            message=f"🩵 Existing scheduled tasks for room {self.room.id}: {existing_tasks}",
+                            f"🩵 Here are the existing scheduled tasks for room {self.room.id} 🩵 {existing_tasks}",
                         )
 
                         schedule_result: ScheduleIntentResult = schedule_intent.process(
@@ -128,10 +123,7 @@ class Agent:
                                 ),
                             )
 
-                            el.log(
-                                level="info",
-                                message=f"🩵 Scheduled task: {inserted_task}",
-                            )
+                            el.log(f"🩵 Scheduled a task: {inserted_task}")
 
                 # all_recent_messages.append({"role": "user", "content": user_message})
             all_recent_messages = self.memory.get_recent_messages(
@@ -157,11 +149,8 @@ class Agent:
                 instructions=task.instructions,
                 current_time=get_current_time_readable(),
             )
-            el.log(step="🩵 System prompt for agent", details=f"{system_prompt}")
-            el.log(
-                step="🩵 Recent message passed to agent",
-                details=f"{all_recent_messages}",
-            )
+            el.log(f"🩵 System prompt for agent 🩵 {system_prompt}")
+            el.log(f"🩵 Recent message passed to agent 🩵 {all_recent_messages}")
 
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
@@ -194,15 +183,10 @@ class Agent:
                         ),
                     )
                 else:
-                    el.log(
-                        level="error",
-                        message=f"🩵 Failed to create FilterIntent.",
-                    )
+                    el.log("🩵 Failed to create FilterIntent. 🩵")
                     return False
 
-            el.log(
-                level="info", message=f"🩵 filter result msg: {filter_result.message}"
-            )
+            el.log(f"🩵 Filter result msg 🩵 {filter_result.message}")
 
             # If approved by filter or if there's a high-confidence proposed message, send and store
             if filter_result.approved:
@@ -210,13 +194,12 @@ class Agent:
             elif filter_result.proposed_message:
                 final_message = filter_result.proposed_message
             else:
-                el.log(
-                    level="warning",
-                    message=f"🩵 Unable to generate appropriate response.",
-                )
+                el.log(f"🩵 Unable to generate appropriate response.🩵")
                 return False
 
-            await self.action.handle_message_send(final_message)
+            success, send_results = await self.action.handle_message_send(final_message)
+
+            el.log(f"🩵 Bird message sending result 🩵 {success}")
 
             self.memory.store_message(
                 MessageTableModel(
@@ -224,21 +207,14 @@ class Agent:
                     sender_id=self.agent.id,
                     content=final_message,
                     type=task.type.value,
-                    log=el.get_event_log(),
+                    log=el.get_logs(),
                 )
             )
-            return True
+            return success
 
         except RequestCanceledException:
-            el.log(
-                level="info",
-                message=f"🩵 Request cancelled for room {self.room.id} due to new request",
-            )
+            el.log(f"🩵 Request cancelled for room {self.room.id} due to new request")
             return False
         except Exception as e:
-            el.log(
-                level="error",
-                message=f"🩵 Unexpected error in processing chat: {str(e)}",
-                exception={e},
-            )
+            el.log(f"🩵 Unexpected error in processing chat: {str(e)}")
             return False
