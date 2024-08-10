@@ -1,10 +1,12 @@
 from datetime import datetime
-from typing import List, Optional, TypeVar, Dict, Tuple, Union, Any
+from functools import wraps
+from typing import List, Optional, TypeVar, Dict, Tuple, Union, Any, Callable
 from supabase import create_client
 from zootopia.core.logger import logger
 from zootopia.core.config import config
 from zootopia.core.schema import TableModel
 from zootopia.core.schema.table import TABLE_MODEL_MAP
+from zootopia.core.error import error_handler
 
 T = TypeVar("T", bound=TableModel)
 
@@ -14,12 +16,14 @@ class SupabaseDB:
     def __init__(self) -> None:
         self.supabase = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
 
+    @error_handler("Supabase")
     def insert(self, table_name: str, item: TableModel) -> TableModel:
         # Removes 'id' field, since Supabase auto-increments
         item_dict = item.model_dump(exclude={"id"})
         data, _ = self.supabase.table(table_name).insert(item_dict).execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
+    @error_handler("Supabase")
     def update(
         self,
         table_name: str,
@@ -39,6 +43,7 @@ class SupabaseDB:
         data, _ = query.execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
+    @error_handler("Supabase")
     def get_row(
         self,
         table_name: str,
@@ -64,6 +69,7 @@ class SupabaseDB:
             return model_class(**data[1][0])
         return None
 
+    @error_handler("Supabase")
     def get_multiple_rows(
         self,
         table_name: str,
@@ -74,36 +80,31 @@ class SupabaseDB:
         conditions: Optional[Dict] = None,
         **kwargs,
     ) -> List[Dict]:
-        try:
-            query = self.supabase.table(table_name).select("*")
+        query = self.supabase.table(table_name).select("*")
 
-            if conditions:
-                for key, value in conditions.items():
-                    query = query.eq(key, value)
-
-            for key, value in kwargs.items():
+        if conditions:
+            for key, value in conditions.items():
                 query = query.eq(key, value)
 
-            if from_time is not None:
-                query = query.gte("created_at", from_time.isoformat())
+        for key, value in kwargs.items():
+            query = query.eq(key, value)
 
-            query = query.order(order_by, desc=order_desc).limit(max_rows)
+        if from_time is not None:
+            query = query.gte("created_at", from_time.isoformat())
 
-            response = query.execute()
+        query = query.order(order_by, desc=order_desc).limit(max_rows)
 
-            # Handle the actual response format
-            if hasattr(response, "data") and isinstance(response.data, list):
-                data = response.data
-            else:
-                logger.error(f"Unexpected response format from Supabase: {response}")
-                return []
+        response = query.execute()
 
-            # Return the data as a list of dictionaries
-            return data
-        except Exception as e:
-            logger.error(f"Error in get_multiple_rows: {str(e)}")
+        if hasattr(response, "data") and isinstance(response.data, list):
+            data = response.data
+        else:
+            logger.error(f"Unexpected response format from Supabase: {response}")
             return []
 
+        return data
+
+    @error_handler("Supabase")
     def delete(self, table_name: str, *conditions) -> bool:
         query = self.supabase.table(table_name).delete()
         for key, value in conditions:
@@ -111,6 +112,7 @@ class SupabaseDB:
         data, _ = query.execute()
         return bool(data and data[1])
 
+    @error_handler("Supabase")
     def query(
         self, table_name: str, *conditions: Union[Tuple[str, str], Tuple[str, str, str]]
     ) -> List[TableModel]:
@@ -139,3 +141,21 @@ class SupabaseDB:
         data, _ = query.execute()
         model_class = TABLE_MODEL_MAP[table_name]
         return [model_class(**item) for item in data[1]] if data and data[1] else []
+
+    @error_handler("Supabase")
+    def count_rows(
+        self,
+        table_name: str,
+        conditions: Optional[Dict[str, Any]] = None
+    ) -> int:
+        query = self.supabase.table(table_name).select("*", count="exact")
+
+        if conditions:
+            for key, value in conditions.items():
+                if value is None:
+                    query = query.is_(key, value)
+                else:
+                    query = query.eq(key, value)
+
+        result = query.execute()
+        return result.count

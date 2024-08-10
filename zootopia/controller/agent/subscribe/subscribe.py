@@ -9,6 +9,7 @@ from zootopia.services import SupabaseDB
 from zootopia.controller.agent.action import ActionManager
 from zootopia.memory import MemoryManager
 from zootopia.core.logger import logger
+from zootopia.core.error import error_handler
 
 
 class SubscribeManager:
@@ -30,58 +31,62 @@ class SubscribeManager:
         self.room = room
         self.agent = agent
 
-    async def should_continue_conversation(self) -> bool:
+    @error_handler("SubscribeManager")
+    async def should_continue_conversation(self) -> dict:
         """
         Determine if the conversation should continue based on subscription status,
         message count, and whether subscriptions are enabled.
 
         Returns:
-            bool: True if the request should continue, False if it should stop.
+            dict: A dictionary containing relevant information and whether to continue.
         """
+        result = {
+            "continue": True,
+            "subscribe_enabled": self.agent.subscribe_enabled,
+            "has_active_subscription": False,
+            "agent_message_count": 0,
+            "free_msg_limit": self.agent.free_msg_limit,
+            "subscribe_msg_sent": self.room.subscribe_msg_sent,
+        }
+
+        # Always get the message count, regardless of subscription status
+        result["agent_message_count"] = await self._get_agent_message_count()
+
         if not self.agent.subscribe_enabled:
-            return True
+            return result
 
-        if await self._has_active_subscription():
-            return True
-
-        agent_message_count = await self._get_agent_message_count()
-
-        print(
-            f"""
-        🍊🍊🍊total agent messages in room: {agent_message_count}
-        \n
-        🍊🍊🍊agent free limit: {self.agent.free_msg_limit}
-        \n
-        🍊🍊🍊subscribe message sent? {self.room.subscribe_msg_sent}
-        """
-        )
+        result["has_active_subscription"] = await self._has_active_subscription()
+        if result["has_active_subscription"]:
+            return result
 
         # Check if we need to send a subscription message
-        if agent_message_count >= self.agent.free_msg_limit:
+        if result["agent_message_count"] >= self.agent.free_msg_limit:
             if not self.room.subscribe_msg_sent:
                 await self._send_subscribe_message()
-            return False
+                result["subscribe_msg_sent"] = True
+            result["continue"] = False
 
-        return True
+        return result
 
+    @error_handler("SubscribeManager")
     async def _get_agent_message_count(self) -> int:
         """
-        Get the number of agent messages in the room.
+        Get the number of agent messages in the room using a direct count query.
 
         Returns:
             int: The count of agent messages.
         """
-        agent_messages_in_room = self.database_service.get_multiple_rows(
+        count = self.database_service.count_rows(
             table_name=Tables.MESSAGES.value,
             conditions={
                 Tables.MESSAGES__room_id.value: self.room.id,
                 Tables.MESSAGES__sender_id.value: self.agent.id,
-            },
-            order_by=Tables.MESSAGES__created_at.value,
-            order_desc=False,
+            }
         )
-        return len(agent_messages_in_room)
+        logger.info(f"Agent message count in room {self.room.id}: {count} 🟡🟡🟡")
+        return count
 
+    @error_handler("SubscribeManager")
     async def _has_active_subscription(self) -> bool:
         """
         Check if the room has an active subscription.
@@ -99,6 +104,7 @@ class SubscribeManager:
         )
         return active_subscription is not None
 
+    @error_handler("SubscribeManager")
     async def _send_subscribe_message(self):
         """
         Send a subscription message, store it, and update the room's status.
@@ -112,12 +118,13 @@ class SubscribeManager:
         await self.action.handle_message_send(subscribe_message)
 
         # Store the subscription message
-        self.memory.store_message(
+        self.database_service.insert(
+            Tables.MESSAGES.value,
             MessageTableModel(
                 room_id=self.room.id,
                 sender_id=self.agent.id,
                 content=subscribe_message,
-            )
+            ),
         )
 
         # Update the room to indicate the subscription message was sent

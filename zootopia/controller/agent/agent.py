@@ -13,7 +13,6 @@ from zootopia.controller.tasks.task_types import (
     RespondTask,
 )
 from zootopia.services import MessageProvider, SupabaseDB
-from zootopia.core.exceptions import RequestCanceledException
 from zootopia.controller.context import BaseContextManager
 from zootopia.controller.agent.intent import (
     FilterIntentInput,
@@ -31,7 +30,7 @@ from zootopia.controller.agent.action import ActionManager
 from zootopia.controller.agent.subscribe import SubscribeManager
 from zootopia.memory import MemoryManager
 from zootopia.core.logger import logger
-from zootopia.core.event_logger import event_logger as el
+from zootopia.controller.agent.event_logger import event_logger as el
 from zootopia.utils.time_utils import get_current_time_readable
 from typing import Dict
 from datetime import datetime
@@ -71,18 +70,32 @@ class Agent:
     async def handle_chat_task(self, task: BaseTask) -> bool:
         """Core logic for generates and sending message"""
 
-        el.log(f"🩵 Handling {task}")
+        el.log(f"🟢 TASK: {task}")
 
         try:
             # Handle user message for respond tasks
             if isinstance(task, RespondTask):
-                user_message = task.user_message.content # Was already inserted into database
+                user_message = (
+                    task.user_message.content
+                )  # Was already inserted into database
 
-                el.log(f"🩵 Responding to '{user_message}' in Room {task.room_id}")
+                el.log(f"🟢 RESPONDING TO: '{user_message}' in Room {task.room_id}")
 
-                if not await self.subscribe_manager.should_continue_conversation():
-                    el.log("🩵 subscriber manager says should end")
+                # Handle subscribe
+                result = await self.subscribe_manager.should_continue_conversation()
+                el.log(
+                    f"""{"🟢" if result['continue'] else "🔴"} ROOM SUBSCRIPTION STATUS:
+                    Continue conversation: {result['continue']}.
+                    Subscribe enabled for agent: {result['subscribe_enabled']}.
+                    User has subscription for agent: {result['has_active_subscription']}.
+                    # of Agent messages in Room: {result['agent_message_count']}.
+                    Agent free message limit: {result['free_msg_limit']}.
+                    Subscribe message sent: {result['subscribe_msg_sent']}.
+                """
+                )
+                if not result["continue"]:
                     return True
+
 
                 # Process schedule intent
                 if self.intent_config.is_enabled(IntentType.SCHEDULE):
@@ -140,19 +153,22 @@ class Agent:
             It is now {current_time}
             """
 
-            # Use Filter intent to ensure quality of agent response
             system_prompt = system_prompt_template.format(
                 agent_prompt=self.agent_prompt,
                 instructions=task.instructions,
                 current_time=get_current_time_readable(),
             )
-            el.log(f"🩵 System prompt for agent 🩵 {system_prompt}")
-            el.log(f"🩵 Recent message passed to agent 🩵 {all_recent_messages}")
+            el.log(f"🟢 SYSTEM PROMPT FOR AGENT: {system_prompt}")
+            el.log(f"🟢 RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
+            # Generate agent message
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
             )
+            
+            el.log(f"🟢 MAIN LLM RESPONSE: {response_text}")
 
+            # Use Filter intent to ensure quality of agent response
             filter_result = None
             if not self.intent_config.is_enabled(IntentType.FILTER):
                 filter_result = FilterIntentResult(
@@ -179,11 +195,8 @@ class Agent:
                             IntentType.FILTER
                         ),
                     )
-                else:
-                    el.log("🩵 Failed to create FilterIntent. 🩵")
-                    return False
 
-            el.log(f"🩵 Filter result msg 🩵 {filter_result.message}")
+            el.log(f"{filter_result.message}")
 
             # If approved by filter or if there's a high-confidence proposed message, send and store
             if filter_result.approved:
@@ -191,27 +204,22 @@ class Agent:
             elif filter_result.proposed_message:
                 final_message = filter_result.proposed_message
             else:
-                el.log(f"🩵 Unable to generate appropriate response.🩵")
                 return False
 
-            success, send_results = await self.action.handle_message_send(final_message)
+            success = await self.action.handle_message_send(final_message)
+            el.log(f"{"🟢" if success else "🔴"} BIRD SMS SENT: {success}")
 
-            el.log(f"🩵 Bird message sending result 🩵 {success}")
-
-            self.memory.store_message(
+            inserted_message = self.database_service.insert(
+                Tables.MESSAGES.value,
                 MessageTableModel(
                     room_id=self.room.id,
                     sender_id=self.agent.id,
                     content=final_message,
                     type=task.type.value,
                     log=el.get_logs(),
-                )
+                ),
             )
-            return success
 
-        except RequestCanceledException:
-            el.log(f"🩵 Request cancelled for room {self.room.id} due to new request")
-            return False
         except Exception as e:
-            el.log(f"🩵 Unexpected error in processing chat: {str(e)}")
+            el.log(f"🔴 Unexpected error in processing chat: {str(e)}")
             return False

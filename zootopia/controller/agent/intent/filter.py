@@ -43,20 +43,12 @@ class FilterIntentResult(IntentResult):
     @property
     def message(self) -> str:
         if self.approved:
-            return f"🟢 LLM response APPROVED by filter (Confidence: {self.confidence})"
+            return f"🟢 FILTER RESULT: Approved (Confidence: {self.confidence})"
         else:
-            return f"🔴 LLM response FAILED (Confidence: {self.confidence})"
+            return f"🔴 FILTER RESULT: Rejected [{self.analyzed_message}] (Confidence: {self.confidence}). 🟢 NEW PROPOSED MESSAGE: {self.proposed_message}"
 
     def __repr__(self) -> str:
         return f"FilterResult(from_user={self.from_user}, approved={self.approved}, confidence={self.confidence})"
-
-    def __repr__(self) -> str:
-        return (
-            f"FilterResult(from_user={self.from_user}, "
-            f"approved={self.approved}, "
-            f"confidence={self.confidence.name}, "
-            f"proposed='{self. proposed_message[:50]}...')"
-        )
 
 
 @IntentFactory.register(IntentType.FILTER)

@@ -1,6 +1,11 @@
 from enum import Enum
 from fastapi import HTTPException
 from pydantic import BaseModel
+from datetime import datetime
+
+
+class ServiceError(Exception):
+    pass
 
 
 class RoomAlreadyExistsError(Exception):
@@ -25,11 +30,6 @@ class DatabaseConnectionError(Exception):
         super().__init__(message)
 
 
-class SMSServiceError(Exception):
-    def __init__(self, message="Failed to send SMS"):
-        super().__init__(message)
-
-
 class RoomCreationError(Exception):
     def __init__(self, message="Failed to create or get room"):
         super().__init__(message)
@@ -37,14 +37,6 @@ class RoomCreationError(Exception):
 
 class MessageParsingError(Exception):
     """Custom exception for errors during message parsing."""
-
-
-class SendMessageError(Exception):
-    """Custom exception for errors during sending messages."""
-
-
-class WebhookError(Exception):
-    """Custom exception for errors during webhook registration."""
 
 
 class MessageInsertError(Exception):
@@ -56,10 +48,3 @@ class MessageInsertError(Exception):
 
     def __str__(self):
         return f"MessageInsertError: {self.args[0]} (Room ID: {self.room_id}, Original error: {self.original_error})"
-
-
-class RequestCanceledException(Exception):
-    def __init__(self, room_id: int):
-        super().__init__(
-            f"🟠 Previous request in room '{room_id}' canceled due to this task"
-        )

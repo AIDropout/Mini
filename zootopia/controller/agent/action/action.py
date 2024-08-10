@@ -9,23 +9,27 @@ from zootopia.services import MessageProvider
 import random
 import asyncio
 from typing import List
-from zootopia.core.event_logger import event_logger as el
+from zootopia.controller.agent.event_logger import event_logger as el
 from datetime import datetime
+from zootopia.core.error import error_handler
+
 
 class ActionManager:
     def __init__(self, messaging_service: MessageProvider) -> None:
         self.llm = LLM(config.ACTION_MANAGER_LLM)
         self.messaging_service = messaging_service
 
+    @error_handler("ActionManager")
     def generate_message(
         self,
         messages: List[Dict[str, str]],
         system_prompt: Optional[str],
-    ) -> Optional[str]:
+    ) -> str:
         msg = self.llm.generate_response(messages, system_prompt)
         return msg
 
-    async def handle_message_send(self, msg: str) -> Tuple[bool, str]:
+    @error_handler("ActionManager")
+    async def handle_message_send(self, msg: str) -> bool:
         """
         Handle sending of potentially multi-part messages.
 
@@ -33,24 +37,19 @@ class ActionManager:
             msg (str): The message to send, potentially containing multiple parts separated by '|'.
 
         Returns:
-            Tuple[bool, str]: Overall success status and a log message string.
+            bool: Overall success status.
         """
         messages = msg.split("|")
         overall_success = True
-        log_messages = []
 
         for i, message in enumerate(messages):
             try:
-                success, details = await self.messaging_service.send_message(message.strip())
+                success, _ = await self.messaging_service.send_message(message.strip())
                 overall_success = overall_success and success
-                
-                log_message = f"Message '{message[:20]}...' {'sent successfully' if success else 'failed to send'}"
-                log_messages.append(log_message)
 
                 if i < len(messages) - 1:
                     await asyncio.sleep(random.uniform(0, 10))
-            except Exception as e:
-                log_messages.append(f"Error sending message '{message[:20]}...': {str(e)}")
+            except Exception:
                 overall_success = False
 
-        return overall_success, " | ".join(log_messages)
+        return overall_success

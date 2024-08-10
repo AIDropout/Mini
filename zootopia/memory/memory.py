@@ -7,7 +7,7 @@ from zootopia.core.schema import (
 )
 from typing import List, Dict
 from zootopia.services import SupabaseDB
-from zootopia.core.exceptions import MessageInsertError
+from zootopia.core.error import error_handler
 
 
 class MemoryManager:
@@ -19,20 +19,7 @@ class MemoryManager:
         self.room_id = room.id
         self.agent_id = agent.id
 
-    def store_message(self, message_obj: MessageTableModel):
-        """Inserts message into database"""
-        try:
-            print("running store message")
-            message = self.database_service.insert(Tables.MESSAGES.value, message_obj)
-            logger.info(
-                f"🟢 Successfully stored '{message.content}', sender_id {message.sender_id}"
-            )
-            return message
-        except Exception as e:
-            raise MessageInsertError(
-                room_id=self.room_id, original_error=e, message=message_obj.content
-            )
-
+    @error_handler("MemoryManager")
     def get_recent_messages(self, count: int = 10) -> List[Dict[str, str]]:
         """
         Get the most recent messages for a given room ID.
@@ -43,36 +30,30 @@ class MemoryManager:
         Returns:
         - List[Dict[str, str]]: A list of dictionaries with 'role' and 'content' keys.
         """
-        try:
-            messages = self.database_service.get_multiple_rows(
-                table_name=Tables.MESSAGES.value,
-                max_rows=count,
-                order_by=Tables.MESSAGES__created_at.value,
-                order_desc=True,
-                conditions={Tables.MESSAGES__room_id.value: self.room_id},
-            )
+        messages = self.database_service.get_multiple_rows(
+            table_name=Tables.MESSAGES.value,
+            max_rows=count,
+            order_by=Tables.MESSAGES__created_at.value,
+            order_desc=True,
+            conditions={Tables.MESSAGES__room_id.value: self.room_id},
+        )
 
-            if not messages or not isinstance(messages, list):
-                logger.error(
-                    f"Invalid or empty data fetched for room {self.room_id}: {messages}"
-                )
-                return []
-
-            # Convert database results to MessageTableModel instances and then to dict format
-            message_models = [
-                MessageTableModel.model_validate(message) for message in messages
-            ]
-            message_models.reverse()
-
-            return [
-                {
-                    "role": "assistant" if msg.sender_id == self.agent_id else "user",
-                    "content": msg.content,
-                }
-                for msg in message_models
-            ]
-        except Exception as e:
-            logger.error(
-                f"Error fetching recent messages for room {self.room_id}: {str(e)}"
+        if not messages or not isinstance(messages, list):
+            logger.warning(
+                f"Invalid or empty data fetched for room {self.room_id}: {messages}"
             )
             return []
+
+        # Convert database results to MessageTableModel instances and then to dict format
+        message_models = [
+            MessageTableModel.model_validate(message) for message in messages
+        ]
+        message_models.reverse()
+
+        return [
+            {
+                "role": "assistant" if msg.sender_id == self.agent_id else "user",
+                "content": msg.content,
+            }
+            for msg in message_models
+        ]
