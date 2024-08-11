@@ -51,8 +51,8 @@ class SupabaseDB:
         order_by: Optional[str] = None,
         order_desc: Optional[bool] = None,
     ) -> Optional[TableModel]:
-        print(conditions)
         query = self.supabase.table(table_name).select("*")
+
         for key, value in conditions.items():
             if value is None:
                 query = query.is_(key, value)

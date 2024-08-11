@@ -12,7 +12,7 @@ from zootopia.server.redis.redis import redis_manager
 
 LOCAL_URL = "127.0.0.1"
 PORT = 8000
-USE_GUNICORN = True
+USE_GUNICORN = False
 
 
 def stop_existing_processes():

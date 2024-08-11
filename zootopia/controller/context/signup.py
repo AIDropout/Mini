@@ -14,6 +14,7 @@ class SignupContextManager(BaseContextManager):
         agent = self.database.get_row(
             Tables.AGENTS.value, conditions={Tables.AGENTS__id.value: agent_id}
         )
+
         if not agent:
             raise AgentNotFoundError(agent_id)
         return agent

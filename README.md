@@ -62,6 +62,9 @@ Make sure Python, [ngrok](https://ngrok.com/), and [uv]() are installed.
    # 4. Install dependencies  
    uv pip install -r requirements.txt
 
+   # 5. Mount env variables
+   source .env
+
    ```
 
 Copy `local.template.yaml` to a new file called `local.yaml` in the same directory
@@ -70,10 +73,7 @@ Paste API keys into .env
 ## 🚀 Usage
 Run the project:
 ```bash
-   # 1. Open a terminal and start the celery server
-   celery -A zootopia.server.celery.celery worker -n worker1@%h
-
-   # 2. Run the FastAPI server
+   # 1. Run the FastAPI server
     python main.py
 ```
 
