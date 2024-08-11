@@ -2,16 +2,9 @@ from fastapi import APIRouter, Request, HTTPException, Security
 from zootopia.core.security import verify_api_key
 from zootopia.core.logger import logger
 from zootopia.core.schema import (
-    AgentTableModel,
-    RoomTableModel,
-    UserTableModel,
     Tables,
     MessageTableModel,
 )
-from typing import Optional
-from zootopia.core.config import config
-from zootopia.services import MessageProvider, SupabaseDB
-from zootopia.services import BirdSMSProvider
 from zootopia.controller.context.cron import CronContextManager
 
 
@@ -22,7 +15,6 @@ router = APIRouter()
 async def send_msg_from_dash(request: Request, api_key: str = Security(verify_api_key)):
     """Endpoint for sending messages from the dashboard."""
     try:
-        # Extract from payload
         payload = await request.json()
         room_id = payload.get("room_id")
         message = payload.get("message")
@@ -35,8 +27,6 @@ async def send_msg_from_dash(request: Request, api_key: str = Security(verify_ap
             content=message,
             sent_by_admin=True,
         )
-
-        print(new_message.model_dump())
 
         context.database.insert(table_name=Tables.MESSAGES.value, item=new_message)
         await context.messaging_service.send_message(message)
