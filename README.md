@@ -77,6 +77,14 @@ Run the project:
     python main.py
 ```
 
+## Testing Stripe webhook
+
+```bash
+stripe login # Download the CLI and log in with your Stripe account
+stripe listen --forward-to http://127.0.0.1:8000/stripe # Forward events to your webhook
+stripe trigger payment_intent.succeeded # Trigger events with the CLI
+```
+
 Interact with the demo:
 - Add +1 (833) 819-1677 to contacts, or
 - Add @AIHealthCoachBot on Telegram
