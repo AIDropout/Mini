@@ -1,4 +1,4 @@
-from zootopia.services import BirdSMSProvider
+from zootopia.service import BirdSMSProvider
 from zootopia.core.schema import Tables
 from zootopia.controller.context import BaseContextManager
 

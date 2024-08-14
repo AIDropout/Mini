@@ -12,7 +12,7 @@ from zootopia.controller.tasks.task_types import (
     BaseTask,
     RespondTask,
 )
-from zootopia.services import MessageProvider, SupabaseDB
+from zootopia.service import MessageProvider, Database
 from zootopia.controller.context import BaseContextManager
 from zootopia.controller.agent.intent import (
     FilterIntentInput,
@@ -43,7 +43,7 @@ class Agent:
         intent_configs: Dict[str, IntentConfig] = None,
     ) -> None:
         self.messaging_service: MessageProvider = context.messaging_service
-        self.database_service: SupabaseDB = context.database
+        self.database_service: Database = context.database
         self.room: Room = context.room
         self.agent: Agent = context.agent
         self.user: User = context.user

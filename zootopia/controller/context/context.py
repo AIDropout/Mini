@@ -1,6 +1,6 @@
 from typing import Optional
 from zootopia.core.schema import Agent, Room, User, Tables
-from zootopia.services import MessageProvider, SupabaseDB
+from zootopia.service import MessageProvider, Database
 
 """
 "ContextManagers" initialize and hold the utilities needed for an agents & its modules.
@@ -17,7 +17,7 @@ agent - holds row data of the agent involved
 
 class BaseContextManager:
     def __init__(self):
-        self.database: SupabaseDB = SupabaseDB()
+        self.database: Database = Database()
         self.messaging_service: Optional[MessageProvider] = None
         self.user: Optional[User] = None
         self.agent: Optional[Agent] = None

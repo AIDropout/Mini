@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from pyngrok import ngrok
 from zootopia.api import router as api_router
 from zootopia.core.logger import logger
-from zootopia.services import Telegram, BirdSMSProvider
+from zootopia.service import Telegram, BirdSMSProvider
 from zootopia.server.redis.redis import redis_manager
 
 

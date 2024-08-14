@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request, Depends, BackgroundTasks
 from models.user_models import UserId
 from pydantic import BaseModel, Field
-from config.globals import PAYMENT_SERVICE, USER_AUTHENTICATOR, EVENT_MANAGER
+from zootopia.service import payment_service_dependency
+from zootopia.service.payment import PaymentService
 from models.events import EventType
 from typing import Dict
 
@@ -12,10 +13,10 @@ router = APIRouter(
 
 
 @router.post("/webhook")
-async def stripe_webhook(request: Request, background_tasks: BackgroundTasks) -> bool:
+async def stripe_webhook(request: Request, background_tasks: BackgroundTasks, payment_service: PaymentService = payment_service_dependency) -> bool:
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
-    event_type, customer = await PAYMENT_SERVICE.process_event(payload, sig_header)
+    event_type, customer = await payment_service.process_event(payload, sig_header)
     if event_type == "checkout.session.completed" and customer:
         data = {
             "email": customer.user.email,

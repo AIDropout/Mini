@@ -1,6 +1,6 @@
 from fastapi import BackgroundTasks
 from zootopia.core.logger import logger
-from zootopia.services import SupabaseDB
+from zootopia.service import Database
 from zootopia.core.schema import (
     Tables,
     Agent,
@@ -19,7 +19,7 @@ def handle_revive(background_tasks: BackgroundTasks, dev_mode: bool = False):
     Function called periodically by Cron service to send proactive messages
     based on room's last message time and agent's proactivity.
     """
-    db = SupabaseDB()
+    db = Database()
 
     # Query agents (all or just one for dev mode)
     agents = db.query(Tables.AGENTS.value, ("id", "=", 1) if dev_mode else None)
@@ -59,7 +59,7 @@ def handle_revive(background_tasks: BackgroundTasks, dev_mode: bool = False):
                     logger.info(f"Scheduled revive task for room {room.id}")
 
 
-def is_room_eligible_for_revival(db: SupabaseDB, room: Room) -> bool:
+def is_room_eligible_for_revival(db: Database, room: Room) -> bool:
     """
     Check if a room is eligible for revival based on subscription status.
     """

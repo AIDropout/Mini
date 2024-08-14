@@ -6,7 +6,7 @@ from fastapi import Request
 from zootopia.core.schema import ZootopiaMessage
 
 
-class MessageProviderBase(ABC):
+class MessagingBase(ABC):
     @classmethod
     @abstractmethod
     async def receive_message(cls, request: Request) -> ZootopiaMessage:

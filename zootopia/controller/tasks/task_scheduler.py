@@ -2,18 +2,18 @@ from zootopia.core.logger import logger
 from zootopia.controller.tasks.task_processor import process_task
 from zootopia.server.redis.redis import redis_manager
 from zootopia.server.cancel import cancel_existing_task
-from zootopia.services import SupabaseDB
+from zootopia.service import Database
 from zootopia.core.schema import TaskType, Schedule
 from datetime import datetime, timedelta
 from typing import Optional
 
 
 class TaskScheduler:
-    def __init__(self, db: SupabaseDB):
+    def __init__(self, db: Database):
         self.db = db
 
     @staticmethod
-    def schedule_task(task_data: dict, delay: int = 0, db: Optional[SupabaseDB] = None):
+    def schedule_task(task_data: dict, delay: int = 0, db: Optional[Database] = None):
         """
         TODO: DEBUG
         Schedule a task, choosing between short-term and long-term based on the delay

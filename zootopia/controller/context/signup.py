@@ -1,6 +1,6 @@
 from typing import Optional, Tuple
 from zootopia.core.schema import Tables, User, Agent, Room
-from zootopia.services import BirdSMSProvider
+from zootopia.service import BirdSMSProvider
 from zootopia.core.exceptions import RoomAlreadyExistsError, AgentNotFoundError
 from zootopia.controller.context import BaseContextManager
 

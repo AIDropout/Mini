@@ -3,8 +3,8 @@ from enum import Enum
 from typing import Dict, List, Any, Type, Optional, TypeVar, Generic
 from pydantic import BaseModel
 from dataclasses import dataclass
-from zootopia.services import LLM
-from zootopia.config.env import config
+from zootopia.service.llm import LLM
+from zootopia.config.config import config
 
 
 class Confidence(Enum):

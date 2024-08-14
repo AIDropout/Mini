@@ -1,13 +1,12 @@
-from payments import CheckoutManager, CustomerManager, SubscriptionManager
+from payment import CheckoutManager, CustomerManager, SubscriptionManager
 from schema.exceptions import ObjectNotFoundError
 from service.service import Service
 from typing import Literal, Optional, Dict, Any, Tuple
-from config.env import STRIPE_WEBHOOK_SECRET
+from zootopia.config.config import STRIPE_WEBHOOK_SECRET
 import stripe
 # from stripe.error import SignatureVerificationError
 from datetime import datetime
 from zootopia.core.schema import Customer, Subscription
-from auth.tier_permissions_auth import TierPermissions
 from database import DatabaseManager
 from zootopia.core.logger import get_logger
 
@@ -18,7 +17,6 @@ class PaymentService(Service):
     def __init__(
         self,
         database_manager: DatabaseManager,
-        tier_permissions: TierPermissions,
         checkout_manager: CheckoutManager,
         customer_manager: CustomerManager,
         subscription_manager: SubscriptionManager,

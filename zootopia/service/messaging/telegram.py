@@ -6,8 +6,8 @@ from typing import Optional, Union, cast
 
 import aiohttp
 import telegram
-from zootopia.config.env import config
-from ..platform import MessageProviderBase
+from zootopia.config.config import config
+from .base import MessagingBase
 from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
@@ -21,7 +21,7 @@ from zootopia.core.error import error_handler
 from zootopia.core.logger import logger
 
 
-class Telegram(MessageProviderBase):
+class Telegram(MessagingBase):
     def __init__(self):
         """Initialize the Telegram Bot messaging service."""
         self._bot = telegram.Bot(token=config.TELEGRAM_BOT_TOKEN)

@@ -6,13 +6,13 @@ from zootopia.core.schema import (
     Agent,
 )
 from typing import List, Dict
-from zootopia.services import SupabaseDB
+from zootopia.service import Database
 from zootopia.core.error import error_handler
 
 
 class MemoryManager:
 
-    def __init__(self, database_service: SupabaseDB, room: Room, agent: Agent):
+    def __init__(self, database_service: Database, room: Room, agent: Agent):
         self.database_service = database_service
         self.room_id = room.id
         self.agent_id = agent.id

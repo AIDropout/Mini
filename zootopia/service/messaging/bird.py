@@ -2,17 +2,15 @@
 
 from typing import Any, Dict, Optional, Tuple
 import requests
-from functools import wraps
-from zootopia.config.env import config
+from zootopia.config.config import config
 from zootopia.core.logger import get_logger
-from zootopia.services.platform.platform import MessageProviderBase
+from zootopia.service.messaging import MessagingBase
 from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
     MessageType,
     BirdMetadata,
 )
-from pydantic import ValidationError
 from zootopia.core.error import error_handler
 import asyncio
 
@@ -20,7 +18,7 @@ import asyncio
 logger = get_logger(__name__)
 
 
-class BirdSMSProvider(MessageProviderBase):
+class BirdSMSProvider(MessagingBase):
     def __init__(self):
         """Initialize Bird credentials."""
         self._api_url = config.BIRD_API_URL
@@ -35,9 +33,11 @@ class BirdSMSProvider(MessageProviderBase):
         self._channel_id = None
 
     def set_user_phone(self, user_phone: str) -> None:
+        """Sets phone number of receiver"""
         self._user_phone = user_phone
 
     def set_channel_id(self, channel_id: str) -> None:
+        """Sets phone number of sender"""
         self._channel_id = channel_id
 
     @error_handler("Bird SMS")

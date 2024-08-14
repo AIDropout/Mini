@@ -1,4 +1,4 @@
-from zootopia.services import BirdSMSProvider, Telegram
+from zootopia.service import BirdSMSProvider, Telegram
 from typing import Union
 from zootopia.core.schema import (
     ZootopiaMessage,

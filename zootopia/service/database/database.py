@@ -3,7 +3,7 @@ from functools import wraps
 from typing import List, Optional, TypeVar, Dict, Tuple, Union, Any, Callable
 from supabase import create_client
 from zootopia.core.logger import logger
-from zootopia.config.env import config
+from zootopia.config.config import config
 from zootopia.core.schema import TableModel
 from zootopia.core.schema.tables import TABLE_MODEL_MAP
 from zootopia.core.error import error_handler
@@ -12,7 +12,7 @@ T = TypeVar("T", bound=TableModel)
 
 
 # TODO: add tests
-class SupabaseDB:
+class DatabaseManager:
     def __init__(self) -> None:
         self.supabase = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
 
@@ -157,6 +157,3 @@ class SupabaseDB:
 
         result = query.execute()
         return result.count
-
-
-database_service = SupabaseDB()

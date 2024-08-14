@@ -61,6 +61,7 @@ class LLM:
 
         return content
 
+    @error_handler("LLM")
     def _prepare_messages(self, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
         """
         Prepare messages for LLM input by combining consecutive user messages.

@@ -1,13 +1,11 @@
 from fastapi import HTTPException, Depends, APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
-from services.platform.sms.bird import (
-    BirdSMSProvider,
-)
+from service.messaging import BirdSMSProvider
 from zootopia.core.logger import logger
-from zootopia.config.env import config
+from zootopia.config.config import config
 
-router = APIRouter(prefix="/verify", tags=["verification"])
+router = APIRouter(prefix="/sms-otp", tags=["sms-otp"])
 
 
 async def get_bird_sms_provider():
@@ -36,11 +34,8 @@ async def initiate_verification(
     request: SendVerificationRequest,
     bird_sms: BirdSMSProvider = Depends(get_bird_sms_provider),
 ):
-    """
-    - bool: Whether the message was sent successfully
-    - str: The expiration time of the verification code
-    - str: The verification ID
-    """
+    """Initiate a new SMS OTP verification process."""
+
     try:
         bird_sms.set_user_phone(request.phone_number)
         bird_sms.set_channel_id(config.PHONE_OTP_CHANNEL_ID)
@@ -60,12 +55,14 @@ async def initiate_verification(
         raise HTTPException(status_code=500, detail="Error sending verification code")
 
 
-@router.post("/verify/{verification_id}")
+@router.patch("/{verification_id}/verify")
 async def verify_code(
     verification_id: str,
     request: VerificationRequest,
     bird_sms: BirdSMSProvider = Depends(get_bird_sms_provider),
 ):
+    """Verify an SMS OTP code for an existing verification."""
+
     try:
         is_verified = await bird_sms.verify_code(verification_id, request.code)
         return {"is_verified": is_verified}
@@ -74,12 +71,14 @@ async def verify_code(
         raise HTTPException(status_code=500, detail="Error verifying code")
 
 
-@router.post("/verify/{verification_id}/resend")
+@router.patch("/{verification_id}/resend")
 async def resend_verification(
     verification_id: str,
     request: ResendVerificationRequest,
     bird_sms: BirdSMSProvider = Depends(get_bird_sms_provider),
 ):
+    """Resend an SMS OTP for an existing verification."""
+
     try:
         is_accepted, expires_at, status = await bird_sms.resend_verification(
             verification_id, request.step_index

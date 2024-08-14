@@ -1,8 +1,8 @@
 import stripe
 from typing import Any, Dict
-from zootopia.payments.stripe import StripeBaseClient
+from zootopia.payment.stripe import StripeBaseClient
 from database import DatabaseManager
-from zootopia.config.env import STRIPE_MONTHLY_PRICE_ID, STRIPE_YEARLY_PRICE_ID,
+from zootopia.config.config import STRIPE_MONTHLY_PRICE_ID, STRIPE_YEARLY_PRICE_ID,
 from zootopia.core.logger import get_logger
 from typing import Optional
 

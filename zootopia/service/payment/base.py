@@ -1,5 +1,5 @@
 from abc import ABC
-from config.env import config
+from zootopia.config.config import config
 import stripe
 
 

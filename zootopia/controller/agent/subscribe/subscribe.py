@@ -5,7 +5,7 @@ from zootopia.core.schema import (
     Subscription,
     Tables,
 )
-from zootopia.services import SupabaseDB
+from zootopia.service import Database
 from zootopia.controller.agent.action import ActionManager
 from zootopia.memory import MemoryManager
 from zootopia.core.logger import logger
@@ -19,7 +19,7 @@ class SubscribeManager:
 
     def __init__(
         self,
-        database_service: SupabaseDB,
+        database_service: Database,
         action: ActionManager,
         memory: MemoryManager,
         room: Room,
