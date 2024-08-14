@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import HTTPException, Depends, APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
 from services.platform.sms.bird import (
@@ -7,7 +7,7 @@ from services.platform.sms.bird import (
 from zootopia.core.logger import logger
 from zootopia.config.env import config
 
-router = FastAPI()
+router = APIRouter(prefix="/verify", tags=["verification"])
 
 
 async def get_bird_sms_provider():
