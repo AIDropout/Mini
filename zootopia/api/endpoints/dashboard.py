@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request, HTTPException, Security
-from zootopia.core.security import verify_api_key
+from zootopia.utils.security import verify_api_key
 from zootopia.core.logger import logger
 from zootopia.core.schema import (
     Tables,
-    MessageTableModel,
+    Message,
 )
 from zootopia.controller.context.cron import CronContextManager
 
@@ -21,7 +21,7 @@ async def send_msg_from_dash(request: Request, api_key: str = Security(verify_ap
 
         context = CronContextManager(room_id)
 
-        new_message = MessageTableModel(
+        new_message = Message(
             sender_id=context.room.agent_id,
             room_id=room_id,
             content=message,

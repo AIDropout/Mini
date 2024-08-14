@@ -1,6 +1,6 @@
 from zootopia.controller.context import MessageContextManager
 from zootopia.core.schema import (
-    MessageTableModel,
+    Message,
     Tables,
 )
 from zootopia.controller.tasks.task_scheduler import TaskScheduler
@@ -22,7 +22,7 @@ def handle_respond(request_body: dict):
     """Insert the user message"""
     inserted_message = context.database.insert(
         Tables.MESSAGES.value,
-        MessageTableModel(
+        Message(
             room_id=context.room.id,
             sender_id=context.user.id,
             content=context.message.content,

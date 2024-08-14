@@ -1,10 +1,10 @@
 """Note: Actions are currently not implemented. None of the action files are being used."""
 
 from typing import List, Dict, Optional, Tuple, Any
-from zootopia.core.schema import MessageTableModel
+from zootopia.core.schema import Message
 from zootopia.core.logger import logger
 from zootopia.services import LLM
-from zootopia.core.config import config
+from zootopia.config.env import config
 from zootopia.services import MessageProvider
 import random
 import asyncio

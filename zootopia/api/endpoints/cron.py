@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, BackgroundTasks, HTTPException, Security
-from zootopia.core.security import verify_api_key
+from zootopia.utils.security import verify_api_key
 from zootopia.controller.tasks.revive import handle_revive
 from zootopia.utils.utils import is_ngrok_url
 from zootopia.core.logger import logger

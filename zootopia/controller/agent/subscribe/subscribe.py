@@ -1,8 +1,8 @@
 from zootopia.core.schema import (
-    RoomTableModel,
-    MessageTableModel,
-    AgentTableModel,
-    SubscriptionTableModel,
+    Room,
+    Message,
+    Agent,
+    Subscription,
     Tables,
 )
 from zootopia.services import SupabaseDB
@@ -22,8 +22,8 @@ class SubscribeManager:
         database_service: SupabaseDB,
         action: ActionManager,
         memory: MemoryManager,
-        room: RoomTableModel,
-        agent: AgentTableModel,
+        room: Room,
+        agent: Agent,
     ):
         self.database_service = database_service
         self.action = action
@@ -81,7 +81,7 @@ class SubscribeManager:
             conditions={
                 Tables.MESSAGES__room_id.value: self.room.id,
                 Tables.MESSAGES__sender_id.value: self.agent.id,
-            }
+            },
         )
         logger.info(f"Agent message count in room {self.room.id}: {count} 🟡🟡🟡")
         return count
@@ -120,7 +120,7 @@ class SubscribeManager:
         # Store the subscription message
         self.database_service.insert(
             Tables.MESSAGES.value,
-            MessageTableModel(
+            Message(
                 room_id=self.room.id,
                 sender_id=self.agent.id,
                 content=subscribe_message,

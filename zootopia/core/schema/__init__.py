@@ -1,14 +1,14 @@
 from .action import ActionType, Action, ActionResult
 from .intent import IntentType
-from .table import (
+from .tables import (
     Tables,
     TableModel,
-    AgentTableModel,
-    UserTableModel,
-    RoomTableModel,
-    MessageTableModel,
-    ScheduleTableModel,
-    SubscriptionTableModel,
+    Agent,
+    User,
+    Room,
+    Message,
+    Schedule,
+    Subscription,
 )
 from .message import (
     MessageProvider,
@@ -43,12 +43,12 @@ __all__ = [
     "IntentType",
     "Tables",
     "TableModel",
-    "AgentTableModel",
-    "UserTableModel",
-    "RoomTableModel",
-    "MessageTableModel",
-    "ScheduleTableModel",
-    "SubscriptionTableModel",
+    "Agent",
+    "User",
+    "Room",
+    "Message",
+    "Schedule",
+    "Subscription",
     "MessageProvider",
     "MessageType",
     "TelegramMetadata",

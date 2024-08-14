@@ -3,9 +3,9 @@
 from typing import Any, Dict, Optional, Tuple
 import requests
 from functools import wraps
-from zootopia.core.config import config
-from zootopia.core.logger import logger
-from ..platform import MessageProviderBase
+from zootopia.config.env import config
+from zootopia.core.logger import get_logger
+from zootopia.services.platform.platform import MessageProviderBase
 from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
@@ -14,6 +14,10 @@ from zootopia.core.schema import (
 )
 from pydantic import ValidationError
 from zootopia.core.error import error_handler
+import asyncio
+
+
+logger = get_logger(__name__)
 
 
 class BirdSMSProvider(MessageProviderBase):
@@ -118,3 +122,150 @@ class BirdSMSProvider(MessageProviderBase):
         url = f"{self._api_url}/organizations/{self._organization_id}/workspaces/{self._workspace_id}/webhook-subscriptions/{webhook_id}"
         response = requests.delete(url, headers=self._api_header)
         response.raise_for_status()
+
+    @error_handler("Bird SMS")
+    async def send_verification(
+        self,
+        locale: str = "en-US",
+        max_attempts: int = 3,
+        timeout: int = 600,
+        code_length: int = 6,
+    ) -> Tuple[bool, str, str]:
+        """
+        Send a verification code to the user's phone number using the Bird API.
+
+        Args:
+            locale (str): The locale/language of the message. Defaults to "en-US".
+            max_attempts (int): Maximum number of verification attempts. Defaults to 3.
+            timeout (int): Time in seconds before the verification expires. Defaults to 600.
+            code_length (int): Length of the verification code. Defaults to 6.
+
+        Returns:
+
+        Tuple[bool, str, str]: A tuple containing:
+            - bool: Whether the message was sent successfully
+            - str: The expiration time of the verification code
+            - str: The verification ID
+        """
+        url = f"{self._api_url}/workspaces/{self._workspace_id}/verify"
+
+        payload = {
+            "identifier": {"phonenumber": self._user_phone},
+            "locale": locale,
+            "maxAttempts": max_attempts,
+            "timeout": timeout,
+            "codeLength": code_length,
+            "steps": [{"channelId": self._channel_id}],
+        }
+
+        response = requests.post(url, headers=self._api_header, json=payload)
+        print(response.json())
+        response.raise_for_status()
+
+        verification_data = response.json()
+
+        # Log the verification request
+        logger.info(f"Verification request sent: {verification_data['id']}")
+
+        is_sent = (
+            verification_data["steps"][0]["attempts"][0]["status"] == "sent"
+            if verification_data["steps"]
+            else False
+        )
+        expires_at = verification_data.get("expiresAt", "")
+        verification_id = verification_data.get("id", "")
+
+        return is_sent, expires_at, verification_id
+
+    @error_handler("Bird SMS")
+    async def verify_code(self, verification_id: str, code: str) -> Tuple[bool, str]:
+        """
+        Verify a code for a given verification ID.
+
+        Args:
+            verification_id (str): The ID of the verification to check.
+            code (str): The verification code to verify.
+
+        Returns:
+            Tuple[bool, str]: A tuple containing:
+                - bool: Whether the code was successfully verified
+        """
+        url = (
+            f"{self._api_url}/workspaces/{self._workspace_id}/verify/{verification_id}"
+        )
+
+        payload = {"code": code}
+
+        response = requests.post(url, headers=self._api_header, json=payload)
+        response.raise_for_status()
+
+        verification_data = response.json()
+        logger.info(
+            f"Verification attempt for ID {verification_id}: {verification_data['status']}"
+        )
+
+        return verification_data["status"] == "verified"
+
+    @error_handler("Bird SMS")
+    async def resend_verification(
+        self, verification_id: str, step_index: int = None
+    ) -> Tuple[bool, str, str]:
+        """
+        Resend a verification code for a given verification ID.
+
+        Args:
+            verification_id (str): The ID of the verification to resend.
+            step_index (int, optional): The index of the step to use. If not provided, uses the currently active step.
+
+        Returns:
+            Tuple[bool, str, str]: A tuple containing:
+                - bool: Whether the resend request was accepted
+                - str: The expiration time of the new verification code
+                - str: The status of the verification after resending
+        """
+        url = f"{self._api_url}/workspaces/{self._workspace_id}/verify/{verification_id}/resend"
+
+        payload = {}
+        if step_index is not None:
+            payload["stepIndex"] = step_index
+
+        response = requests.post(url, headers=self._api_header, json=payload)
+        response.raise_for_status()
+
+        verification_data = response.json()
+        logger.info(
+            f"Verification resend for ID {verification_id}: {verification_data['status']}"
+        )
+
+        is_accepted = response.status_code == 202
+        expires_at = verification_data.get("expiresAt", "")
+        status = verification_data["status"]
+
+        return is_accepted, expires_at, status
+
+
+async def main():
+    bird_sms = BirdSMSProvider()
+    bird_sms.set_user_phone("+13142952259")
+    bird_sms.set_channel_id("4e127266-e6de-4081-a6f6-702015f48e6d")
+    try:
+        # Send verification
+        # is_sent, expires_at, verification_id = await bird_sms.send_verification()
+        # print(f"Verification sent: {is_sent}, Expires at: {expires_at}, ID: {verification_id}")
+
+        # Verify code (you would get this code from the user in a real scenario)
+        is_verified, status = await bird_sms.verify_code(
+            verification_id="c8d3a75a-a232-4ac8-bb51-1a88fc6a724d", code="876813"
+        )
+        print(f"Code verified: {is_verified}, Status: {status}")
+
+        # # Resend verification if needed
+        # is_accepted, new_expires_at, new_status = await bird_sms.resend_verification(verification_id)
+        # print(f"Resend accepted: {is_accepted}, New expiration: {new_expires_at}, New status: {new_status}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

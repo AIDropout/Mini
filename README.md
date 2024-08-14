@@ -78,6 +78,7 @@ Run the project:
 ```
 
 ## Testing Stripe webhook
+https://dashboard.stripe.com/test/webhooks
 
 ```bash
 stripe login # Download the CLI and log in with your Stripe account

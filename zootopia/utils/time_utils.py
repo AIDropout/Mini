@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from zootopia.core.schema import MessageTableModel
+from zootopia.core.schema import Message
 from zootopia.core.logger import logger
 from typing import List
 import random
@@ -17,7 +17,7 @@ def get_current_time_readable() -> str:
     return current_time.strftime("%-I:%M%p %A, %b %-d, %Y")
 
 
-def calculate_response_delay(messages: List[MessageTableModel]) -> int:
+def calculate_response_delay(messages: List[Message]) -> int:
     """
     Calculate a human-like delay in seconds for message responses.
 

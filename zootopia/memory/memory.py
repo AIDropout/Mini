@@ -1,9 +1,9 @@
 from zootopia.core.logger import logger
 from zootopia.core.schema import (
     Tables,
-    MessageTableModel,
-    RoomTableModel,
-    AgentTableModel,
+    Message,
+    Room,
+    Agent,
 )
 from typing import List, Dict
 from zootopia.services import SupabaseDB
@@ -12,9 +12,7 @@ from zootopia.core.error import error_handler
 
 class MemoryManager:
 
-    def __init__(
-        self, database_service: SupabaseDB, room: RoomTableModel, agent: AgentTableModel
-    ):
+    def __init__(self, database_service: SupabaseDB, room: Room, agent: Agent):
         self.database_service = database_service
         self.room_id = room.id
         self.agent_id = agent.id
@@ -44,10 +42,8 @@ class MemoryManager:
             )
             return []
 
-        # Convert database results to MessageTableModel instances and then to dict format
-        message_models = [
-            MessageTableModel.model_validate(message) for message in messages
-        ]
+        # Convert database results to Message instances and then to dict format
+        message_models = [Message.model_validate(message) for message in messages]
         message_models.reverse()
 
         return [

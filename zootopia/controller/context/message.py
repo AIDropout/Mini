@@ -4,7 +4,7 @@ from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
     Tables,
-    UserTableModel,
+    User,
     TaskType,
 )
 from zootopia.core.exceptions import AgentNotFoundError
@@ -73,7 +73,7 @@ class MessageContextManager(BaseContextManager):
         return user, agent
 
     def _create_new_user(self, message: ZootopiaMessage):
-        new_user = UserTableModel(
+        new_user = User(
             telegram_uid=(
                 message.metadata.uid
                 if message.provider == MessageProvider.TELEGRAM

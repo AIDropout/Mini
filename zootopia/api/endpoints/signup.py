@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Security
-from zootopia.core.security import verify_api_key
+from zootopia.utils.security import verify_api_key
 from zootopia.core.logger import logger
-from zootopia.core.schema import SignupRequestBase, Tables, MessageTableModel
-from zootopia.core.exceptions import RoomAlreadyExistsError, AgentNotFoundError
+from zootopia.schema import SignupRequestBase, Tables, Message
+from zootopia.schema.exceptions import RoomAlreadyExistsError, AgentNotFoundError
 from zootopia.controller.context import SignupContextManager
 
 router = APIRouter()
@@ -26,7 +26,7 @@ async def signup_webhook(
 
         context.database.insert(
             table_name=Tables.MESSAGES.value,
-            item=MessageTableModel(
+            item=Message(
                 room_id=room.id,
                 sender_id=agent.id,
                 content=agent.first_message,

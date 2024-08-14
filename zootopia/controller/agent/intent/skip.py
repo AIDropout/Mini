@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
-from zootopia.core.schema import MessageTableModel, IntentType
+from zootopia.core.schema import Message, IntentType
 import json
 from zootopia.controller.agent.intent import (
     IntentInput,

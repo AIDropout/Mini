@@ -3,9 +3,9 @@ from functools import wraps
 from typing import List, Optional, TypeVar, Dict, Tuple, Union, Any, Callable
 from supabase import create_client
 from zootopia.core.logger import logger
-from zootopia.core.config import config
+from zootopia.config.env import config
 from zootopia.core.schema import TableModel
-from zootopia.core.schema.table import TABLE_MODEL_MAP
+from zootopia.core.schema.tables import TABLE_MODEL_MAP
 from zootopia.core.error import error_handler
 
 T = TypeVar("T", bound=TableModel)
@@ -144,9 +144,7 @@ class SupabaseDB:
 
     @error_handler("Supabase")
     def count_rows(
-        self,
-        table_name: str,
-        conditions: Optional[Dict[str, Any]] = None
+        self, table_name: str, conditions: Optional[Dict[str, Any]] = None
     ) -> int:
         query = self.supabase.table(table_name).select("*", count="exact")
 
@@ -159,3 +157,6 @@ class SupabaseDB:
 
         result = query.execute()
         return result.count
+
+
+database_service = SupabaseDB()

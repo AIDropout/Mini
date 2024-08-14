@@ -1,9 +1,9 @@
 from zootopia.core.schema import (
-    RoomTableModel,
-    MessageTableModel,
-    ScheduleTableModel,
-    AgentTableModel,
-    UserTableModel,
+    Room,
+    Message,
+    Schedule,
+    Agent,
+    User,
     Tables,
     TaskType,
     IntentType,
@@ -44,9 +44,9 @@ class Agent:
     ) -> None:
         self.messaging_service: MessageProvider = context.messaging_service
         self.database_service: SupabaseDB = context.database
-        self.room: RoomTableModel = context.room
-        self.agent: AgentTableModel = context.agent
-        self.user: UserTableModel = context.user
+        self.room: Room = context.room
+        self.agent: Agent = context.agent
+        self.user: User = context.user
         self.agent_prompt: str = context.agent.prompt
         self.action = ActionManager(self.messaging_service)
         self.memory = MemoryManager(self.database_service, self.room, self.agent)
@@ -125,7 +125,7 @@ class Agent:
                         if schedule_result.approved:
                             inserted_task = self.database_service.insert(
                                 table_name=Tables.SCHEDULE.value,
-                                item=ScheduleTableModel(
+                                item=Schedule(
                                     room_id=self.room.id,
                                     run_at=schedule_result.run_at,
                                     type=TaskType.REMIND.value,
@@ -211,7 +211,7 @@ class Agent:
 
             inserted_message = self.database_service.insert(
                 Tables.MESSAGES.value,
-                MessageTableModel(
+                Message(
                     room_id=self.room.id,
                     sender_id=self.agent.id,
                     content=final_message,

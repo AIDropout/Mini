@@ -2,6 +2,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 from zootopia.core.logger import logger as core_logger
 
+
 class EventLogger:
     """Collects logs that get stored in the database at the end of a request (for observability)"""
 
@@ -10,10 +11,7 @@ class EventLogger:
 
     def log(self, message: str):
         cleaned_message = self._clean_string(message)
-        log_entry = {
-            "log": cleaned_message,
-            "timestamp": datetime.now().isoformat()
-        }
+        log_entry = {"log": cleaned_message, "timestamp": datetime.now().isoformat()}
         self.logs.append(log_entry)
         core_logger.info(cleaned_message)
 
@@ -23,6 +21,7 @@ class EventLogger:
     @staticmethod
     def _clean_string(s: str) -> str:
         """Remove newlines and extra whitespace from a string."""
-        return ' '.join(s.split())
+        return " ".join(s.split())
+
 
 event_logger = EventLogger()

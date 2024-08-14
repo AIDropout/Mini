@@ -1,4 +1,4 @@
-from zootopia.core.config import config
+from zootopia.config.env import config
 
 broker_url = config.REDIS_URL
 result_backend = config.REDIS_URL

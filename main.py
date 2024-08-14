@@ -82,13 +82,21 @@ app.include_router(api_router)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """Logging configuration for requests"""
-    logger.info(f"Request: {request.method} {request.url}")
-    logger.info(f"Headers: {request.headers}")
-    body = await request.body()
-    logger.info(f"Body: {body.decode()}")
+    """Middleware to log HTTP requests and responses, with special handling for Stripe requests."""
+    is_stripe_request = "Stripe" in request.headers.get("User-Agent", "")
+
+    # Log the basic request info
+    logger.info(f"{request.method} {request.url}")
+
+    if not is_stripe_request:
+        # Log additional request details if not from Stripe
+        logger.info(f"Headers: {request.headers}")
+        body = await request.body()
+        logger.info(f"Body: {body.decode()}")
+
     response = await call_next(request)
-    logger.info(f"Response status: {response.status_code}")
+
+    # logger.info(f"Response status: {response.status_code}")
     return response
 
 
@@ -121,7 +129,6 @@ if __name__ == "__main__":
 
     # Stops all existing servers
     stop_existing_processes()
-
 
     if USE_GUNICORN:
         # Start Gunicorn server

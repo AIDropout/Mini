@@ -3,7 +3,7 @@ from zootopia.controller.tasks.task_processor import process_task
 from zootopia.server.redis.redis import redis_manager
 from zootopia.server.cancel import cancel_existing_task
 from zootopia.services import SupabaseDB
-from zootopia.core.schema import TaskType, ScheduleTableModel
+from zootopia.core.schema import TaskType, Schedule
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -60,7 +60,7 @@ class TaskScheduler:
     ):
         """TODO: Full implementation
         Schedule a long-term task using Supabase, called by Cron later"""
-        model = ScheduleTableModel(
+        model = Schedule(
             room_id=room_id,
             run_at=run_at,
             type=task_type,
@@ -69,7 +69,7 @@ class TaskScheduler:
         if info:
             model.info = info
 
-        self.db.insert(ScheduleTableModel.table_name(), model.dict())
+        self.db.insert(Schedule.table_name(), model.dict())
         logger.info(
             f"🟢 Scheduled long-term task"
             f"🟢 Task type: {task_type}"

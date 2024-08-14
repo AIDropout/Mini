@@ -48,5 +48,11 @@ class Config(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
 
+    STRIPE_SECRET_KEY_TEST: str = Field(..., env="STRIPE_SECRET_KEY_TEST")
+    STRIPE_WEBHOOK_SECRET: str = Field(..., env="STRIPE_WEBHOOK_SECRET")
+
+    STRIPE_WEEKLY_PRICE: int = 5
+    PHONE_OTP_CHANNEL_ID: str = Field(..., env="PHONE_OTP_CHANNEL_ID")
+
 
 config = Config()

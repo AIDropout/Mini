@@ -1,8 +1,10 @@
 """Initialized by main:app"""
 
 from redis import ConnectionPool, Redis
-from zootopia.core.logger import logger
-from zootopia.core.config import config
+from zootopia.core.logger import get_logger
+from zootopia.config.env import config
+
+logger = get_logger(__name__)
 
 
 class RedisManager:

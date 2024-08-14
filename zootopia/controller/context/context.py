@@ -1,5 +1,5 @@
 from typing import Optional
-from zootopia.core.schema import AgentTableModel, RoomTableModel, UserTableModel, Tables
+from zootopia.core.schema import Agent, Room, User, Tables
 from zootopia.services import MessageProvider, SupabaseDB
 
 """
@@ -19,13 +19,11 @@ class BaseContextManager:
     def __init__(self):
         self.database: SupabaseDB = SupabaseDB()
         self.messaging_service: Optional[MessageProvider] = None
-        self.user: Optional[UserTableModel] = None
-        self.agent: Optional[AgentTableModel] = None
-        self.room: Optional[RoomTableModel] = None
+        self.user: Optional[User] = None
+        self.agent: Optional[Agent] = None
+        self.room: Optional[Room] = None
 
-    def _get_or_create_room(
-        self, user: UserTableModel, agent: AgentTableModel
-    ) -> RoomTableModel:
+    def _get_or_create_room(self, user: User, agent: Agent) -> Room:
         room = self.database.get_row(
             Tables.ROOMS.value,
             conditions={
@@ -35,13 +33,13 @@ class BaseContextManager:
         )
 
         if not room:
-            room = RoomTableModel(user_id=user.id, agent_id=agent.id)
-            print(f"Created RoomTableModel: {room}")
+            room = Room(user_id=user.id, agent_id=agent.id)
+            print(f"Created Room: {room}")
 
             room_dict = (
                 room.model_dump()
             )  # Convert to dictionary to ensure serialization
-            print(f"RoomTableModel as dict: {room_dict}")
+            print(f"Room as dict: {room_dict}")
             room = self.database.insert(Tables.ROOMS.value, room)
 
         return room

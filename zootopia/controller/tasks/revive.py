@@ -3,9 +3,9 @@ from zootopia.core.logger import logger
 from zootopia.services import SupabaseDB
 from zootopia.core.schema import (
     Tables,
-    AgentTableModel,
-    RoomTableModel,
-    MessageTableModel,
+    Agent,
+    Room,
+    Message,
 )
 from zootopia.utils.time_utils import should_send_proactive_message
 from zootopia.controller.tasks.task_scheduler import TaskScheduler
@@ -59,7 +59,7 @@ def handle_revive(background_tasks: BackgroundTasks, dev_mode: bool = False):
                     logger.info(f"Scheduled revive task for room {room.id}")
 
 
-def is_room_eligible_for_revival(db: SupabaseDB, room: RoomTableModel) -> bool:
+def is_room_eligible_for_revival(db: SupabaseDB, room: Room) -> bool:
     """
     Check if a room is eligible for revival based on subscription status.
     """

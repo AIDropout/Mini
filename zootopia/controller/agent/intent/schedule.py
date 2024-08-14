@@ -10,14 +10,14 @@ from zootopia.controller.agent.intent import (
     IntentFactory,
 )
 from datetime import datetime
-from zootopia.core.schema import IntentType, ScheduleTableModel
+from zootopia.core.schema import IntentType, Schedule
 from zootopia.utils.utils import EnhancedJSONEncoder
 from zootopia.utils.time_utils import get_current_time_cst_iso8601
 
 
 @dataclass
 class ScheduleIntentInput(IntentInput):
-    existing_tasks: List[ScheduleTableModel]
+    existing_tasks: List[Schedule]
 
     def __repr__(self) -> str:
         return f"ScheduleIntentInput(text='{self.message[:20]}...')"
