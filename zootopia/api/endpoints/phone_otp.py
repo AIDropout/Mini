@@ -1,13 +1,13 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from services.platform.sms.bird import (
     BirdSMSProvider,
 )
 from zootopia.core.logger import logger
 from zootopia.config.env import config
 
-app = FastAPI()
+router = FastAPI()
 
 
 async def get_bird_sms_provider():
@@ -27,7 +27,11 @@ class SendVerificationRequest(BaseModel):
     code_length: int = 6
 
 
-@app.post("/verify/initiate")
+class ResendVerificationRequest(BaseModel):
+    step_index: Optional[int] = None
+
+
+@router.post("/initiate")
 async def initiate_verification(
     request: SendVerificationRequest,
     bird_sms: BirdSMSProvider = Depends(get_bird_sms_provider),
@@ -56,7 +60,7 @@ async def initiate_verification(
         raise HTTPException(status_code=500, detail="Error sending verification code")
 
 
-@app.post("/verify/{verification_id}")
+@router.post("/verify/{verification_id}")
 async def verify_code(
     verification_id: str,
     request: VerificationRequest,
@@ -68,3 +72,23 @@ async def verify_code(
     except Exception as e:
         logger.error(f"Error verifying code: {str(e)}")
         raise HTTPException(status_code=500, detail="Error verifying code")
+
+
+@router.post("/verify/{verification_id}/resend")
+async def resend_verification(
+    verification_id: str,
+    request: ResendVerificationRequest,
+    bird_sms: BirdSMSProvider = Depends(get_bird_sms_provider),
+):
+    try:
+        is_accepted, expires_at, status = await bird_sms.resend_verification(
+            verification_id, request.step_index
+        )
+        return {
+            "is_accepted": is_accepted,
+            "expires_at": expires_at,
+            "status": status,
+        }
+    except Exception as e:
+        logger.error(f"Error resending verification: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error resending verification code")
