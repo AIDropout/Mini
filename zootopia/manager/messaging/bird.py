@@ -3,8 +3,8 @@
 from typing import Any, Dict, Optional, Tuple
 import requests
 from config.config import config
-from zootopia.core.logger import get_logger
-from .base import MessagingBase
+from zootopia.core.logger import logger
+from zootopia.manager.messaging.base import MessagingBase
 from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
@@ -15,7 +15,7 @@ from zootopia.core.error import error_handler
 import asyncio
 
 
-logger = get_logger(__name__)
+# logger = get_logger(__name__)
 
 
 class BirdManager(MessagingBase):
@@ -63,6 +63,9 @@ class BirdManager(MessagingBase):
     @error_handler("Bird SMS")
     async def send_message(self, message: str) -> Tuple[bool, Dict[str, Any]]:
         """Send a Bird SMS message to the recipient."""
+        print("neart💜💜💜")
+        logger.info("heart💜💜💜")
+
         url = f"{self._api_url}/workspaces/{self._workspace_id}/channels/{self._channel_id}/messages"
         payload = {
             "receiver": {"contacts": [{"identifierValue": self._user_phone}]},
@@ -79,6 +82,8 @@ class BirdManager(MessagingBase):
             "status_code": response.status_code,
             "response_data": response_data,
         }
+
+        logger.info(response_data) # Why can't i see this
 
         if response.status_code == 202 and response_data.get("status") == "accepted":
             return True, details
@@ -237,11 +242,11 @@ class BirdManager(MessagingBase):
             f"Verification resend for ID {verification_id}: {verification_data['status']}"
         )
 
-        is_accepted = response.status_code == 202
+        is_sent = response.status_code == 202
         expires_at = verification_data.get("expiresAt", "")
         status = verification_data["status"]
 
-        return is_accepted, expires_at, status
+        return is_sent, expires_at, status
 
 
 async def main():
@@ -249,15 +254,19 @@ async def main():
     bird_sms.set_user_phone("+13142952259")
     bird_sms.set_channel_id("4e127266-e6de-4081-a6f6-702015f48e6d")
     try:
+        # Send message
+        result = await bird_sms.send_message("hi")
+        print(result)
+
         # Send verification
         # is_sent, expires_at, verification_id = await bird_sms.send_verification()
         # print(f"Verification sent: {is_sent}, Expires at: {expires_at}, ID: {verification_id}")
 
         # Verify code (you would get this code from the user in a real scenario)
-        is_verified, status = await bird_sms.verify_code(
-            verification_id="c8d3a75a-a232-4ac8-bb51-1a88fc6a724d", code="876813"
-        )
-        print(f"Code verified: {is_verified}, Status: {status}")
+        # is_verified, status = await bird_sms.verify_code(
+        #     verification_id="c8d3a75a-a232-4ac8-bb51-1a88fc6a724d", code="876813"
+        # )
+        # print(f"Code verified: {is_verified}, Status: {status}")
 
         # # Resend verification if needed
         # is_accepted, new_expires_at, new_status = await bird_sms.resend_verification(verification_id)

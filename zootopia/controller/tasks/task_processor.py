@@ -1,25 +1,32 @@
 from celery import shared_task
-from zootopia.service.context.message import MessageContextService
-from zootopia.service.context.cron import CronContextService
+from zootopia.service.context import ContextFactory, CronContextService
+from zootopia.manager.messaging import MessagingManagerFactory
 from zootopia.core.schema import TaskType
 from zootopia.controller.agent.agent import Agent
 from zootopia.controller.tasks.task_types import RemindTask, ReviveTask, RespondTask
-from zootopia.core.logger import logger
+from zootopia.core.logger import get_logger
 import asyncio
 from datetime import datetime
 from zootopia.server.cancel import cancel_existing_task
+
+logger = get_logger(__name__)
 
 
 @shared_task(bind=True, max_retries=2)
 def process_task(self, data: dict):
     logger.info(f"🔴🔴🔴 running at {datetime.now()}")
+    messaging_manager_factory = MessagingManagerFactory()
+    context_factory = ContextFactory(messaging_manager_factory)
+
     try:
         context = None
         task = None
 
         task_type = data["type"]
         if task_type == TaskType.RESPOND.value:
-            context = MessageContextService(request_body=data["original_request"])
+            context = context_factory.create_message_context(
+                request_body=data["original_request"]
+            )
             task = RespondTask(user_message=context.message, room_id=data["room_id"])
         elif task_type == TaskType.REMIND.value:
             context = CronContextService(data["room_id"])

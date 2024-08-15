@@ -7,7 +7,7 @@ from typing import Optional, Union, cast
 import aiohttp
 import telegram
 from config.config import config
-from .base import MessagingBase
+from zootopia.manager.messaging.base import MessagingBase
 from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,

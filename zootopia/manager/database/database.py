@@ -11,7 +11,6 @@ from zootopia.core.error import error_handler
 T = TypeVar("T", bound=TableModel)
 
 
-# TODO: add tests
 class DatabaseManager:
     def __init__(self) -> None:
         self.supabase = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)

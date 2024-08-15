@@ -4,7 +4,7 @@ from typing import List, Dict, Optional, Tuple, Any
 from zootopia.core.schema import Message
 from zootopia.core.logger import logger
 from zootopia.manager.llm import LLMManager
-# from zootopia.manager.messaging import MessageProvider
+from zootopia.manager.messaging import MessagingManager
 from config.config import config
 import random
 import asyncio
@@ -15,7 +15,7 @@ from zootopia.core.error import error_handler
 
 
 class ActionManager:
-    def __init__(self, messaging_manager) -> None: #TODO: fix type
+    def __init__(self, messaging_manager: MessagingManager) -> None:
         self.llm = LLMManager(config.ACTION_MANAGER_LLM)
         self.messaging_manager = messaging_manager
 

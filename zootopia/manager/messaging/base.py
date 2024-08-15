@@ -7,7 +7,6 @@ from zootopia.core.schema import ZootopiaMessage
 
 
 class MessagingBase(ABC):
-    @classmethod
     @abstractmethod
     async def receive_message(cls, request: Request) -> ZootopiaMessage:
         """Handle an incoming message from a sender."""

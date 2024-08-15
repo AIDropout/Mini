@@ -30,10 +30,14 @@ def calculate_response_delay(messages: List[Message]) -> int:
     try:
         last_message_time = datetime.fromisoformat(
             messages[0]["created_at"].replace("Z", "+00:00")
-        )
-        time_since_last_message = (datetime.now() - last_message_time).total_seconds()
-    except (ValueError, KeyError):
+        ).replace(tzinfo=timezone.utc)
+        time_since_last_message = (datetime.now(timezone.utc) - last_message_time).total_seconds()
+    except (ValueError, KeyError) as e:
+        logger.error(f"Error parsing message time: {e}")
         return random.randint(5, 15)  # Default delay if there's an error parsing time
+    
+    # for debugging
+    return 1
 
     # Determine delay based on time since last message
     if time_since_last_message < 60:  # Within a minute

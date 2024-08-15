@@ -35,23 +35,22 @@ from .message import (
 )
 from .request import (
     SignupRequest,
-    InitiateVerificationRequest,
+    SendVerificationRequest,
     ResendVerificationRequest,
     VerifyCodeRequest,
-    InitiateVerificationResponse,
+    OTPOperationResponse,
     VerifyCodeResponse,
-    ResendVerificationResponse,
 )
 from .task import TaskType
 
 
 __all__ = [
     "Customer",
-    "ResendVerificationResponse",
+    "OTPOperationResponse",
     "VerifyCodeRequest",
     "VerifyCodeResponse",
-    "InitiateVerificationRequest",
-    "InitiateVerificationResponse",
+    "SendVerificationRequest",
+    "SendVerificationResponse",
     "SignupRequest",
     "SendVerificationRequest",
     "ResendVerificationRequest",

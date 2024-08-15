@@ -60,6 +60,7 @@ class Tables(Enum):
 
     SUBSCRIPTIONS = "subscriptions"
     SUBSCRIPTIONS__id = "id"
+    SUBSCRIPTIONS__user_id = "user_id"
     SUBSCRIPTIONS__status = "status"
     SUBSCRIPTIONS__created_at = "created_at"
     SUBSCRIPTIONS__tier = "tier"

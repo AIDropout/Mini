@@ -14,7 +14,7 @@ class SignupRequest(BaseRequest):
     user_phone: str
     birthday: Optional[str] = None
 
-class InitiateVerificationRequest(BaseRequest):
+class SendVerificationRequest(BaseRequest):
     phone_number: str
     locale: str = "en-US"
     max_attempts: int = 3
@@ -28,15 +28,10 @@ class ResendVerificationRequest(BaseRequest):
     step_index: Optional[int] = None
 
 # Response Schemas
-class InitiateVerificationResponse(BaseResponse):
+class OTPOperationResponse(BaseResponse):
     is_sent: bool
     expires_at: str
     verification_id: str
 
 class VerifyCodeResponse(BaseResponse):
     is_verified: bool
-
-class ResendVerificationResponse(BaseResponse):
-    is_accepted: bool
-    expires_at: str
-    status: str

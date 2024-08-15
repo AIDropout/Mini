@@ -17,7 +17,6 @@ class TaskScheduler:
         task_data: dict, delay: int = 0, db: Optional[DatabaseManager] = None
     ):
         """
-        TODO: DEBUG
         Schedule a task, choosing between short-term and long-term based on the delay
         If delay > 1 hour, schedule as a long-term task
         """
@@ -60,7 +59,7 @@ class TaskScheduler:
         run_at: datetime,
         info: Optional[str] = None,
     ):
-        """TODO: Full implementation
+        """TODO: Full implementation (below is all wrong)
         Schedule a long-term task using Supabase, called by Cron later"""
         model = Schedule(
             room_id=room_id,
@@ -71,7 +70,7 @@ class TaskScheduler:
         if info:
             model.info = info
 
-        self.db.insert(Schedule.table_name(), model.dict())
+        self.db.insert(Schedule.table_name(), model.model_dump())
         logger.info(
             f"🟢 Scheduled long-term task"
             f"🟢 Task type: {task_type}"

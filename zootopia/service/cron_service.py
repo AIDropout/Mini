@@ -2,35 +2,38 @@
 from fastapi import BackgroundTasks
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
-from zootopia.core.schema import Tables, Message
+from zootopia.core.schema import Tables, Message, Room, User
 from zootopia.utils.time_utils import should_send_proactive_message
 from zootopia.controller.tasks.task_scheduler import TaskScheduler
 from zootopia.controller.tasks.task_types import ReviveTask, ScheduledTaskInfo
 from zootopia.core.error import error_handler
 
 
-class RoomService:
-    def __init__(self):
-        self.db_manager = DatabaseManager()
-        self.messaging_manager = MessagingManager()
+class CronService:
+    def __init__(
+        self, database_manager: DatabaseManager, messaging_manager: MessagingManager
+    ):
+        self.database_manager = database_manager
+        self.messaging_manager = messaging_manager
 
-    @error_handler("HandleRevive")
-    async def handle_revive(
+    @error_handler("CronService")
+    async def refresh_rooms(
         self, background_tasks: BackgroundTasks, dev_mode: bool = False
     ):
-        agents = self.db_manager.query(Tables.AGENTS.value, ("id", "=", 1) if dev_mode else None)
-
+        agents = self.database_manager.query(
+            Tables.AGENTS.value, ("id", "=", 1) if dev_mode else None
+        )
 
         for agent in agents:
-            proactive_rooms = await self.db_manager.query(
+            proactive_rooms = self.database_manager.query(
                 Tables.ROOMS.value,
                 (Tables.ROOMS__agent_id.value, agent.id),
                 (Tables.ROOMS__agent_proactivity.value, ">", 0),
             )
 
             for room in proactive_rooms:
-                if await self._is_room_eligible_for_revival(room):
-                    last_message = await self.db_manager.get_row(
+                if self._is_room_eligible_for_revival(room, room.user_id):
+                    last_message = self.database_manager.get_row(
                         Tables.MESSAGES.value,
                         {Tables.MESSAGES__room_id.value: room.id},
                         order_by=Tables.MESSAGES__created_at.value,
@@ -49,38 +52,19 @@ class RoomService:
                         await TaskScheduler.schedule_task(
                             task_data=scheduled_task_info.to_dict(),
                             delay=0,
-                            db=self.db_manager,
+                            db=self.database_manager,
                         )
 
-    async def _is_room_eligible_for_revival(self, room):
+    async def _is_room_eligible_for_revival(self, room: Room, user_id: int):
         if not room.subscribe_msg_sent:
             return True
 
-        active_subscription = await self.db_manager.get_row(
+        active_subscription = self.database_manager.get_row(
             Tables.SUBSCRIPTIONS.value,
             {
-                Tables.SUBSCRIPTIONS__room_id.value: room.id,
-                Tables.SUBSCRIPTIONS__ended_at.value: None,
+                Tables.SUBSCRIPTIONS__user_id.value: user_id,
+                Tables.SUBSCRIPTIONS__status.value: "active",
             },
         )
 
         return active_subscription is not None
-
-    async def send_admin_message(self, payload: dict):
-        room_id = payload.get("room_id")
-        message = payload.get("message")
-
-        if not room_id or not message:
-            raise ValueError("Missing room_id or message")
-
-        context = await self.messaging_manager.create_cron_context(room_id)
-
-        new_message = Message(
-            sender_id=context.room.agent_id,
-            room_id=room_id,
-            content=message,
-            sent_by_admin=True,
-        )
-
-        await self.db_manager.insert(Tables.MESSAGES.value, new_message)
-        await context.messaging_manager.send_message(message)

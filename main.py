@@ -107,11 +107,7 @@ In production (Render.com), the start command is starting the celery servers and
 
 In local, we can either use uvicorn or gunicorn (gunicorn to simulate prod environment) by setting USE_GUNICORN: bool
 
-To start local,
-- Open a terminal and start celery:
-celery -A zootopia.server.celery.celery worker -n worker1@%h
-- Open another terminal and run the main script
-python main.py
+To start local, run python main.py
 
 Helpful commands:
 - To view gunicorn ports run: ps aux | grep gunicorn
@@ -120,9 +116,13 @@ Flower (Flower hosts a localhost dashboard to view status of Celery tasks):
 - export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/ZOOTOPIA/ZOOTOPIA
 - View celery tasks via Flower: celery -A zootopia.server.celery.celery flower
 
+- To manually start Celery, open a new terminal: celery -A zootopia.server.celery.celery worker -n worker1@%h
+
 """
 if __name__ == "__main__":
-    """This main function is ONLY called when developing and running python main.py"""
+    """This main function is ONLY called when developing and running python main.py. 
+    
+    (Prod has a separate run command on Render)"""
 
     # Set up a local server with a public url via ngrok
     asyncio.run(configure_local_webhooks())

@@ -1,6 +1,7 @@
 from typing import Optional
 from zootopia.core.schema import Agent, Room, User, Tables
 from zootopia.manager.database import DatabaseManager
+from zootopia.manager.messaging import MessagingManager
 
 """
 "ContextServices" initialize and hold the managers and objects needed for an agents & its modules.
@@ -18,7 +19,7 @@ agent - holds row data of the agent involved
 class ContextService:
     def __init__(self):
         self.database_manager: DatabaseManager = DatabaseManager()
-        self.messaging_manager = None #TODO: fix type
+        self.messaging_manager: MessagingManager = None
         self.user: Optional[User] = None
         self.agent: Optional[Agent] = None
         self.room: Optional[Room] = None

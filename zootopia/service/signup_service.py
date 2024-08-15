@@ -8,9 +8,9 @@ from zootopia.core.logger import logger
 
 
 class SignupService:
-    def __init__(self):
-        self.database_manager = DatabaseManager()
-        self.messaging_manager = BirdManager()
+    def __init__(self, database_manager: DatabaseManager, messaging_manager: BirdManager):
+        self.database_manager = database_manager
+        self.messaging_manager = messaging_manager
 
     def process_signup(self, request: SignupRequest):
         """Creates a new room for the user with the selected agent & sends the first message"""

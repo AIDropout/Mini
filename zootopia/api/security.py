@@ -1,15 +1,13 @@
-"""Include the 'X-API-Key' header in your request, with your API key as its value."""
-
 from fastapi import Header, HTTPException, Security
-from fastapi.security import APIKeyHeader
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from config.config import config
 
-API_KEY_NAME = "X-API-Key"
-api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+security = HTTPBearer()
 
 
-def verify_api_key(api_key: str = Security(api_key_header)):
-    """Verifies the incoming request header"""
-
-    if api_key != config.ZOOTOPIA_API_KEY:
+def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security)):
+    """Verifies the incoming request Authorization header."""
+    token = credentials.credentials
+    if token != config.ZOOTOPIA_API_KEY:
         raise HTTPException(status_code=403, detail="Could not validate credentials")
+    return token
