@@ -7,7 +7,8 @@ from zootopia.core.exceptions import ServiceError, MessageParsingError
 import re
 import json
 
-class LLM:
+
+class LLMManager:
     """Class for Large Language Models (LLMs) usage powered by LiteLLM"""
 
     def __init__(self, llm_name: str):
@@ -113,6 +114,8 @@ class LLM:
         try:
             json_data = json.loads(cleaned_output)
         except json.JSONDecodeError:
-            raise MessageParsingError(f"Invalid JSON output from LLM. Instead got {llm_output}")
+            raise MessageParsingError(
+                f"Invalid JSON output from LLM. Instead got {llm_output}"
+            )
 
         return json_data

@@ -12,8 +12,9 @@ from zootopia.controller.tasks.task_types import (
     BaseTask,
     RespondTask,
 )
-from zootopia.service import MessageProvider, Database
-from zootopia.controller.context import BaseContextManager
+from zootopia.manager.database import DatabaseManager
+from zootopia.manager.messaging import MessagingBase
+from zootopia.service.context import ContextService
 from zootopia.controller.agent.intent import (
     FilterIntentInput,
     FilterIntentResult,
@@ -28,7 +29,7 @@ from zootopia.controller.agent.intent import (
 )
 from zootopia.controller.agent.action import ActionManager
 from zootopia.controller.agent.subscribe import SubscribeManager
-from zootopia.memory import MemoryManager
+from zootopia.controller.agent.memory import MemoryService
 from zootopia.core.logger import logger
 from zootopia.controller.agent.event_logger import event_logger as el
 from zootopia.utils.time_utils import get_current_time_readable
@@ -39,19 +40,19 @@ from datetime import datetime
 class Agent:
     def __init__(
         self,
-        context: BaseContextManager,
+        context: ContextService,
         intent_configs: Dict[str, IntentConfig] = None,
     ) -> None:
-        self.messaging_service: MessageProvider = context.messaging_service
-        self.database_service: Database = context.database
+        self.messaging_manager: MessagingBase = context.messaging_manager
+        self.database_manager_service: DatabaseManager = context.database_manager
         self.room: Room = context.room
         self.agent: Agent = context.agent
         self.user: User = context.user
         self.agent_prompt: str = context.agent.prompt
-        self.action = ActionManager(self.messaging_service)
-        self.memory = MemoryManager(self.database_service, self.room, self.agent)
+        self.action = ActionManager(self.messaging_manager)
+        self.memory = MemoryService(self.database_manager_service, self.room, self.agent)
         self.subscribe_manager = SubscribeManager(
-            self.database_service, self.action, self.memory, self.room, self.agent
+            self.database_manager_service, self.action, self.memory, self.room, self.agent
         )
         default_configs = {
             IntentType.FILTER: IntentConfig(
@@ -102,7 +103,7 @@ class Agent:
                     schedule_intent = self.intent_factory.create(IntentType.SCHEDULE)
                     if schedule_intent:
 
-                        existing_tasks = self.database_service.get_multiple_rows(
+                        existing_tasks = self.database_manager_service.get_multiple_rows(
                             table_name=Tables.SCHEDULE.value,
                             conditions={Tables.SCHEDULE__room_id.value: self.room.id},
                             order_by=Tables.SCHEDULE__run_at.value,
@@ -123,7 +124,7 @@ class Agent:
                         )
 
                         if schedule_result.approved:
-                            inserted_task = self.database_service.insert(
+                            inserted_task = self.database_manager_service.insert(
                                 table_name=Tables.SCHEDULE.value,
                                 item=Schedule(
                                     room_id=self.room.id,
@@ -209,7 +210,7 @@ class Agent:
             success = await self.action.handle_message_send(final_message)
             el.log(f"{"🟢" if success else "🔴"} BIRD SMS SENT: {success}")
 
-            inserted_message = self.database_service.insert(
+            inserted_message = self.database_manager_service.insert(
                 Tables.MESSAGES.value,
                 Message(
                     room_id=self.room.id,

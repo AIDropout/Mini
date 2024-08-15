@@ -1,13 +1,20 @@
-from payment import CheckoutManager, CustomerManager, SubscriptionManager
-from schema.exceptions import ObjectNotFoundError
-from service.service import Service
+# TODO: WIP
+
+from .base import Service
+from zootopia.manager.payment import (
+    CheckoutManager,
+    CustomerManager,
+    SubscriptionManager,
+)
+from zootopia.manager.database import DatabaseManager
+# from schema.exceptions import ObjectNotFoundError
 from typing import Literal, Optional, Dict, Any, Tuple
-from zootopia.config.config import STRIPE_WEBHOOK_SECRET
+from config.config import config
 import stripe
+
 # from stripe.error import SignatureVerificationError
 from datetime import datetime
 from zootopia.core.schema import Customer, Subscription
-from database import DatabaseManager
 from zootopia.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,7 +28,7 @@ class PaymentService(Service):
         customer_manager: CustomerManager,
         subscription_manager: SubscriptionManager,
     ):
-        super().__init__(database_manager, tier_permissions)
+        super().__init__(database_manager)
         self._checkout_manager = checkout_manager
         self._customer_manager = customer_manager
         self._subscription_manager = subscription_manager
@@ -54,14 +61,14 @@ class PaymentService(Service):
         self, event_payload: str, sig_header: str
     ) -> Tuple[str, Optional[Customer]]:
         """Processes the event received from Stripe webhook."""
-        if not STRIPE_WEBHOOK_SECRET:
+        if not config.STRIPE_WEBHOOK_SECRET:
             raise ValueError("The Stripe webhook secret must be set.")
 
         try:
             event = stripe.Webhook.construct_event(
                 payload=event_payload,
                 sig_header=sig_header,
-                secret=STRIPE_WEBHOOK_SECRET,
+                secret=config.STRIPE_WEBHOOK_SECRET,
             )
             customer = await self._handle_event(event)
             return event.type, customer

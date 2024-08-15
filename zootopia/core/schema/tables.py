@@ -59,10 +59,10 @@ class Tables(Enum):
     SCHEDULE__complete = "complete"
 
     SUBSCRIPTIONS = "subscriptions"
-    SUBSCRIPTION__id = "id"
-    SUBSCRIPTION__status = "status"
-    SUBSCRIPTION__created_at = "created_at"
-    SUBSCRIPTION__tier = "tier"
+    SUBSCRIPTIONS__id = "id"
+    SUBSCRIPTIONS__status = "status"
+    SUBSCRIPTIONS__created_at = "created_at"
+    SUBSCRIPTIONS__tier = "tier"
 
 
 def utc_now():
@@ -170,3 +170,11 @@ TABLE_MODEL_MAP = {
     Tables.SCHEDULE.value: Schedule,
     Tables.SUBSCRIPTIONS.value: Subscription,
 }
+
+class Customer(BaseModel):
+    id: str
+    user_id: str
+    email: Optional[str] = None
+    subscription: Optional[Subscription] = None
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()

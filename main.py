@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from pyngrok import ngrok
 from zootopia.api import router as api_router
 from zootopia.core.logger import logger
-from zootopia.service import Telegram, BirdSMSProvider
+from zootopia.manager.messaging import TelegramManager, BirdManager
 from zootopia.server.redis.redis import redis_manager
 
 
@@ -34,9 +34,9 @@ async def configure_local_webhooks() -> None:
     ngrok_connection = ngrok.connect(addr=f"{LOCAL_URL}:{PORT}", proto="http")
     logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
 
-    webhook = f"{ngrok_connection.public_url}/message"
-    _telegram = Telegram()
-    _bird = BirdSMSProvider()
+    webhook = f"{ngrok_connection.public_url}/room/respond"
+    _telegram = TelegramManager()
+    _bird = BirdManager()
 
     if bird_dev_channel_id := os.getenv("BIRD_DEV_CHANNEL_ID"):
         _bird.set_channel_id(bird_dev_channel_id)

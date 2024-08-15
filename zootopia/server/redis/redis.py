@@ -2,7 +2,7 @@
 
 from redis import ConnectionPool, Redis
 from zootopia.core.logger import get_logger
-from zootopia.config.config import config
+from config.config import config
 
 logger = get_logger(__name__)
 

@@ -3,8 +3,8 @@ from enum import Enum
 from typing import Dict, List, Any, Type, Optional, TypeVar, Generic
 from pydantic import BaseModel
 from dataclasses import dataclass
-from zootopia.service.llm import LLM
-from zootopia.config.config import config
+from zootopia.manager.llm import LLMManager
+from config.config import config
 
 
 class Confidence(Enum):
@@ -116,7 +116,7 @@ class IntentProcessor(Generic[I, O, R], ABC):
         """
         Initializes the LLM for intent processing.
         """
-        self.llm = LLM(config.FILTER_LLM)
+        self.llm = LLMManager(config.FILTER_LLM)
 
     @abstractmethod
     def process(

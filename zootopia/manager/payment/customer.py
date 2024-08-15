@@ -1,4 +1,4 @@
-from zootopia.payment.stripe import StripeBaseClient
+from .stripe import StripeBaseClient
 from typing import Dict, Any
 import stripe
 

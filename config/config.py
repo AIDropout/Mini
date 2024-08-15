@@ -51,7 +51,7 @@ class Config(BaseSettings):
     STRIPE_SECRET_KEY_TEST: str = Field(..., env="STRIPE_SECRET_KEY_TEST")
     STRIPE_WEBHOOK_SECRET: str = Field(..., env="STRIPE_WEBHOOK_SECRET")
 
-    STRIPE_WEEKLY_PRICE: int = Field(..., env="STRIPE_WEEKLY_PRICE")
+    STRIPE_WEEKLY_PRICE_ID: int = Field(..., env="STRIPE_WEEKLY_PRICE_ID")
     PHONE_OTP_CHANNEL_ID: str = Field(..., env="PHONE_OTP_CHANNEL_ID")
 
 

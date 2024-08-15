@@ -5,9 +5,9 @@ from zootopia.core.schema import (
     Subscription,
     Tables,
 )
-from zootopia.service import Database
+from zootopia.manager.database import DatabaseManager
 from zootopia.controller.agent.action import ActionManager
-from zootopia.memory import MemoryManager
+from zootopia.controller.agent.memory import MemoryService
 from zootopia.core.logger import logger
 from zootopia.core.error import error_handler
 
@@ -19,13 +19,13 @@ class SubscribeManager:
 
     def __init__(
         self,
-        database_service: Database,
+        database_manager: DatabaseManager,
         action: ActionManager,
-        memory: MemoryManager,
+        memory: MemoryService,
         room: Room,
         agent: Agent,
     ):
-        self.database_service = database_service
+        self.database_manager_service = database_manager
         self.action = action
         self.memory = memory
         self.room = room
@@ -76,7 +76,7 @@ class SubscribeManager:
         Returns:
             int: The count of agent messages.
         """
-        count = self.database_service.count_rows(
+        count = self.database_manager_service.count_rows(
             table_name=Tables.MESSAGES.value,
             conditions={
                 Tables.MESSAGES__room_id.value: self.room.id,
@@ -95,7 +95,7 @@ class SubscribeManager:
             bool: True if there's an active subscription, False otherwise.
         """
 
-        active_subscription = self.database_service.get_row(
+        active_subscription = self.database_manager_service.get_row(
             table_name=Tables.SUBSCRIPTIONS.value,
             conditions={
                 Tables.SUBSCRIPTIONS__room_id.value: self.room.id,
@@ -118,7 +118,7 @@ class SubscribeManager:
         await self.action.handle_message_send(subscribe_message)
 
         # Store the subscription message
-        self.database_service.insert(
+        self.database_manager_service.insert(
             Tables.MESSAGES.value,
             Message(
                 room_id=self.room.id,
@@ -129,7 +129,7 @@ class SubscribeManager:
 
         # Update the room to indicate the subscription message was sent
         response = (
-            self.database_service.supabase.table(Tables.ROOMS.value)
+            self.database_manager_service.supabase.table(Tables.ROOMS.value)
             .update({Tables.ROOMS__subscribe_msg_sent.value: True})
             .eq(Tables.ROOMS__id.value, self.room.id)
             .execute()

@@ -3,9 +3,9 @@
 from typing import List, Dict, Optional, Tuple, Any
 from zootopia.core.schema import Message
 from zootopia.core.logger import logger
-from zootopia.service.llm import LLM
-from zootopia.service.messaging import MessageProvider
-from zootopia.config.config import config
+from zootopia.manager.llm import LLMManager
+# from zootopia.manager.messaging import MessageProvider
+from config.config import config
 import random
 import asyncio
 from typing import List
@@ -15,9 +15,9 @@ from zootopia.core.error import error_handler
 
 
 class ActionManager:
-    def __init__(self, messaging_service: MessageProvider) -> None:
-        self.llm = LLM(config.ACTION_MANAGER_LLM)
-        self.messaging_service = messaging_service
+    def __init__(self, messaging_manager) -> None: #TODO: fix type
+        self.llm = LLMManager(config.ACTION_MANAGER_LLM)
+        self.messaging_manager = messaging_manager
 
     @error_handler("ActionManager")
     def generate_message(
@@ -44,7 +44,7 @@ class ActionManager:
 
         for i, message in enumerate(messages):
             try:
-                success, _ = await self.messaging_service.send_message(message.strip())
+                success, _ = await self.messaging_manager.send_message(message.strip())
                 overall_success = overall_success and success
 
                 if i < len(messages) - 1:

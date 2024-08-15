@@ -1,11 +1,11 @@
 from .checkout import CheckoutManager
 from .customer import CustomerManager
 from .subscription import SubscriptionManager
-from .payment_services import PaymentService
+from .stripe import StripeBaseClient
 
 __all__ = [
     "CheckoutManager",
     "CustomerManager",
     "SubscriptionManager",
-    "PaymentService"
+    "StripeBaseClient",
 ]

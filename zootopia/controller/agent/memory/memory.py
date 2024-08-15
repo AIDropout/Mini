@@ -6,18 +6,18 @@ from zootopia.core.schema import (
     Agent,
 )
 from typing import List, Dict
-from zootopia.service import Database
+from zootopia.manager.database import DatabaseManager
 from zootopia.core.error import error_handler
 
 
-class MemoryManager:
+class MemoryService:
 
-    def __init__(self, database_service: Database, room: Room, agent: Agent):
-        self.database_service = database_service
+    def __init__(self, database_manager: DatabaseManager, room: Room, agent: Agent):
+        self.database_manager_service = database_manager
         self.room_id = room.id
         self.agent_id = agent.id
 
-    @error_handler("MemoryManager")
+    @error_handler("MemoryService")
     def get_recent_messages(self, count: int = 10) -> List[Dict[str, str]]:
         """
         Get the most recent messages for a given room ID.
@@ -28,7 +28,7 @@ class MemoryManager:
         Returns:
         - List[Dict[str, str]]: A list of dictionaries with 'role' and 'content' keys.
         """
-        messages = self.database_service.get_multiple_rows(
+        messages = self.database_manager_service.get_multiple_rows(
             table_name=Tables.MESSAGES.value,
             max_rows=count,
             order_by=Tables.MESSAGES__created_at.value,

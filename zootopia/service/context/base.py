@@ -1,30 +1,30 @@
 from typing import Optional
 from zootopia.core.schema import Agent, Room, User, Tables
-from zootopia.service import MessageProvider, Database
+from zootopia.manager.database import DatabaseManager
 
 """
-"ContextManagers" initialize and hold the utilities needed for an agents & its modules.
+"ContextServices" initialize and hold the managers and objects needed for an agents & its modules.
 
-Think of these as the toolbox for any function running on the server.
+Think of these as the toolbox for any agent running on the server.
 
 database - allows agent & modules to make supabase calls
-messaging_service - allows agent & modules to send messages
+messaging_manager - allows agent & modules to send messages
 room - holds row data of the room involved
 user - holds row data of the user involved
 agent - holds row data of the agent involved
 """
 
 
-class BaseContextManager:
+class ContextService:
     def __init__(self):
-        self.database: Database = Database()
-        self.messaging_service: Optional[MessageProvider] = None
+        self.database_manager: DatabaseManager = DatabaseManager()
+        self.messaging_manager = None #TODO: fix type
         self.user: Optional[User] = None
         self.agent: Optional[Agent] = None
         self.room: Optional[Room] = None
 
     def _get_or_create_room(self, user: User, agent: Agent) -> Room:
-        room = self.database.get_row(
+        room = self.database_manager.get_row(
             Tables.ROOMS.value,
             conditions={
                 Tables.ROOMS__user_id.value: user.id,
@@ -40,9 +40,9 @@ class BaseContextManager:
                 room.model_dump()
             )  # Convert to dictionary to ensure serialization
             print(f"Room as dict: {room_dict}")
-            room = self.database.insert(Tables.ROOMS.value, room)
+            room = self.database_manager.insert(Tables.ROOMS.value, room)
 
         return room
 
     def __str__(self):
-        return f"ContextManager(user={self.user}, agent={self.agent}, room={self.room})"
+        return f"ContextService(user={self.user}, agent={self.agent}, room={self.room})"

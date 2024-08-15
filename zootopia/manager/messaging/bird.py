@@ -2,9 +2,9 @@
 
 from typing import Any, Dict, Optional, Tuple
 import requests
-from zootopia.config.config import config
+from config.config import config
 from zootopia.core.logger import get_logger
-from zootopia.service.messaging import MessagingBase
+from .base import MessagingBase
 from zootopia.core.schema import (
     ZootopiaMessage,
     MessageProvider,
@@ -18,7 +18,7 @@ import asyncio
 logger = get_logger(__name__)
 
 
-class BirdSMSProvider(MessagingBase):
+class BirdManager(MessagingBase):
     def __init__(self):
         """Initialize Bird credentials."""
         self._api_url = config.BIRD_API_URL
@@ -245,7 +245,7 @@ class BirdSMSProvider(MessagingBase):
 
 
 async def main():
-    bird_sms = BirdSMSProvider()
+    bird_sms = BirdManager()
     bird_sms.set_user_phone("+13142952259")
     bird_sms.set_channel_id("4e127266-e6de-4081-a6f6-702015f48e6d")
     try:

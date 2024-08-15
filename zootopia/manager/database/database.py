@@ -3,7 +3,7 @@ from functools import wraps
 from typing import List, Optional, TypeVar, Dict, Tuple, Union, Any, Callable
 from supabase import create_client
 from zootopia.core.logger import logger
-from zootopia.config.config import config
+from config.config import config
 from zootopia.core.schema import TableModel
 from zootopia.core.schema.tables import TABLE_MODEL_MAP
 from zootopia.core.error import error_handler

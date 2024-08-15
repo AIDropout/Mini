@@ -1,93 +1,52 @@
-from fastapi import HTTPException, Depends, APIRouter
-from pydantic import BaseModel
-from typing import List, Optional
-from service.messaging import BirdSMSProvider
-from zootopia.core.logger import logger
-from zootopia.config.config import config
+from fastapi import Depends, APIRouter, Security
+from typing import Annotated
+from zootopia.core.schema import (
+    InitiateVerificationRequest,
+    InitiateVerificationResponse,
+    VerifyCodeRequest,
+    VerifyCodeResponse,
+    ResendVerificationRequest,
+)
+from zootopia.service import SMSOTPService
+from zootopia.api.security import verify_api_key
 
 router = APIRouter(prefix="/sms-otp", tags=["sms-otp"])
 
 
-async def get_bird_sms_provider():
-    provider = BirdSMSProvider()
-    return provider
+async def get_sms_otp_service():
+    return SMSOTPService()
 
 
-class VerificationRequest(BaseModel):
-    code: str
-
-
-class SendVerificationRequest(BaseModel):
-    phone_number: str
-    locale: str = "en-US"
-    max_attempts: int = 3
-    timeout: int = 600
-    code_length: int = 6
-
-
-class ResendVerificationRequest(BaseModel):
-    step_index: Optional[int] = None
+SMSOTPServiceDep = Annotated[SMSOTPService, Depends(get_sms_otp_service)]
 
 
 @router.post("/initiate")
 async def initiate_verification(
-    request: SendVerificationRequest,
-    bird_sms: BirdSMSProvider = Depends(get_bird_sms_provider),
-):
+    request: InitiateVerificationRequest,
+    sms_otp_service: SMSOTPServiceDep,
+    api_key: str = Security(verify_api_key),
+) -> InitiateVerificationResponse:
     """Initiate a new SMS OTP verification process."""
-
-    try:
-        bird_sms.set_user_phone(request.phone_number)
-        bird_sms.set_channel_id(config.PHONE_OTP_CHANNEL_ID)
-        is_sent, expires_at, verification_id = await bird_sms.send_verification(
-            locale=request.locale,
-            max_attempts=request.max_attempts,
-            timeout=request.timeout,
-            code_length=request.code_length,
-        )
-        return {
-            "is_sent": is_sent,
-            "expires_at": expires_at,
-            "verification_id": verification_id,
-        }
-    except Exception as e:
-        logger.error(f"Error sending verification: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error sending verification code")
+    return await sms_otp_service.initiate_verification(request)
 
 
 @router.patch("/{verification_id}/verify")
 async def verify_code(
     verification_id: str,
-    request: VerificationRequest,
-    bird_sms: BirdSMSProvider = Depends(get_bird_sms_provider),
-):
+    request: VerifyCodeRequest,
+    sms_otp_service: SMSOTPServiceDep,
+    api_key: str = Security(verify_api_key),
+) -> VerifyCodeResponse:
     """Verify an SMS OTP code for an existing verification."""
-
-    try:
-        is_verified = await bird_sms.verify_code(verification_id, request.code)
-        return {"is_verified": is_verified}
-    except Exception as e:
-        logger.error(f"Error verifying code: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error verifying code")
+    return await sms_otp_service.verify_code(verification_id, request)
 
 
 @router.patch("/{verification_id}/resend")
 async def resend_verification(
     verification_id: str,
     request: ResendVerificationRequest,
-    bird_sms: BirdSMSProvider = Depends(get_bird_sms_provider),
-):
+    sms_otp_service: SMSOTPServiceDep,
+    api_key: str = Security(verify_api_key),
+) -> ResendVerificationRequest:
     """Resend an SMS OTP for an existing verification."""
-
-    try:
-        is_accepted, expires_at, status = await bird_sms.resend_verification(
-            verification_id, request.step_index
-        )
-        return {
-            "is_accepted": is_accepted,
-            "expires_at": expires_at,
-            "status": status,
-        }
-    except Exception as e:
-        logger.error(f"Error resending verification: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error resending verification code")
+    return await sms_otp_service.resend_verification(verification_id, request)

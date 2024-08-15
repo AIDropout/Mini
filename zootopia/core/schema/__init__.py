@@ -9,6 +9,7 @@ from .tables import (
     Message,
     Schedule,
     Subscription,
+    Customer,
 )
 from .message import (
     MessageProvider,
@@ -32,11 +33,29 @@ from .message import (
     _TelegramDocument,
     _TelegramVenue,
 )
-from .request import SignupRequestBase
+from .request import (
+    SignupRequest,
+    InitiateVerificationRequest,
+    ResendVerificationRequest,
+    VerifyCodeRequest,
+    InitiateVerificationResponse,
+    VerifyCodeResponse,
+    ResendVerificationResponse,
+)
 from .task import TaskType
 
 
 __all__ = [
+    "Customer",
+    "ResendVerificationResponse",
+    "VerifyCodeRequest",
+    "VerifyCodeResponse",
+    "InitiateVerificationRequest",
+    "InitiateVerificationResponse",
+    "SignupRequest",
+    "SendVerificationRequest",
+    "ResendVerificationRequest",
+    "VerificationRequest",
     "ActionType",
     "Action",
     "ActionResult",
@@ -69,6 +88,6 @@ __all__ = [
     "_TelegramLocation",
     "_TelegramDocument",
     "_TelegramVenue",
-    "SignupRequestBase",
+    "SignupRequest",
     "TaskType",
 ]
