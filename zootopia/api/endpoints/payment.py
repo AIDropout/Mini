@@ -22,15 +22,12 @@ async def stripe_webhook(
 ) -> bool:
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
-    event_type, customer = await payment_service.process_event(payload, sig_header)
+    await payment_service.process_event(payload, sig_header)
     return True
 
 
 class Checkout(BaseModel):
-    user_id: str = Field(..., description="Unique identifier of the user.")
-    frequency: str = Field(
-        ..., description="Frequency to subscribe to.", examples=["monthly", "yearly"]
-    )
+    user_id: int = Field(..., description="Unique identifier of the user.")
 
 
 @router.post("/checkout")
@@ -42,7 +39,7 @@ async def create_checkout_session(
 ) -> Dict:
     """Returns { url: [link to checkout session] }"""
 
-    return await payment_service.create_checkout_session(data.user_id, data.frequency)
+    return await payment_service.create_checkout_session(data.user_id)
 
 
 @router.get("/portal/{user_id}")

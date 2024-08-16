@@ -50,9 +50,16 @@ class Agent:
         self.user: User = context.user
         self.agent_prompt: str = context.agent.prompt
         self.action = ActionManager(self.messaging_manager)
-        self.memory = MemoryService(self.database_manager_service, self.room, self.agent)
+        self.memory = MemoryService(
+            self.database_manager_service, self.room, self.agent
+        )
         self.subscribe_manager = SubscribeManager(
-            self.database_manager_service, self.action, self.memory, self.room, self.agent
+            self.database_manager_service,
+            self.action,
+            self.memory,
+            self.user,
+            self.room,
+            self.agent,
         )
         default_configs = {
             IntentType.FILTER: IntentConfig(
@@ -97,17 +104,20 @@ class Agent:
                 if not result["continue"]:
                     return True
 
-
                 # Process schedule intent
                 if self.intent_config.is_enabled(IntentType.SCHEDULE):
                     schedule_intent = self.intent_factory.create(IntentType.SCHEDULE)
                     if schedule_intent:
 
-                        existing_tasks = self.database_manager_service.get_multiple_rows(
-                            table_name=Tables.SCHEDULE.value,
-                            conditions={Tables.SCHEDULE__room_id.value: self.room.id},
-                            order_by=Tables.SCHEDULE__run_at.value,
-                            order_details=False,
+                        existing_tasks = (
+                            self.database_manager_service.get_multiple_rows(
+                                table_name=Tables.SCHEDULE.value,
+                                conditions={
+                                    Tables.SCHEDULE__room_id.value: self.room.id
+                                },
+                                order_by=Tables.SCHEDULE__run_at.value,
+                                order_details=False,
+                            )
                         )
 
                         # el.log(
@@ -166,7 +176,7 @@ class Agent:
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
             )
-            
+
             # el.log(f"🟢 MAIN LLM RESPONSE: {response_text}")
 
             # Use Filter intent to ensure quality of agent response

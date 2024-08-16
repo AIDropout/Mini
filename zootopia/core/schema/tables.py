@@ -58,13 +58,6 @@ class Tables(Enum):
     SCHEDULE__info = "info"
     SCHEDULE__complete = "complete"
 
-    SUBSCRIPTIONS = "subscriptions"
-    SUBSCRIPTIONS__id = "id"
-    SUBSCRIPTIONS__user_id = "user_id"
-    SUBSCRIPTIONS__status = "status"
-    SUBSCRIPTIONS__created_at = "created_at"
-    SUBSCRIPTIONS__tier = "tier"
-
 
 def utc_now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
@@ -95,6 +88,8 @@ class User(BaseModel):
     birthday: Optional[str] = Field(default=None)
     telegram_uid: Optional[str] = Field(default=None)
     customer_id: Optional[str] = Field(default=None)
+    subscription_id: Optional[str] = Field(default=None)
+    subscription_status: Optional[str] = Field(default=None)
 
 
 class Room(BaseModel):
@@ -148,20 +143,12 @@ class Schedule(BaseModel):
     complete: bool = Field(default=False)
 
 
-class Subscription(BaseModel):
-    id: Optional[str] = None
-    status: str
-    created_at: datetime
-    tier: str = "free"
-
-
 TableModel = Union[
     User,
     Agent,
     Room,
     Message,
     Schedule,
-    Subscription,
 ]
 TABLE_MODEL_MAP = {
     Tables.USERS.value: User,
@@ -169,14 +156,4 @@ TABLE_MODEL_MAP = {
     Tables.ROOMS.value: Room,
     Tables.MESSAGES.value: Message,
     Tables.SCHEDULE.value: Schedule,
-    Tables.SUBSCRIPTIONS.value: Subscription,
 }
-
-
-class Customer(BaseModel):
-    id: str
-    user_id: str
-    email: Optional[str] = None
-    subscription: Optional[Subscription] = None
-    created_at: datetime = datetime.now()
-    updated_at: datetime = datetime.now()

@@ -20,8 +20,6 @@ class CustomerManager(StripeBaseClient):
         return cls(return_url=return_url)
 
     def create_customer(self, phone: str, **kwargs) -> stripe.Customer:
-        print("1")
-        print(stripe.api_key)
         """Creates a new customer in Stripe."""
         return stripe.Customer.create(phone=phone, **kwargs)
 

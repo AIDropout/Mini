@@ -7,6 +7,7 @@ from config.config import config
 from zootopia.core.schema import TableModel
 from zootopia.core.schema.tables import TABLE_MODEL_MAP
 from zootopia.core.error import error_handler
+from pydantic import BaseModel
 
 T = TypeVar("T", bound=TableModel)
 
@@ -26,11 +27,14 @@ class DatabaseManager:
     def update(
         self,
         table_name: str,
-        item: TableModel,
+        item: BaseModel,
         condition_key: str,
         condition_value: Any,
-    ) -> TableModel:
-        query = self.supabase.table(table_name).update(item.model_dump())
+    ) -> Dict[str, Any]:
+        # Only include fields that are set (not None)
+        update_data = {k: v for k, v in item.model_dump().items() if v is not None}
+
+        query = self.supabase.table(table_name).update(update_data)
 
         if not condition_key or not condition_value:
             raise ValueError(
@@ -40,7 +44,9 @@ class DatabaseManager:
         query = query.eq(condition_key, condition_value)
 
         data, _ = query.execute()
-        return type(item)(**data[1][0]) if data and data[1] else None
+        if not data or not data[1]:
+            raise ValueError(f"No data returned for update on {table_name}")
+        return data[1][0]
 
     @error_handler("Supabase")
     def get_row(

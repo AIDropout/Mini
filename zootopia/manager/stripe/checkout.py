@@ -1,10 +1,7 @@
 import stripe
-from typing import Any, Dict
 from .stripe import StripeBaseClient
-from zootopia.manager.database import DatabaseManager
 from config.config import config
 from zootopia.core.logger import get_logger
-from typing import Optional
 
 logger = get_logger(__name__)
 
@@ -19,17 +16,15 @@ class CheckoutManager(StripeBaseClient):
     def create_checkout_session(
         self,
         user_id: str,
-        phone_number: str,
-        frequency: str,
-        customer_id: Optional[str] = None,
-        trial=True,
+        phone: str,
+        customer_id: str,
     ) -> stripe.checkout.Session:
-        """Creates a checkout session for a given user and price."""
+        """Creates a checkout session for a given user and price.
 
-        price_id = config.STRIPE_WEEKLY_PRICE_ID
+        Session Object: https://docs.stripe.com/api/checkout/sessions/object
+        """
 
-        # if frequency.lower() == 'yearly':
-        #     price_id = STRIPE_YEARLY_PRICE_ID
+        price_id = config.STRIPE_PRODUCT_PRICE_ID
 
         session_params = {
             "line_items": [
@@ -40,31 +35,19 @@ class CheckoutManager(StripeBaseClient):
             ],
             "subscription_data": {},
             "mode": "subscription",
-            "metadata": {"user_id": user_id},
-            "success_url": "http://boyfriend.so/?success=true",
+            "metadata": {"user_id": user_id, "phone": phone},
+            "success_url": f"{config.FRONTEND_URL}/subscribe/?success=true",
         }
 
-        # Use customer_id if it's provided, otherwise use customer_phone_number
-        if customer_id:
-            session_params["customer"] = customer_id
-        else:
-            session_params["customer_phone_number"] = phone_number
+        session_params["customer"] = customer_id
 
-        # if email.endswith('.edu'):
-        #     session_params['discounts'] = [{
-        #         'coupon': STRIPE_EDU_COUPON_ID
-        #     }]
-        # else:
-        #     session_params['allow_promotion_codes'] = True
+        # session_params['allow_promotion_codes'] = True
 
         session = stripe.checkout.Session.create(**session_params)
         return session
 
 
 if __name__ == "__main__":
-    # from database import DatabaseManager
-    # db_manager = DatabaseManager()
-    # checkout_manager = CheckoutManager(db_manager)
     checkout_manager = CheckoutManager()
-    session = checkout_manager.create_checkout_session("urmom", "monthly")
+    session = checkout_manager.create_checkout_session(1)
     print(session)

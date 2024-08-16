@@ -2,8 +2,8 @@ from zootopia.core.schema import (
     Room,
     Message,
     Agent,
-    Subscription,
     Tables,
+    User,
 )
 from zootopia.manager.database import DatabaseManager
 from zootopia.controller.agent.action import ActionManager
@@ -22,12 +22,14 @@ class SubscribeManager:
         database_manager: DatabaseManager,
         action: ActionManager,
         memory: MemoryService,
+        user: User,
         room: Room,
         agent: Agent,
     ):
         self.database_manager_service = database_manager
         self.action = action
         self.memory = memory
+        self.user = user
         self.room = room
         self.agent = agent
 
@@ -55,7 +57,7 @@ class SubscribeManager:
         if not self.agent.subscribe_enabled:
             return result
 
-        result["has_active_subscription"] = await self._has_active_subscription()
+        result["has_active_subscription"] = self.user.subscription_status == "active"
         if result["has_active_subscription"]:
             return result
 
@@ -85,24 +87,6 @@ class SubscribeManager:
         )
         logger.info(f"Agent message count in room {self.room.id}: {count} 🟡🟡🟡")
         return count
-
-    @error_handler("SubscribeManager")
-    async def _has_active_subscription(self) -> bool:
-        """
-        Check if the room has an active subscription.
-
-        Returns:
-            bool: True if there's an active subscription, False otherwise.
-        """
-
-        active_subscription = self.database_manager_service.get_row(
-            table_name=Tables.SUBSCRIPTIONS.value,
-            conditions={
-                Tables.SUBSCRIPTIONS__room_id.value: self.room.id,
-                Tables.SUBSCRIPTIONS__ended_at.value: None,
-            },
-        )
-        return active_subscription is not None
 
     @error_handler("SubscribeManager")
     async def _send_subscribe_message(self):

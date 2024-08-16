@@ -82,8 +82,9 @@ https://dashboard.stripe.com/test/webhooks
 
 ```bash
 stripe login # Download the CLI and log in with your Stripe account
-stripe listen --forward-to http://127.0.0.1:8000/stripe # Forward events to your webhook
-stripe trigger payment_intent.succeeded # Trigger events with the CLI
+stripe listen --forward-to http://127.0.0.1:8000/payment/webhook # Forward events to your webhook
+stripe trigger checkout.session.completed # Trigger events with the CLI
+stripe trigger customer.subscription.deleted 
 ```
 
 Interact with the demo:

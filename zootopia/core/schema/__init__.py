@@ -8,8 +8,6 @@ from .tables import (
     Room,
     Message,
     Schedule,
-    Subscription,
-    Customer,
 )
 from .message import (
     MessageProvider,
@@ -71,7 +69,6 @@ __all__ = [
     "Room",
     "Message",
     "Schedule",
-    "Subscription",
     "MessageProvider",
     "MessageType",
     "TelegramMetadata",
