@@ -1,13 +1,12 @@
 import re
 from typing import Dict, Any, Optional
-from pydantic import BaseModel, create_model
-from typing import List, Dict, Any, Optional
+from pydantic import BaseModel
+from typing import Dict, Any, Optional
 import json
 from zootopia.controller.agent.intent import (
     Confidence,
 )
 from zootopia.core.logger import logger
-import subprocess
 
 
 def is_ngrok_url(url: str) -> bool:

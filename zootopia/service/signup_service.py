@@ -5,11 +5,14 @@ from zootopia.manager.messaging import BirdManager
 from zootopia.core.exceptions import RoomAlreadyExistsError, AgentNotFoundError
 from zootopia.manager.database import DatabaseManager
 from zootopia.core.logger import logger
+from zootopia.service.base import Service
 
 
-class SignupService:
-    def __init__(self, database_manager: DatabaseManager, messaging_manager: BirdManager):
-        self.database_manager = database_manager
+class SignupService(Service):
+    def __init__(
+        self, database_manager: DatabaseManager, messaging_manager: BirdManager
+    ):
+        super().__init__(database_manager)
         self.messaging_manager = messaging_manager
 
     def process_signup(self, request: SignupRequest):

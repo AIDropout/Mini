@@ -3,17 +3,19 @@ from fastapi import BackgroundTasks
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
 from zootopia.core.schema import Tables, Message, Room, User
-from zootopia.utils.time_utils import should_send_proactive_message
 from zootopia.controller.tasks.task_scheduler import TaskScheduler
 from zootopia.controller.tasks.task_types import ReviveTask, ScheduledTaskInfo
 from zootopia.core.error import error_handler
+from zootopia.service.base import Service
+from datetime import datetime, timedelta, timezone
+import random
 
 
-class CronService:
+class CronService(Service):
     def __init__(
         self, database_manager: DatabaseManager, messaging_manager: MessagingManager
     ):
-        self.database_manager = database_manager
+        super().__init__(database_manager)
         self.messaging_manager = messaging_manager
 
     @error_handler("CronService")
@@ -40,7 +42,7 @@ class CronService:
                         order_desc=True,
                     )
 
-                    if last_message and should_send_proactive_message(
+                    if last_message and self._should_send_proactive_message(
                         agent_proactivity=room.agent_proactivity,
                         last_message_time=last_message.created_at,
                     ):
@@ -55,7 +57,7 @@ class CronService:
                             db=self.database_manager,
                         )
 
-    async def _is_room_eligible_for_revival(self, room: Room, user_id: int):
+    def _is_room_eligible_for_revival(self, room: Room, user_id: int):
         if not room.subscribe_msg_sent:
             return True
 
@@ -68,3 +70,36 @@ class CronService:
         )
 
         return active_subscription is not None
+
+    def _should_send_proactive_message(
+        self,
+        agent_proactivity: float,
+        last_message_time: datetime,
+        min_interval: timedelta = timedelta(minutes=30),
+        max_interval: timedelta = timedelta(days=7),
+    ) -> bool:
+        """
+        Determine if the agent should send a proactive message based on proactivity and time elapsed.
+
+        Args:
+        agent_proactivity - The agent's proactivity score (0 to 1).
+        last_message_time - The timestamp of the last message in the room.
+        min_interval - The minimum interval between messages.
+        max_interval - The maximum interval between messages.
+
+        Returns:
+        bool: True if the agent should send a message, False otherwise.
+        """
+        current_time = datetime.now(timezone.utc)
+        time_elapsed = current_time - last_message_time
+
+        # Calculate how much of the total possible interval has elapsed
+        interval_progress = (time_elapsed - min_interval) / (
+            max_interval - min_interval
+        )
+        interval_progress = max(0, min(interval_progress, 1))  # Clamp between 0 and 1
+
+        # Combine interval progress with agent proactivity
+        send_probability = interval_progress * agent_proactivity
+
+        return random.random() < send_probability

@@ -83,7 +83,7 @@ class BirdManager(MessagingBase):
             "response_data": response_data,
         }
 
-        logger.info(response_data) # Why can't i see this
+        logger.info(response_data)  # Why can't i see this
 
         if response.status_code == 202 and response_data.get("status") == "accepted":
             return True, details

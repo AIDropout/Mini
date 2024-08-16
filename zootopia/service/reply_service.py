@@ -1,21 +1,27 @@
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManagerFactory
 from zootopia.core.schema import Message, Tables
-from zootopia.utils.time_utils import calculate_response_delay
 from zootopia.core.error import error_handler
 from zootopia.controller.tasks.task_scheduler import TaskScheduler
 from zootopia.controller.tasks.task_types import ScheduledTaskInfo, RespondTask
 from zootopia.service.context import ContextFactory
+import random
+from typing import List
+from datetime import datetime, timezone
+from zootopia.core.logger import get_logger
+from zootopia.service.base import Service
+
+logger = get_logger(__name__)
 
 
-class ReplyService:
+class ReplyService(Service):
     def __init__(
         self,
         database_manager: DatabaseManager,
         context_factory: ContextFactory,
         messaging_manager_factory: MessagingManagerFactory,
     ):
-        self.database_manager = database_manager
+        super().__init__(database_manager)
         self.context_factory = context_factory
         self.messaging_manager_factory = messaging_manager_factory
 
@@ -42,7 +48,7 @@ class ReplyService:
             order_desc=True,
             conditions={"room_id": context.room.id},
         )
-        delay = calculate_response_delay(recent_messages)
+        delay = self._calculate_response_delay(recent_messages)
 
         scheduled_task_info = ScheduledTaskInfo(
             task=RespondTask(user_message=context.message, room_id=context.room.id),
@@ -56,23 +62,41 @@ class ReplyService:
             db=self.database_manager,
         )
 
-    # Define the Request
-    async def send_admin_message(self, payload: dict):
-        room_id = payload.get("room_id")
-        message = payload.get("message")
 
-        if not room_id or not message:
-            raise ValueError("Missing room_id or message")
+    def _calculate_response_delay(messages: List[Message]) -> int:
+        """
+        Calculate a human-like delay in seconds for message responses.
 
-        context = self.context_factory.create_cron_context(room_id)
+        :param messages: List of message objects, sorted by creation time (newest first)
+        :return: Delay in seconds
+        """
+        if not messages:
+            return random.randint(5, 15)  # Default delay if no messages
 
-        new_message = Message(
-            sender_id=context.room.agent_id,
-            room_id=room_id,
-            content=message,
-            sent_by_admin=True,
-        )
+        try:
+            last_message_time = datetime.fromisoformat(
+                messages[0]["created_at"].replace("Z", "+00:00")
+            ).replace(tzinfo=timezone.utc)
+            time_since_last_message = (
+                datetime.now(timezone.utc) - last_message_time
+            ).total_seconds()
+        except (ValueError, KeyError) as e:
+            logger.error(f"Error parsing message time: {e}")
+            return random.randint(
+                5, 15
+            )  # Default delay if there's an error parsing time
 
-        self.database_manager.insert(Tables.MESSAGES.value, new_message)
-        bird_manager = self.messaging_manager_factory.bird_manager
-        await bird_manager.send_message(message)
+        # for debugging
+        return 1
+
+        # Determine delay based on time since last message
+        if time_since_last_message < 60:  # Within a minute
+            return random.randint(5, 30)
+        elif time_since_last_message < 300:  # Within 5 minutes
+            return random.randint(30, 180)
+        elif time_since_last_message < 3600:  # Within an hour
+            return random.randint(3 * 60, 20 * 60)  # 3 to 20 minutes
+        elif time_since_last_message < 86400:  # Within a day
+            return random.randint(30 * 60, 4 * 60 * 60)  # 30 minutes to 4 hours
+        else:  # More than a day
+            return random.randint(4 * 60 * 60, 24 * 60 * 60)  # 4 to 24 hours

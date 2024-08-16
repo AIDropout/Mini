@@ -8,6 +8,7 @@ from fastapi import (
 )
 from zootopia.service.reply_service import ReplyService
 from zootopia.service.cron_service import CronService
+from zootopia.service.dashboard_service import DashboardService
 from zootopia.api.security import verify_api_key
 from zootopia.utils.utils import is_ngrok_url
 from zootopia.core.logger import logger
@@ -22,6 +23,10 @@ def get_reply_service() -> ReplyService:
 
 def get_cron_service() -> CronService:
     return container.cron_service
+
+
+def get_dashboard_service() -> DashboardService:
+    return container.dashboard_service
 
 
 @router.post("/respond")
@@ -60,13 +65,13 @@ async def revive_webhook(
 @router.post("/admin-message")
 async def send_admin_message(
     request: Request,
-    reply_service: ReplyService = Depends(get_reply_service),
+    dashboard_service: DashboardService = Depends(get_dashboard_service),
     api_key: str = Security(verify_api_key),
 ):
     """Endpoint for sending messages from the admin dashboard."""
     try:
         payload = await request.json()
-        await reply_service.send_admin_message(payload)
+        await dashboard_service.send_admin_message(payload)
         return {"status": "Admin message sent successfully"}
     except Exception as e:
         logger.exception("Error in send_admin_message")
