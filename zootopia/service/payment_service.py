@@ -1,14 +1,13 @@
 # TODO: WIP
 
 from .base import Service
-from zootopia.manager.payment import (
+from zootopia.manager.stripe import (
     CheckoutManager,
     CustomerManager,
     SubscriptionManager,
 )
 from zootopia.manager.database import DatabaseManager
-
-# from schema.exceptions import ObjectNotFoundError
+from zootopia.core.schema.tables import Tables
 from typing import Literal, Optional, Dict, Any, Tuple
 from config.config import config
 import stripe
@@ -37,10 +36,18 @@ class PaymentService(Service):
     async def create_checkout_session(
         self, user_id: str, frequency: Literal["monthly", "yearly"]
     ):
-        email = await self.database_manager.get_user_email(user_id)
+        user = self.database_manager.get_row(
+            Tables.USERS.value,
+            {Tables.USERS__id.value: user_id},
+        )
+        phone_number = user.phone_number
+
         trial = True
         try:
             customer = await self.database_manager.get_user_customer(user_id)
+
+
+
             if customer.subscription.created_at:
                 trial = False
             customer_id = customer.id
@@ -48,13 +55,17 @@ class PaymentService(Service):
             customer_id = None
 
         response = self._checkout_manager.create_checkout_session(
-            user_id, email, frequency, customer_id, trial=trial
+            user_id, phone_number, frequency, customer_id, trial=trial
         )
 
         return {"url": response.url}
 
     async def get_portal_link(self, user_id: str):
-        customer_id = await self.database_manager.get_user_customer_id(user_id)
+        user = self.database_manager.get_row(
+            Tables.USERS.value,
+            {Tables.USERS__id.value: user_id},
+        )
+        customer_id = user.customer_id
         response = self._customer_manager.get_portal_link(customer_id)
         return {"url": response.url}
 

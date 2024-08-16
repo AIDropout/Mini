@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 def get_signup_service() -> SignupService:
-    return container.sms_otp_service
+    return container.signup_service
 
 
 @router.post("/signup")

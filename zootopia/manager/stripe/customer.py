@@ -1,17 +1,29 @@
 from .stripe import StripeBaseClient
 from typing import Dict, Any
 import stripe
+from config.config import config, Config
 
 
 class CustomerManager(StripeBaseClient):
     """Manages customer operations in Stripe."""
 
-    def __init__(self):
+    def __init__(self, return_url: str):
         super().__init__()
+        self.return_url = return_url
 
-    def create_customer(self, email: str, **kwargs) -> stripe.Customer:
+    @classmethod
+    def from_config(cls, config: Config):
+        return_url = config.FRONTEND_URL
+        if not return_url:
+            raise ValueError("Return URL must be provided in the configuration.")
+
+        return cls(return_url=return_url)
+
+    def create_customer(self, phone: str, **kwargs) -> stripe.Customer:
+        print("1")
+        print(stripe.api_key)
         """Creates a new customer in Stripe."""
-        return stripe.Customer.create(email=email, **kwargs)
+        return stripe.Customer.create(phone=phone, **kwargs)
 
     def list_customers(self, **kwargs) -> stripe.Customer:
         """Lists all customers in Stripe."""
@@ -52,8 +64,7 @@ class CustomerManager(StripeBaseClient):
     def get_portal_link(self, customer_id: str) -> stripe.billing_portal.Session:
         """Retrieves the link to the Stripe customer portal."""
         session = stripe.billing_portal.Session.create(
-            customer=customer_id,
-            return_url="https://app.youlearn.ai"
+            customer=customer_id, return_url=self.return_url
         )
         return session
 
@@ -63,7 +74,7 @@ class CustomerManager(StripeBaseClient):
         return subscriptions
 
 
-if __name__ == '__main__':
-    customer_manager = CustomerManager()
+if __name__ == "__main__":
+    customer_manager = CustomerManager.from_config(config)
     customer = customer_manager.get_portal_link("cus_P2mvWPPveMDq1g")
     print(customer)

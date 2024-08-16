@@ -26,7 +26,7 @@ class Tables(Enum):
     USERS__phone_number = "phone_number"
     USERS__telegram_uid = "telegram_uid"
     USERS__birthday = "birthday"
-    USERS__stripe_customer_id = "stripe_customer_id"
+    USERS__customer_id = "customer_id"
 
     ROOMS = "rooms"
     ROOMS__id = "id"
@@ -94,7 +94,7 @@ class User(BaseModel):
     phone_number: Optional[str] = Field(default=None)
     birthday: Optional[str] = Field(default=None)
     telegram_uid: Optional[str] = Field(default=None)
-    stripe_customer_id: Optional[str] = Field(default=None)
+    customer_id: Optional[str] = Field(default=None)
 
 
 class Room(BaseModel):
@@ -171,6 +171,7 @@ TABLE_MODEL_MAP = {
     Tables.SCHEDULE.value: Schedule,
     Tables.SUBSCRIPTIONS.value: Subscription,
 }
+
 
 class Customer(BaseModel):
     id: str

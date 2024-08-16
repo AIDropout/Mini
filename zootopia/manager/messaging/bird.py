@@ -63,8 +63,6 @@ class BirdManager(MessagingBase):
     @error_handler("Bird SMS")
     async def send_message(self, message: str) -> Tuple[bool, Dict[str, Any]]:
         """Send a Bird SMS message to the recipient."""
-        print("neart💜💜💜")
-        logger.info("heart💜💜💜")
 
         url = f"{self._api_url}/workspaces/{self._workspace_id}/channels/{self._channel_id}/messages"
         payload = {

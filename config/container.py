@@ -5,19 +5,24 @@ from zootopia.service.reply_service import ReplyService
 from zootopia.service.cron_service import CronService
 from zootopia.service.signup_service import SignupService
 from zootopia.service.sms_otp_service import SMSOTPService
-from zootopia.manager.payment import (
+from zootopia.manager.stripe import (
     CheckoutManager,
     CustomerManager,
     SubscriptionManager,
 )
 from zootopia.service.payment_service import PaymentService
 from zootopia.service.dashboard_service import DashboardService
+from config.config import config
 
 
 class Container:
     def __init__(self):
         self.database_manager = DatabaseManager()
         self.messaging_manager_factory = MessagingManagerFactory()
+        self.checkout_manager = CheckoutManager()
+        self.customer_manager = CustomerManager.from_config(config)
+        self.subscription_manager = SubscriptionManager()
+
         self.context_factory = ContextFactory(
             messaging_manager_factory=self.messaging_manager_factory
         )
@@ -33,18 +38,15 @@ class Container:
             messaging_manager=self.messaging_manager_factory.bird_manager,
         )
 
-        self.signup_service = SignupService(
-            database_manager=self.database_manager,
-            messaging_manager=self.messaging_manager_factory.bird_manager,
-        )
-
         self.sms_otp_service = SMSOTPService(
             bird_manager=self.messaging_manager_factory.bird_manager
         )
 
-        self.checkout_manager = CheckoutManager()
-        self.customer_manager = CustomerManager()
-        self.subscription_manager = SubscriptionManager()
+        self.signup_service = SignupService(
+            database_manager=self.database_manager,
+            messaging_manager=self.messaging_manager_factory.bird_manager,
+            customer_manager=self.customer_manager,
+        )
 
         self.payment_service = PaymentService(
             database_manager=self.database_manager,

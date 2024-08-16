@@ -6,7 +6,7 @@ import stripe
 class StripeBaseClient(ABC):
     """Base class for all Stripe-related operations."""
 
-    def init(self):
+    def __init__(self):
         """Initializes the client with the Stripe API key."""
         if not config.STRIPE_SECRET_KEY_TEST:
             raise ValueError("The Stripe API key must be set.")

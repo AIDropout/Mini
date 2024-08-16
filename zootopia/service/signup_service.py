@@ -4,18 +4,23 @@ from zootopia.core.schema import Tables, User, Agent, Room, Message, SignupReque
 from zootopia.manager.messaging import BirdManager
 from zootopia.core.exceptions import RoomAlreadyExistsError, AgentNotFoundError
 from zootopia.manager.database import DatabaseManager
+from zootopia.manager.stripe import CustomerManager
 from zootopia.core.logger import logger
 from zootopia.service.base import Service
 
 
 class SignupService(Service):
     def __init__(
-        self, database_manager: DatabaseManager, messaging_manager: BirdManager
+        self,
+        database_manager: DatabaseManager,
+        messaging_manager: BirdManager,
+        customer_manager: CustomerManager,
     ):
         super().__init__(database_manager)
         self.messaging_manager = messaging_manager
+        self.customer_manager = customer_manager
 
-    def process_signup(self, request: SignupRequest):
+    async def process_signup(self, request: SignupRequest):
         """Creates a new room for the user with the selected agent & sends the first message"""
         try:
             agent = self.get_agent(request.agent_id)
@@ -25,7 +30,7 @@ class SignupService(Service):
 
             self.messaging_manager.set_user_phone(request.user_phone)
             self.messaging_manager.set_channel_id(agent.bird_channel_id)
-            self.messaging_manager.send_message(agent.first_message)
+            await self.messaging_manager.send_message(agent.first_message)
 
             self.database_manager.insert(
                 table_name=Tables.MESSAGES.value,
@@ -89,9 +94,12 @@ class SignupService(Service):
             )
             return existing_user, new_room, False
 
+        customer = self.customer_manager.create_customer(phone=user_phone)
         new_user = self.database_manager.insert(
             table_name=Tables.USERS.value,
-            item=User(phone_number=user_phone, birthday=birthday),
+            item=User(
+                phone_number=user_phone, birthday=birthday, customer_id=customer.id
+            ),
         )
         new_room = self.database_manager.insert(
             table_name=Tables.ROOMS.value,

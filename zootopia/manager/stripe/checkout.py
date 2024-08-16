@@ -19,7 +19,7 @@ class CheckoutManager(StripeBaseClient):
     def create_checkout_session(
         self,
         user_id: str,
-        email: str,
+        phone_number: str,
         frequency: str,
         customer_id: Optional[str] = None,
         trial=True,
@@ -44,11 +44,11 @@ class CheckoutManager(StripeBaseClient):
             "success_url": "http://boyfriend.so/?success=true",
         }
 
-        # Use customer_id if it's provided, otherwise use customer_email
+        # Use customer_id if it's provided, otherwise use customer_phone_number
         if customer_id:
             session_params["customer"] = customer_id
         else:
-            session_params["customer_email"] = email
+            session_params["customer_phone_number"] = phone_number
 
         # if email.endswith('.edu'):
         #     session_params['discounts'] = [{

@@ -53,6 +53,7 @@ class Config(BaseSettings):
 
     STRIPE_WEEKLY_PRICE_ID: int = Field(..., env="STRIPE_WEEKLY_PRICE_ID")
     PHONE_OTP_CHANNEL_ID: str = Field(..., env="PHONE_OTP_CHANNEL_ID")
+    FRONTEND_URL: str = Field(..., env="FRONTEND_URL")
 
 
 config = Config()
