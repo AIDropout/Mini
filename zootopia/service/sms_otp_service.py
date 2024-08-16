@@ -6,10 +6,13 @@ from zootopia.core.logger import logger
 from config.config import config
 from zootopia.core.schema import (
     SendVerificationRequest,
-    OTPOperationResponse,
+    SendVerificationResponse,
+
+    ResendVerificationRequest,
+    ResendVerificationResponse,
+
     VerifyCodeRequest,
     VerifyCodeResponse,
-    ResendVerificationRequest,
 )
 
 
@@ -19,7 +22,7 @@ class SMSOTPService:
 
     async def send_verification(
         self, request: SendVerificationRequest
-    ) -> OTPOperationResponse:
+    ) -> SendVerificationResponse:
         try:
             self.bird_sms.set_user_phone(request.phone_number)
             self.bird_sms.set_channel_id(config.PHONE_OTP_CHANNEL_ID)
@@ -31,7 +34,8 @@ class SMSOTPService:
                     code_length=request.code_length,
                 )
             )
-            return OTPOperationResponse(
+            print(expires_at)
+            return SendVerificationResponse(
                 is_sent=is_sent,
                 expires_at=expires_at,
                 verification_id=verification_id,
@@ -45,13 +49,14 @@ class SMSOTPService:
 
     async def resend_verification(
         self, verification_id: str, request: ResendVerificationRequest
-    ) -> OTPOperationResponse:
+    ) -> ResendVerificationResponse:
         try:
-            is_sent, expires_at, status = await self.bird_sms.resend_verification(
-                verification_id, request.step_index
+            is_sent, is_active, expires_at = await self.bird_sms.resend_verification(
+                verification_id
             )
-            return OTPOperationResponse(
+            return ResendVerificationResponse(
                 is_sent=is_sent,
+                is_active=is_active,
                 expires_at=expires_at,
                 verification_id=verification_id,
             )
@@ -65,8 +70,8 @@ class SMSOTPService:
         self, verification_id: str, request: VerifyCodeRequest
     ) -> VerifyCodeResponse:
         try:
-            is_verified = await self.bird_sms.verify_code(verification_id, request.code)
-            return VerifyCodeResponse(is_verified=is_verified)
+            is_verified, is_active = await self.bird_sms.verify_code(verification_id, request.code)
+            return VerifyCodeResponse(is_verified=is_verified, is_active=is_active)
         except Exception as e:
             logger.error(f"Error verifying code: {str(e)}")
             raise HTTPException(status_code=500, detail="Error verifying code")

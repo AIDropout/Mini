@@ -11,9 +11,9 @@ from zootopia.core.schema import (
     MessageType,
     BirdMetadata,
 )
+from zootopia.core.schema.sms_otp import VerificationStatus, ErrorCode
 from zootopia.core.error import error_handler
 import asyncio
-
 
 # logger = get_logger(__name__)
 
@@ -133,7 +133,7 @@ class BirdManager(MessagingBase):
         self,
         locale: str = "en-US",
         max_attempts: int = 3,
-        timeout: int = 600,
+        timeout: int = 120,
         code_length: int = 6,
     ) -> Tuple[bool, str, str]:
         """
@@ -183,7 +183,74 @@ class BirdManager(MessagingBase):
         return is_sent, expires_at, verification_id
 
     @error_handler("Bird SMS")
-    async def verify_code(self, verification_id: str, code: str) -> Tuple[bool, str]:
+    async def resend_verification(
+        self, verification_id: str
+    ) -> Tuple[bool, bool, Optional[str]]:
+        """
+        Resend a verification code for a given verification ID.
+
+        Args:
+            verification_id (str): The ID of the verification to resend.
+
+        Returns:
+            Tuple[bool, bool, Optional[str]]: A tuple containing:
+                - bool: Whether the resend request was accepted
+                - bool: Whether the verification process is still active
+                - Optional[str]: The expiration time of the new verification code, or None if not applicable
+        """
+        url = f"{self._api_url}/workspaces/{self._workspace_id}/verify/{verification_id}/resend"
+
+        payload = {}
+        try:
+            response = requests.post(url, headers=self._api_header, json=payload)
+            response_data = response.json()
+            logger.info(
+                f"Resend verification response for ID {verification_id}: {response_data}"
+            )
+
+            if response.status_code == 202:  # Accepted
+                is_sent = True
+                expires_at = response_data.get("expiresAt")
+                status = response_data.get("status")
+                is_active = status in [
+                    VerificationStatus.ACCEPTED.value,
+                    VerificationStatus.PENDING.value,
+                ]
+                return is_sent, is_active, expires_at
+            else:
+                response.raise_for_status()  # This will raise an HTTPError for non-2xx status codes
+
+        except requests.exceptions.HTTPError as e:
+            error_data = e.response.json()
+            error_code = error_data.get("code")
+            error_message = error_data.get("message", "Unknown error")
+
+            if error_code == ErrorCode.MAX_ATTEMPTS_REACHED.value:
+                logger.warning(
+                    f"Max attempts reached for verification ID {verification_id}: {error_message}"
+                )
+                return False, False, None  # Not sent, not active, no expiration
+            else:
+                logger.error(
+                    f"HTTP error in resend verification for ID {verification_id}: {error_message}"
+                )
+                return (
+                    False,
+                    True,
+                    None,
+                )  # Not sent, but might still be active, no expiration
+
+        except Exception as e:
+            logger.error(
+                f"Unexpected error during resend verification for ID {verification_id}: {str(e)}"
+            )
+            return False, False, None  # Not sent, not active, no expiration
+
+        # This line should never be reached, but added for completeness
+        return False, False, None
+
+    @error_handler("Bird SMS")
+    async def verify_code(self, verification_id: str, code: str) -> Tuple[bool, bool]:
         """
         Verify a code for a given verification ID.
 
@@ -192,61 +259,62 @@ class BirdManager(MessagingBase):
             code (str): The verification code to verify.
 
         Returns:
-            Tuple[bool, str]: A tuple containing:
-                - bool: Whether the code was successfully verified
+            VerifyCodeResponse: Contains whether the code was successfully verified,
+                                if the verification process is still active,
+                                and the current status of the verification.
         """
         url = (
             f"{self._api_url}/workspaces/{self._workspace_id}/verify/{verification_id}"
         )
-
         payload = {"code": code}
 
-        response = requests.post(url, headers=self._api_header, json=payload)
-        response.raise_for_status()
+        try:
+            response = requests.post(url, headers=self._api_header, json=payload)
+            response.raise_for_status()
+            verification_data = response.json()
 
-        verification_data = response.json()
-        logger.info(
-            f"Verification attempt for ID {verification_id}: {verification_data['status']}"
-        )
+            logger.info(
+                f"Verification response for ID {verification_id}: {verification_data}"
+            )
 
-        return verification_data["status"] == "verified"
+            status = verification_data.get("status")
 
-    @error_handler("Bird SMS")
-    async def resend_verification(
-        self, verification_id: str, step_index: int = None
-    ) -> Tuple[bool, str, str]:
-        """
-        Resend a verification code for a given verification ID.
+            is_verified = status == VerificationStatus.VERIFIED.value
+            is_active = status in [
+                VerificationStatus.ACCEPTED.value,
+                VerificationStatus.PENDING.value,
+            ]
 
-        Args:
-            verification_id (str): The ID of the verification to resend.
-            step_index (int, optional): The index of the step to use. If not provided, uses the currently active step.
+            return is_verified, is_active
 
-        Returns:
-            Tuple[bool, str, str]: A tuple containing:
-                - bool: Whether the resend request was accepted
-                - str: The expiration time of the new verification code
-                - str: The status of the verification after resending
-        """
-        url = f"{self._api_url}/workspaces/{self._workspace_id}/verify/{verification_id}/resend"
+        except requests.exceptions.HTTPError as e:
+            error_data = e.response.json()
+            error_code = error_data.get("code")
+            error_message = error_data.get("message", "Unknown error")
 
-        payload = {}
-        if step_index is not None:
-            payload["stepIndex"] = step_index
+            if error_code == ErrorCode.MAX_ATTEMPTS_REACHED.value:
+                logger.warning(f"Maxed attempts reached for ID {verification_id}. ")
+                return False, False
+            elif error_code == ErrorCode.VERIFICATION_CODE_MISMATCH.value:
+                details = error_data.get("details", {})
+                logger.warning(
+                    f"Incorrect code for ID {verification_id}. "
+                    f"Failed attempts: {details.get('failedAttempts')}, "
+                    f"Remaining attempts: {details.get('remainingAttempts')}"
+                )
+                return False, True  # Not verified, but still active
+            else:
+                logger.error(
+                    f"Verification failed for ID {verification_id}: {error_message}"
+                )
 
-        response = requests.post(url, headers=self._api_header, json=payload)
-        response.raise_for_status()
+            return False, True  # Not verified, but still active
 
-        verification_data = response.json()
-        logger.info(
-            f"Verification resend for ID {verification_id}: {verification_data['status']}"
-        )
-
-        is_sent = response.status_code == 202
-        expires_at = verification_data.get("expiresAt", "")
-        status = verification_data["status"]
-
-        return is_sent, expires_at, status
+        except Exception as e:
+            logger.error(
+                f"Unexpected error during verification for ID {verification_id}: {str(e)}"
+            )
+            return False, False  # Not verified and not active due to unexpected error
 
 
 async def main():

@@ -35,10 +35,14 @@ from .message import (
 )
 from .request import (
     SignupRequest,
+
     SendVerificationRequest,
+    SendVerificationResponse,
+
     ResendVerificationRequest,
+    ResendVerificationResponse,
+    
     VerifyCodeRequest,
-    OTPOperationResponse,
     VerifyCodeResponse,
 )
 from .task import TaskType
@@ -46,10 +50,11 @@ from .task import TaskType
 
 __all__ = [
     "Customer",
-    "OTPOperationResponse",
+    "SendVerificationResponse",
     "VerifyCodeRequest",
     "VerifyCodeResponse",
     "SendVerificationRequest",
+    "ResendVerificationResponse",
     "SendVerificationResponse",
     "SignupRequest",
     "SendVerificationRequest",

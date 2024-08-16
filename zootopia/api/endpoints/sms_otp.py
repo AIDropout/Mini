@@ -1,8 +1,9 @@
 from fastapi import Depends, APIRouter, Security
 from zootopia.core.schema import (
     SendVerificationRequest,
+    SendVerificationResponse,
     ResendVerificationRequest,
-    OTPOperationResponse,
+    ResendVerificationResponse,
     VerifyCodeRequest,
     VerifyCodeResponse,
 )
@@ -22,23 +23,23 @@ async def send_verification(
     request: SendVerificationRequest,
     sms_otp_service: SMSOTPService = Depends(get_sms_otp_service),
     api_key: str = Security(verify_api_key),
-) -> OTPOperationResponse:
+) -> SendVerificationResponse:
     """Start a new SMS OTP verification process."""
     return await sms_otp_service.send_verification(request)
 
 
-@router.patch("/{verification_id}/resend")
+@router.post("/{verification_id}/resend")
 async def resend_verification(
     verification_id: str,
     request: ResendVerificationRequest,
     sms_otp_service: SMSOTPService = Depends(get_sms_otp_service),
     api_key: str = Security(verify_api_key),
-) -> OTPOperationResponse:
+) -> ResendVerificationResponse:
     """Resend an SMS OTP for an existing verification."""
     return await sms_otp_service.resend_verification(verification_id, request)
 
 
-@router.patch("/{verification_id}/verify")
+@router.post("/{verification_id}/verify")
 async def verify_code(
     verification_id: str,
     request: VerifyCodeRequest,
