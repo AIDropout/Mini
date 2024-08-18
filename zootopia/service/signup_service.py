@@ -28,8 +28,8 @@ class SignupService(Service):
                 request.user_phone, request.agent_id, request.birthday
             )
 
-            self.messaging_manager.set_user_phone(request.user_phone)
-            self.messaging_manager.set_channel_id(agent.bird_channel_id)
+            self.messaging_manager.set_receiver(request.user_phone)
+            self.messaging_manager.set_sender(agent.bird_channel_id)
             await self.messaging_manager.send_message(agent.first_message)
 
             self.database_manager.insert(

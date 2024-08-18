@@ -74,7 +74,7 @@ class Container:
         from zootopia.controller.agent.modules.action import ActionModule
         from zootopia.controller.agent.modules.memory import MemoryModule
 
-        action_module = ActionModule(llm_manager=LLMManager(config.ACTION_MANAGER_LLM))
+        action_module = ActionModule(llm_manager=LLMManager(llm_name=config.ACTION_MANAGER_LLM))
         memory_module = MemoryModule(database_manager=self.database_manager)
         subscribe_module = SubscribeModule(
             database_manager=self.database_manager,

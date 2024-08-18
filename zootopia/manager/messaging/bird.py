@@ -317,8 +317,8 @@ class BirdManager(MessagingBase):
 
 async def main():
     bird_sms = BirdManager()
-    bird_sms.set_user_phone("+13142952259")
-    bird_sms.set_channel_id("4e127266-e6de-4081-a6f6-702015f48e6d")
+    bird_sms.set_receiver("+13142952259")
+    bird_sms.set_sender("4e127266-e6de-4081-a6f6-702015f48e6d")
     try:
         # Send message
         result = await bird_sms.send_message("hi")

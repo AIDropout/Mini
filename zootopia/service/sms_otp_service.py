@@ -7,10 +7,8 @@ from config.config import config
 from zootopia.core.schema import (
     SendVerificationRequest,
     SendVerificationResponse,
-
     ResendVerificationRequest,
     ResendVerificationResponse,
-
     VerifyCodeRequest,
     VerifyCodeResponse,
 )
@@ -24,8 +22,8 @@ class SMSOTPService:
         self, request: SendVerificationRequest
     ) -> SendVerificationResponse:
         try:
-            self.bird_sms.set_user_phone(request.phone_number)
-            self.bird_sms.set_channel_id(config.PHONE_OTP_CHANNEL_ID)
+            self.bird_sms.set_receiver(request.phone_number)
+            self.bird_sms.set_sender(config.PHONE_OTP_CHANNEL_ID)
             is_sent, expires_at, verification_id = (
                 await self.bird_sms.send_verification(
                     locale=request.locale,
@@ -70,7 +68,9 @@ class SMSOTPService:
         self, verification_id: str, request: VerifyCodeRequest
     ) -> VerifyCodeResponse:
         try:
-            is_verified, is_active = await self.bird_sms.verify_code(verification_id, request.code)
+            is_verified, is_active = await self.bird_sms.verify_code(
+                verification_id, request.code
+            )
             return VerifyCodeResponse(is_verified=is_verified, is_active=is_active)
         except Exception as e:
             logger.error(f"Error verifying code: {str(e)}")
