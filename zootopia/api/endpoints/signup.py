@@ -18,3 +18,4 @@ async def signup_webhook(
     signup_service: SignupService = Depends(get_signup_service),
 ):
     return await signup_service.process_signup(request)
+
