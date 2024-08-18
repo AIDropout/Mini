@@ -17,22 +17,10 @@ from config.container import container
 router = APIRouter(prefix="/room", tags=["room"])
 
 
-def get_reply_service() -> ReplyService:
-    return container.reply_service
-
-
-def get_cron_service() -> CronService:
-    return container.cron_service
-
-
-def get_dashboard_service() -> DashboardService:
-    return container.dashboard_service
-
-
 @router.post("/respond")
 async def respond_webhook(
     request: Request,
-    reply_service: ReplyService = Depends(get_reply_service),
+    reply_service: ReplyService = Depends(lambda: container.get_reply_service()),
 ):
     """Endpoint hit by incoming user messages."""
     try:
@@ -48,7 +36,7 @@ async def respond_webhook(
 async def revive_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
-    cron_service: CronService = Depends(get_cron_service),
+    cron_service: CronService = Depends(lambda: container.get_cron_service()),
     api_key: str = Security(verify_api_key),
 ):
     """Endpoint hit by Supabase cron job every x minutes."""
@@ -65,7 +53,7 @@ async def revive_webhook(
 @router.post("/admin-message")
 async def send_admin_message(
     request: Request,
-    dashboard_service: DashboardService = Depends(get_dashboard_service),
+    dashboard_service: DashboardService = Depends(lambda: container.get_dashboard_service()),
     api_key: str = Security(verify_api_key),
 ):
     """Endpoint for sending messages from the admin dashboard."""

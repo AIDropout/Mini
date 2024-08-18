@@ -4,7 +4,7 @@ from zootopia.core.schema import Tables, User, Agent, Room, Message, SignupReque
 from zootopia.manager.messaging import BirdManager
 from zootopia.core.exceptions import RoomAlreadyExistsError, AgentNotFoundError
 from zootopia.manager.database import DatabaseManager
-from zootopia.manager.stripe import CustomerManager
+from zootopia.manager.payment import CustomerManager
 from zootopia.core.logger import logger
 from zootopia.service.base import Service
 

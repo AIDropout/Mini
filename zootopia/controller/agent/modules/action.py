@@ -12,11 +12,15 @@ from typing import List
 from zootopia.controller.agent.event_logger import event_logger as el
 from datetime import datetime
 from zootopia.core.error import error_handler
+from zootopia.controller.agent.modules.base import AgentModule
 
 
-class ActionManager:
-    def __init__(self, messaging_manager: MessagingManager) -> None:
-        self.llm = LLMManager(config.ACTION_MANAGER_LLM)
+class ActionModule(AgentModule):
+    def __init__(self, llm_manager: LLMManager):
+        self.llm_manager = llm_manager
+        self.messaging_manager = None
+
+    def set_messaging_manager(self, messaging_manager: MessagingManager) -> None:
         self.messaging_manager = messaging_manager
 
     @error_handler("ActionManager")
@@ -25,7 +29,7 @@ class ActionManager:
         messages: List[Dict[str, str]],
         system_prompt: Optional[str],
     ) -> str:
-        msg = self.llm.generate_response(messages, system_prompt)
+        msg = self.llm_manager.generate_response(messages, system_prompt)
         return msg
 
     @error_handler("ActionManager")

@@ -7,14 +7,10 @@ from zootopia.service.signup_service import SignupService
 router = APIRouter()
 
 
-def get_signup_service() -> SignupService:
-    return container.signup_service
-
-
 @router.post("/signup")
 async def signup_webhook(
     request: SignupRequest,
     api_key: str = Security(verify_api_key),
-    signup_service: SignupService = Depends(get_signup_service),
+    signup_service: SignupService = Depends(lambda: container.get_signup_service()),
 ):
     return await signup_service.process_signup(request)

@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 import json
-from zootopia.controller.agent.intent import (
+from zootopia.controller.agent.modules.intent.intent import (
     IntentInput,
     IntentOutput,
     IntentResult,

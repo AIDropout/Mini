@@ -8,14 +8,16 @@ from zootopia.core.schema import (
     TaskType,
     IntentType,
 )
-from zootopia.controller.tasks.task_types import (
+from zootopia.controller.task.task_types import (
     BaseTask,
     RespondTask,
+    RemindTask,
+    ReviveTask
 )
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
-from zootopia.service.context import ContextService
-from zootopia.controller.agent.intent import (
+from zootopia.service.context_factory import Context
+from zootopia.controller.agent.modules.intent import (
     FilterIntentInput,
     FilterIntentResult,
     SkipIntentInput,
@@ -27,40 +29,33 @@ from zootopia.controller.agent.intent import (
     ScheduleIntentInput,
     ScheduleIntentResult,
 )
-from zootopia.controller.agent.action import ActionManager
-from zootopia.controller.agent.subscribe import SubscribeManager
-from zootopia.controller.agent.memory import MemoryService
+from zootopia.controller.agent.modules.action import ActionModule
+from zootopia.controller.agent.modules.subscribe import SubscribeModule
+from zootopia.controller.agent.modules.memory import MemoryModule
 from zootopia.core.logger import logger
 from zootopia.controller.agent.event_logger import event_logger as el
 from zootopia.utils.time_utils import get_current_time_readable
-from typing import Dict
-from datetime import datetime
+from typing import Dict, Union, Optional
+from zootopia.service.base import Service
 
 
-class Agent:
+class AgentService(Service):
     def __init__(
         self,
-        context: ContextService,
+        database_manager: DatabaseManager,
+        action_module: ActionModule,
+        memory_module: MemoryModule,
+        subscribe_module: SubscribeModule,
         intent_configs: Dict[str, IntentConfig] = None,
     ) -> None:
-        self.messaging_manager: MessagingManager = context.messaging_manager
-        self.database_manager_service: DatabaseManager = context.database_manager
-        self.room: Room = context.room
-        self.agent: Agent = context.agent
-        self.user: User = context.user
-        self.agent_prompt: str = context.agent.prompt
-        self.action = ActionManager(self.messaging_manager)
-        self.memory = MemoryService(
-            self.database_manager_service, self.room, self.agent
-        )
-        self.subscribe_manager = SubscribeManager(
-            self.database_manager_service,
-            self.action,
-            self.memory,
-            self.user,
-            self.room,
-            self.agent,
-        )
+        super().__init__(database_manager)
+        self.agent: Agent = None
+        self.user: User = None
+        self.room: Room = None
+        self.action = action_module
+        self.memory = memory_module
+        self.subscribe = subscribe_module
+        #TODO: properly inject intent configs
         default_configs = {
             IntentType.FILTER: IntentConfig(
                 message_count=5, confidence_threshold=Confidence.HIGH, enabled=True
@@ -75,10 +70,20 @@ class Agent:
         self.intent_config = IntentConfigManager(intent_configs or default_configs)
         self.intent_factory = IntentFactory()
 
-    async def handle_chat_task(self, task: BaseTask) -> bool:
+    def configure(self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room) -> None:
+        self.agent=agent
+        self.user=user
+        self.room=room
+        self.memory.configure(room, agent, user)
+        self.action.configure(room, agent, user)
+        self.subscribe.configure(room, agent, user)
+        self.action.set_messaging_manager(messaging_manager)
+
+    async def handle_chat_task(self, task: Union[RespondTask, RemindTask, ReviveTask]) -> bool:
+
         """Core logic for generates and sending message"""
 
-        # el.log(f"🟢 TASK: {task}")
+        el.log(f"🟢 TASK: {task}")
 
         try:
             # Handle user message for respond tasks
@@ -87,20 +92,20 @@ class Agent:
                     task.user_message.content
                 )  # Was already inserted into database
 
-                # el.log(f"🟢 RESPONDING TO: '{user_message}' in Room {task.room_id}")
+                el.log(f"🟢 RESPONDING TO: '{user_message}' in Room {task.room_id}")
 
                 # Handle subscribe
-                result = await self.subscribe_manager.should_continue_conversation()
-                # el.log(
-                #     f"""{"🟢" if result['continue'] else "🔴"} ROOM SUBSCRIPTION STATUS:
-                #     Continue conversation: {result['continue']}.
-                #     Subscribe enabled for agent: {result['subscribe_enabled']}.
-                #     User has subscription for agent: {result['has_active_subscription']}.
-                #     # of Agent messages in Room: {result['agent_message_count']}.
-                #     Agent free message limit: {result['free_msg_limit']}.
-                #     Subscribe message sent: {result['subscribe_msg_sent']}.
-                # """
-                # )
+                result = await self.subscribe.should_continue_conversation()
+                el.log(
+                    f"""{"🟢" if result['continue'] else "🔴"} ROOM SUBSCRIPTION STATUS:
+                    Continue conversation: {result['continue']}.
+                    Subscribe enabled for agent: {result['subscribe_enabled']}.
+                    User has subscription for agent: {result['has_active_subscription']}.
+                    # of Agent messages in Room: {result['agent_message_count']}.
+                    Agent free message limit: {result['free_msg_limit']}.
+                    Subscribe message sent: {result['subscribe_msg_sent']}.
+                """
+                )
                 if not result["continue"]:
                     return True
 
@@ -110,7 +115,7 @@ class Agent:
                     if schedule_intent:
 
                         existing_tasks = (
-                            self.database_manager_service.get_multiple_rows(
+                            self.database_manager.get_multiple_rows(
                                 table_name=Tables.SCHEDULE.value,
                                 conditions={
                                     Tables.SCHEDULE__room_id.value: self.room.id
@@ -120,9 +125,9 @@ class Agent:
                             )
                         )
 
-                        # el.log(
-                        #     f"🩵 Here are the existing scheduled tasks for room {self.room.id} 🩵 {existing_tasks}",
-                        # )
+                        el.log(
+                            f"🩵 Here are the existing scheduled tasks for room {self.room.id} 🩵 {existing_tasks}",
+                        )
 
                         schedule_result: ScheduleIntentResult = schedule_intent.process(
                             input=ScheduleIntentInput(
@@ -134,7 +139,7 @@ class Agent:
                         )
 
                         if schedule_result.approved:
-                            inserted_task = self.database_manager_service.insert(
+                            inserted_task = self.database_manager.insert(
                                 table_name=Tables.SCHEDULE.value,
                                 item=Schedule(
                                     room_id=self.room.id,
@@ -145,7 +150,7 @@ class Agent:
                                 ),
                             )
 
-                            # el.log(f"🩵 Scheduled a task: {inserted_task}")
+                            el.log(f"🩵 Scheduled a task: {inserted_task}")
 
             all_recent_messages = self.memory.get_recent_messages(
                 count=task.recent_message_count
@@ -165,19 +170,19 @@ class Agent:
             """
 
             system_prompt = system_prompt_template.format(
-                agent_prompt=self.agent_prompt,
+                agent_prompt=self.agent.prompt,
                 instructions=task.instructions,
                 current_time=get_current_time_readable(),
             )
-            # el.log(f"🟢 SYSTEM PROMPT FOR AGENT: {system_prompt}")
-            # el.log(f"🟢 RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
+            el.log(f"🟢 SYSTEM PROMPT FOR AGENT: {system_prompt}")
+            el.log(f"🟢 RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
             # Generate agent message
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
             )
 
-            # el.log(f"🟢 MAIN LLM RESPONSE: {response_text}")
+            el.log(f"🟢 MAIN LLM RESPONSE: {response_text}")
 
             # Use Filter intent to ensure quality of agent response
             filter_result = None
@@ -198,7 +203,7 @@ class Agent:
                     filter_result: FilterIntentResult = filter_intent.process(
                         input=FilterIntentInput(
                             from_user=False,
-                            agent_prompt=self.agent_prompt,
+                            agent_prompt=self.agent.prompt,
                             messages=filter_messages,
                             message=response_text,
                         ),
@@ -218,9 +223,9 @@ class Agent:
                 return False
 
             success = await self.action.handle_message_send(final_message)
-            # el.log(f"{"🟢" if success else "🔴"} BIRD SMS SENT: {success}")
+            el.log(f"{"🟢" if success else "🔴"} BIRD SMS SENT: {success}")
 
-            inserted_message = self.database_manager_service.insert(
+            inserted_message = self.database_manager.insert(
                 Tables.MESSAGES.value,
                 Message(
                     room_id=self.room.id,
@@ -232,5 +237,5 @@ class Agent:
             )
 
         except Exception as e:
-            # el.log(f"🔴 Unexpected error in processing chat: {str(e)}")
+            el.log(f"🔴 Unexpected error in processing chat: {str(e)}")
             return False

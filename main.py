@@ -39,7 +39,7 @@ async def configure_local_webhooks() -> None:
     _bird = BirdManager()
 
     if bird_dev_channel_id := os.getenv("BIRD_DEV_CHANNEL_ID"):
-        _bird.set_channel_id(bird_dev_channel_id)
+        _bird.set_sender(bird_dev_channel_id)
 
     await asyncio.gather(
         _telegram.register_webhook(webhook),

@@ -13,6 +13,16 @@ class MessagingBase(ABC):
         pass
 
     @abstractmethod
+    async def set_receiver(self) -> Optional[str]:
+        """Set the user identifier."""
+        pass
+
+    @abstractmethod
+    async def set_sender(self) -> Optional[str]:
+        """Set the agent identifier."""
+        pass
+
+    @abstractmethod
     async def send_message(self, message: str) -> Optional[str]:
         """Send a message to a recipient."""
         pass

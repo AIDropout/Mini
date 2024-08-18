@@ -32,11 +32,11 @@ class BirdManager(MessagingBase):
         self._user_phone = None
         self._channel_id = None
 
-    def set_user_phone(self, user_phone: str) -> None:
+    def set_receiver(self, user_phone: str) -> None:
         """Sets phone number of receiver"""
         self._user_phone = user_phone
 
-    def set_channel_id(self, channel_id: str) -> None:
+    def set_sender(self, channel_id: str) -> None:
         """Sets phone number of sender"""
         self._channel_id = channel_id
 
@@ -46,8 +46,8 @@ class BirdManager(MessagingBase):
         bird_message = request_body["payload"]
         phone_number = bird_message["sender"]["contact"]["identifierValue"]
         channel_id = bird_message["channelId"]
-        self.set_user_phone(phone_number)
-        self._channel_id = channel_id
+        self.set_receiver(phone_number)
+        self.set_sender(channel_id)
         message_text = bird_message["body"]["text"]["text"]
 
         metadata = BirdMetadata(channel_id=channel_id, phone_number=phone_number)

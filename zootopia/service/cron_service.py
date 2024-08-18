@@ -3,8 +3,8 @@ from fastapi import BackgroundTasks
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
 from zootopia.core.schema import Tables, Message, Room, User
-from zootopia.controller.tasks.task_scheduler import TaskScheduler
-from zootopia.controller.tasks.task_types import ReviveTask, ScheduledTaskInfo
+from zootopia.controller.task.task_scheduler import SchedulerService
+from zootopia.controller.task.task_types import ReviveTask, ScheduledTaskInfo
 from zootopia.core.error import error_handler
 from zootopia.service.base import Service
 from datetime import datetime, timedelta, timezone
@@ -51,7 +51,7 @@ class CronService(Service):
                             task=revive_task, delay=0
                         )
 
-                        await TaskScheduler.schedule_task(
+                        await SchedulerService.schedule_task(
                             task_data=scheduled_task_info.to_dict(),
                             delay=0,
                             db=self.database_manager,

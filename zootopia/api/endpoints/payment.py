@@ -11,14 +11,10 @@ router = APIRouter(
 )
 
 
-def get_payment_service() -> PaymentService:
-    return container.payment_service
-
-
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,
-    payment_service: PaymentService = Depends(get_payment_service),
+    payment_service: PaymentService = Depends(lambda: container.get_payment_service()),
 ) -> bool:
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
@@ -34,7 +30,7 @@ class Checkout(BaseModel):
 async def create_checkout_session(
     data: Checkout,
     request: Request,
-    payment_service: PaymentService = Depends(get_payment_service),
+    payment_service: PaymentService = Depends(lambda: container.get_payment_service()),
     api_key: str = Security(verify_api_key),
 ) -> Dict:
     """Returns { url: [link to checkout session] }"""
@@ -46,7 +42,7 @@ async def create_checkout_session(
 async def get_portal_link(
     user_id: str,
     request: Request,
-    payment_service: PaymentService = Depends(get_payment_service),
+    payment_service: PaymentService = Depends(lambda: container.get_payment_service()),
     api_key: str = Security(verify_api_key),
 ) -> Dict:
     """Returns { url: [portal link] }"""

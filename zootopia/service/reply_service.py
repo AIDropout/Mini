@@ -1,15 +1,15 @@
+import random
+from typing import List
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManagerFactory
 from zootopia.core.schema import Message, Tables
 from zootopia.core.error import error_handler
-from zootopia.controller.tasks.task_scheduler import TaskScheduler
-from zootopia.controller.tasks.task_types import ScheduledTaskInfo, RespondTask
-from zootopia.service.context import ContextFactory
-import random
-from typing import List
+from zootopia.controller.task.task_scheduler import SchedulerService
+from zootopia.controller.task.task_types import ScheduledTaskInfo, RespondTask
 from datetime import datetime, timezone
 from zootopia.core.logger import get_logger
 from zootopia.service.base import Service
+from zootopia.service.context_factory import ContextFactory
 
 logger = get_logger(__name__)
 
@@ -18,26 +18,29 @@ class ReplyService(Service):
     def __init__(
         self,
         database_manager: DatabaseManager,
-        context_factory: ContextFactory,
         messaging_manager_factory: MessagingManagerFactory,
+        context_factory: ContextFactory,
+        scheduler_service: SchedulerService,
     ):
         super().__init__(database_manager)
-        self.context_factory = context_factory
         self.messaging_manager_factory = messaging_manager_factory
+        self.context_factory = context_factory
+        self.scheduler_service = scheduler_service
 
     @error_handler("ReplyService")
     def handle_respond(self, request_body: dict):
-        context = self.context_factory.create_message_context(request_body)
         messaging_manager = self.messaging_manager_factory.get_manager_from_request(
             request_body
         )
+        message = messaging_manager.receive_message(request_body)
+        context = self.context_factory.create_message_context(message)
 
         inserted_message = self.database_manager.insert(
             Tables.MESSAGES.value,
             Message(
                 room_id=context.room.id,
                 sender_id=context.user.id,
-                content=context.message.content,
+                content=message.content,
             ),
         )
 
@@ -51,19 +54,18 @@ class ReplyService(Service):
         delay = self._calculate_response_delay(recent_messages)
 
         scheduled_task_info = ScheduledTaskInfo(
-            task=RespondTask(user_message=context.message, room_id=context.room.id),
+            task=RespondTask(user_message=message, room_id=context.room.id),
             delay=delay,
             original_request=request_body,
         )
 
-        TaskScheduler.schedule_task(
+        self.scheduler_service.schedule_task(
             task_data=scheduled_task_info.to_dict(),
             delay=delay,
             db=self.database_manager,
         )
 
-
-    def _calculate_response_delay(messages: List[Message]) -> int:
+    def _calculate_response_delay(self, messages: List[Message]) -> int:
         """
         Calculate a human-like delay in seconds for message responses.
 

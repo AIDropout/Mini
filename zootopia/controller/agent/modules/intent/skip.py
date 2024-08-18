@@ -2,7 +2,7 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from zootopia.core.schema import Message, IntentType
 import json
-from zootopia.controller.agent.intent import (
+from zootopia.controller.agent.modules.intent.intent import (
     IntentInput,
     IntentOutput,
     IntentResult,

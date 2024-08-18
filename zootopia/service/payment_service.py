@@ -1,7 +1,7 @@
 # TODO: WIP
 
 from .base import Service
-from zootopia.manager.stripe import (
+from zootopia.manager.payment import (
     CheckoutManager,
     CustomerManager,
     SubscriptionManager,

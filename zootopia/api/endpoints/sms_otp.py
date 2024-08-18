@@ -14,14 +14,10 @@ from zootopia.service.sms_otp_service import SMSOTPService
 router = APIRouter(prefix="/sms-otp", tags=["sms-otp"])
 
 
-def get_sms_otp_service() -> SMSOTPService:
-    return container.sms_otp_service
-
-
 @router.post("/send")
 async def send_verification(
     request: SendVerificationRequest,
-    sms_otp_service: SMSOTPService = Depends(get_sms_otp_service),
+    sms_otp_service: SMSOTPService = Depends(lambda: container.get_sms_otp_service()),
     api_key: str = Security(verify_api_key),
 ) -> SendVerificationResponse:
     """Start a new SMS OTP verification process."""
@@ -32,7 +28,7 @@ async def send_verification(
 async def resend_verification(
     verification_id: str,
     request: ResendVerificationRequest,
-    sms_otp_service: SMSOTPService = Depends(get_sms_otp_service),
+    sms_otp_service: SMSOTPService = Depends(lambda: container.get_sms_otp_service()),
     api_key: str = Security(verify_api_key),
 ) -> ResendVerificationResponse:
     """Resend an SMS OTP for an existing verification."""
@@ -43,7 +39,7 @@ async def resend_verification(
 async def verify_code(
     verification_id: str,
     request: VerifyCodeRequest,
-    sms_otp_service: SMSOTPService = Depends(get_sms_otp_service),
+    sms_otp_service: SMSOTPService = Depends(lambda: container.get_sms_otp_service()),
     api_key: str = Security(verify_api_key),
 ) -> VerifyCodeResponse:
     """Verify an SMS OTP code for an existing verification."""

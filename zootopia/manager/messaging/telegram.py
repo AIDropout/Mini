@@ -27,6 +27,12 @@ class TelegramManager(MessagingBase):
         self._bot = telegram.Bot(token=config.TELEGRAM_BOT_TOKEN)
         self._user_id = None
 
+    def set_sender(self):
+        pass
+
+    def set_receiver(self):
+        pass
+
     @classmethod
     @error_handler("Telegram")
     def receive_message(cls, request_body) -> ZootopiaMessage:

@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 import json
-from zootopia.controller.agent.intent import (
+from zootopia.controller.agent.modules.intent import (
     Confidence,
 )
 from zootopia.core.logger import logger
