@@ -9,7 +9,6 @@ from zootopia.core.schema import User
 
 
 router = APIRouter(
-    prefix="/users",
     tags=["users"],
 )
 
@@ -52,7 +51,9 @@ async def get_user_profile(
     phone_number: str, 
     db_manager: DatabaseManager = Depends(get_db_manager)
 ):
-    user = db_manager.get_row("users", {"phone_number": phone_number})
+    print(phone_number, "this is phone number")
+    normalized_phone = ''.join(filter(str, phone_number))
+    user = db_manager.get_row("users", {"phone_number": normalized_phone})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
