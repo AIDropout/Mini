@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from zootopia.manager.database.database import DatabaseManager
 from config.container import container
 
@@ -12,5 +12,14 @@ async def verify_phone_number(
     phone_number: str, 
     db_manager: DatabaseManager = Depends(get_db_manager)
 ):
-    exists = db_manager.phone_number_exists(phone_number)
+    # Normalize the phone number (remove spaces, dashes, etc.)
+    normalized_phone = ''.join(filter(str.isdigit, phone_number))
+    
+    # Check if the normalized phone number exists
+    exists = db_manager.phone_number_exists(normalized_phone)
+    
+    if not exists:
+        # Log the attempt for debugging
+        print(f"Phone number not found: {normalized_phone}")
+        
     return {"exists": exists}
