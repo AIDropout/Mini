@@ -1,16 +1,13 @@
-from fastapi import APIRouter, Request, Depends, Security, Path, Body, HTTPException
+from fastapi import APIRouter, Request, Depends, Security, Path, Body
 from pydantic import BaseModel
 from config.container import container
 from zootopia.api.security import verify_api_key
-from zootopia.manager.database import DatabaseManager
-from zootopia.manager.payment.customer import CustomerManager
-from zootopia.core.schema.tables import Tables, User
+from zootopia.core.schema.tables import User
 import asyncio
 import httpx
-from config.config import config
-from fastapi.responses import JSONResponse
 from config.container import container
 from zootopia.service.user_service import UserService
+from config.config import config
 
 
 router = APIRouter()
@@ -65,16 +62,16 @@ async def test_user_endpoints():
 
     async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
         # Test create_user
-        # user_data = {"phone_number": "+3142952259"}
+        user_data = {"phone_number": "+3142952259"}
 
-        # response = await client.post(
-        #     f"/users",
-        #     json=user_data,
-        #     headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"},
-        # )
-        # print(
-        #     f"POST /users - Status: {response.status_code}, Response: {response.json()}"
-        # )
+        response = await client.post(
+            f"/users",
+            json=user_data,
+            headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"},
+        )
+        print(
+            f"POST /users - Status: {response.status_code}, Response: {response.json()}"
+        )
 
         # # Test get_user
         # response = await client.get(
