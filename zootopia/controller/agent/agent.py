@@ -96,18 +96,18 @@ class AgentService(Service):
                 # Handle subscribe
                 result = await self.subscribe.should_continue_conversation()
                 el.log(
-                    f"""{"🟢" if result['continue'] else "🔴"} ROOM SUBSCRIPTION STATUS:
-                    Continue conversation: {result['continue']}.
-                    Subscribe enabled for agent: {result['subscribe_enabled']}.
-                    User has subscription for agent: {result['has_active_subscription']}.
-                    # of Agent messages in Room: {result['agent_message_count']}.
-                    Agent free message limit: {result['free_msg_limit']}.
-                    Subscribe message sent: {result['subscribe_msg_sent']}.
+                    f"""{"🟢" if result.continue_conversation else "🔴"} ROOM SUBSCRIPTION STATUS:
+                    Continue conversation: {result.continue_conversation}.
+                    Subscribe enabled for agent: {result.subscribe_enabled}.
+                    User has subscription for agent: {result.subscription_status}.
+                    # of Agent messages in Room: {result.agent_message_count}.
+                    Agent free message limit: {result.free_msg_limit}.
+                    Subscribe message sent: {result.subscribe_msg_sent}.
                 """
                 )
-                if not result["continue"]:
+                if not result.continue_conversation:
                     return True
-
+                
                 # Process schedule intent
                 if self.intent_config.is_enabled(IntentType.SCHEDULE):
                     schedule_intent = self.intent_factory.create(IntentType.SCHEDULE)

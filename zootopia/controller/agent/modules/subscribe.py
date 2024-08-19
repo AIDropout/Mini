@@ -11,6 +11,18 @@ from zootopia.controller.agent.modules.memory import MemoryModule
 from zootopia.core.logger import logger
 from zootopia.core.error import error_handler
 from zootopia.controller.agent.modules.base import AgentModule
+from dataclasses import dataclass
+from zootopia.core.schema.subscription import SubscriptionStatus
+
+
+@dataclass
+class ConversationStatus:
+    continue_conversation: bool
+    subscribe_enabled: bool
+    subscription_status: bool
+    agent_message_count: int
+    free_msg_limit: int
+    subscribe_msg_sent: bool
 
 
 class SubscribeModule(AgentModule):
@@ -29,7 +41,7 @@ class SubscribeModule(AgentModule):
         self.memory_module = memory_module
 
     @error_handler("SubscribeManager")
-    async def should_continue_conversation(self) -> dict:
+    async def should_continue_conversation(self) -> ConversationStatus:
         """
         Determine if the conversation should continue based on subscription status,
         message count, and whether subscriptions are enabled.
@@ -37,33 +49,32 @@ class SubscribeModule(AgentModule):
         Returns:
             dict: A dictionary containing relevant information and whether to continue.
         """
-        result = {
-            "continue": True,
-            "subscribe_enabled": self.agent.subscribe_enabled,
-            "has_active_subscription": False,
-            "agent_message_count": 0,
-            "free_msg_limit": self.agent.free_msg_limit,
-            "subscribe_msg_sent": self.room.subscribe_msg_sent,
-        }
+        continue_conversation = True
+        subscribe_enabled = self.agent.subscribe_enabled
+        subscription_status = False
+        agent_message_count = await self._get_agent_message_count()
+        free_msg_limit = self.agent.free_msg_limit
+        subscribe_msg_sent = self.room.subscribe_msg_sent
 
-        # Always get the message count, regardless of subscription status
-        result["agent_message_count"] = await self._get_agent_message_count()
+        if subscribe_enabled:
+            subscription_status = self.user.subscription_status
+            if (
+                subscription_status != SubscriptionStatus.ACTIVE
+                and agent_message_count >= free_msg_limit
+            ):
+                if not subscribe_msg_sent:
+                    await self._send_subscribe_message()
+                    subscribe_msg_sent = True
+                continue_conversation = False
 
-        if not self.agent.subscribe_enabled:
-            return result
-
-        result["has_active_subscription"] = self.user.subscription_status == "active"
-        if result["has_active_subscription"]:
-            return result
-
-        # Check if we need to send a subscription message
-        if result["agent_message_count"] >= self.agent.free_msg_limit:
-            if not self.room.subscribe_msg_sent:
-                await self._send_subscribe_message()
-                result["subscribe_msg_sent"] = True
-            result["continue"] = False
-
-        return result
+        return ConversationStatus(
+            continue_conversation=continue_conversation,
+            subscribe_enabled=subscribe_enabled,
+            subscription_status=subscription_status,
+            agent_message_count=agent_message_count,
+            free_msg_limit=free_msg_limit,
+            subscribe_msg_sent=subscribe_msg_sent,
+        )
 
     @error_handler("SubscribeManager")
     async def _get_agent_message_count(self) -> int:

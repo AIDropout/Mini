@@ -1,5 +1,3 @@
-# TODO: WIP
-
 from .base import Service
 from zootopia.manager.payment import (
     CheckoutManager,
@@ -8,7 +6,6 @@ from zootopia.manager.payment import (
 )
 from zootopia.manager.database import DatabaseManager
 from zootopia.core.schema.tables import Tables
-from typing import Literal, Optional, Dict, Any, Tuple
 from config.config import config
 import stripe
 from datetime import datetime
@@ -54,9 +51,7 @@ class PaymentService(Service):
         response = self._customer_manager.get_portal_link(customer_id)
         return {"url": response.url}
 
-    async def process_event(
-        self, event_payload: str, sig_header: str
-    ) -> None:
+    async def process_event(self, event_payload: str, sig_header: str) -> None:
         """Processes the event received from Stripe webhook."""
         if not config.STRIPE_WEBHOOK_SECRET:
             raise ValueError("The Stripe webhook secret must be set.")
@@ -100,13 +95,6 @@ class PaymentService(Service):
                 subscription_id
             )
 
-            # customer = await self.database_manager.update(
-            #     user_id=user_id,
-            #     customer_id=subscription.customer,
-            #     subscription_status=subscription.status,
-            #     subscription_id=subscription.id,
-            # )
-
             updated_customer = self.database_manager.update(
                 table_name=Tables.USERS.value,
                 item=User(
@@ -125,21 +113,19 @@ class PaymentService(Service):
         self, subscription: stripe.Subscription
     ) -> None:
         """Handles the customer.subscription.deleted event."""
-        pass
-        # logger.debug(f"Handling customer.subscription.deleted event")
-        # try:
-        #     user_id = subscription.metadata.get("user_id", None)
-        #     subscription_data = Subscription(
-        #         id=subscription.id,
-        #         status=subscription.status,
-        #         created_at=datetime.fromtimestamp(subscription.created),
-        #         tier="free",
-        #     )
-        #     customer = await self.database_manager.update_user_customer_subscription(
-        #         user_id=user_id,
-        #         customer_id=subscription.customer,
-        #         subscription_data=subscription_data,
-        #     )
-        # except Exception as e:
-        #     logger.error(f"Error retrieving subscription information: {e}")
-        #     raise e
+        logger.debug(f"Handling customer.subscription.deleted event")
+        try:
+            user_id = subscription.metadata.get("user_id", None)
+            updated_customer = self.database_manager.update(
+                table_name=Tables.USERS.value,
+                item=User(
+                    stripe_customer_id=subscription.customer,
+                    subscription_status=subscription.status,
+                    subscription_id=subscription.id,
+                ),
+                condition_key=Tables.USERS__id.value,
+                condition_value=user_id,
+            )
+        except Exception as e:
+            logger.error(f"Error retrieving subscription information: {e}")
+            raise e

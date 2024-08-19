@@ -9,6 +9,7 @@ from zootopia.core.error import error_handler
 from zootopia.service.base import Service
 from datetime import datetime, timedelta, timezone
 import random
+from zootopia.core.schema.subscription import SubscriptionStatus
 
 
 class CronService(Service):
@@ -61,15 +62,14 @@ class CronService(Service):
         if not room.subscribe_msg_sent:
             return True
 
-        active_subscription = self.database_manager.get_row(
-            Tables.SUBSCRIPTIONS.value,
+        user = self.database_manager.get_row(
+            Tables.USERS.value,
             {
-                Tables.SUBSCRIPTIONS__user_id.value: user_id,
-                Tables.SUBSCRIPTIONS__status.value: "active",
+                Tables.USERS__id.value: user_id,
             },
         )
 
-        return active_subscription is not None
+        return user.subscription_status == SubscriptionStatus.ACTIVE
 
     def _should_send_proactive_message(
         self,
