@@ -5,11 +5,10 @@ from zootopia.manager.payment import (
     SubscriptionManager,
 )
 from zootopia.manager.database import DatabaseManager
-from zootopia.core.schema.tables import Tables
+from zootopia.core.schema.tables import Tables, User
 from config.config import config
 import stripe
 from datetime import datetime
-from zootopia.core.schema import User
 from zootopia.core.logger import get_logger
 
 logger = get_logger(__name__)

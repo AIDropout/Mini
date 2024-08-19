@@ -1,6 +1,6 @@
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManagerFactory
-from zootopia.core.schema import Message, Tables
+from zootopia.core.schema.tables import Message, Tables
 from zootopia.service.context_factory import ContextFactory
 from zootopia.core.logger import get_logger
 from zootopia.service.base import Service

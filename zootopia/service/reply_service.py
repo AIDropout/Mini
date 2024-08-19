@@ -2,7 +2,7 @@ import random
 from typing import List
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManagerFactory
-from zootopia.core.schema import Message, Tables
+from zootopia.core.schema.tables import Message, Tables
 from zootopia.core.error import error_handler
 from zootopia.controller.task.task_scheduler import SchedulerService
 from zootopia.controller.task.task_types import ScheduledTaskInfo, RespondTask

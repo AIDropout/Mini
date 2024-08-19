@@ -1,5 +1,5 @@
 from fastapi import Depends, APIRouter, Security
-from zootopia.core.schema import (
+from zootopia.core.schema.request import (
     SendVerificationRequest,
     SendVerificationResponse,
     ResendVerificationRequest,

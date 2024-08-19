@@ -11,7 +11,7 @@ from zootopia.controller.agent.modules.intent.intent import (
 )
 from zootopia.utils.utils import EnhancedJSONEncoder
 from zootopia.core.logger import logger
-from zootopia.core.schema import IntentType
+from zootopia.core.schema.intent import IntentType
 from zootopia.core.exceptions import LLMResponseParsingError
 
 

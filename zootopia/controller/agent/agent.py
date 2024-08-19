@@ -1,13 +1,13 @@
-from zootopia.core.schema import (
+from zootopia.core.schema.tables import (
     Room,
     Message,
     Schedule,
     Agent,
     User,
     Tables,
-    TaskType,
-    IntentType,
 )
+from zootopia.core.schema.task import TaskType
+from zootopia.core.schema.intent import IntentType
 from zootopia.controller.task.task_types import (
     RespondTask,
     RemindTask,

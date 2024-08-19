@@ -4,7 +4,7 @@ from typing import Dict
 from zootopia.manager.messaging import BirdManager
 from zootopia.core.logger import logger
 from config.config import config
-from zootopia.core.schema import (
+from zootopia.core.schema.request import (
     SendVerificationRequest,
     SendVerificationResponse,
     ResendVerificationRequest,

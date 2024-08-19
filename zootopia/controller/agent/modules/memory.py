@@ -1,5 +1,5 @@
 from zootopia.core.logger import logger
-from zootopia.core.schema import (
+from zootopia.core.schema.tables import (
     Tables,
     Message,
 )

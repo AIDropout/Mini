@@ -2,7 +2,7 @@
 from fastapi import BackgroundTasks
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
-from zootopia.core.schema import Tables, Message, Room, User
+from zootopia.core.schema.tables import Tables, Message, Room, User
 from zootopia.controller.task.task_scheduler import SchedulerService
 from zootopia.controller.task.task_types import ReviveTask, ScheduledTaskInfo
 from zootopia.core.error import error_handler

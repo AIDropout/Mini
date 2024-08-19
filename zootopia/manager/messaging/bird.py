@@ -5,7 +5,7 @@ import requests
 from config.config import config
 from zootopia.core.logger import logger
 from zootopia.manager.messaging.base import MessagingBase
-from zootopia.core.schema import (
+from zootopia.core.schema.message import (
     ZootopiaMessage,
     MessageProvider,
     MessageType,

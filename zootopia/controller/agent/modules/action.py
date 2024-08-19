@@ -1,7 +1,6 @@
 """Note: Actions are currently not implemented. None of the action files are being used."""
 
 from typing import List, Dict, Optional, Tuple, Any
-from zootopia.core.schema import Message
 from zootopia.core.logger import logger
 from zootopia.manager.llm import LLMManager
 from zootopia.manager.messaging import MessagingManager

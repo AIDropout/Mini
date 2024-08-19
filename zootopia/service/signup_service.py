@@ -1,6 +1,7 @@
 from typing import Optional, Tuple
 from fastapi import HTTPException
-from zootopia.core.schema import Tables, User, Agent, Room, Message, SignupRequest
+from zootopia.core.schema.tables import Tables, User, Agent, Room, Message
+from zootopia.core.schema.request import SignupRequest
 from zootopia.manager.messaging import BirdManager
 from zootopia.core.exceptions import RoomAlreadyExistsError, AgentNotFoundError
 from zootopia.manager.database import DatabaseManager

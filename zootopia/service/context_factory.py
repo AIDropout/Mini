@@ -1,12 +1,12 @@
 from typing import Optional
-from zootopia.core.schema import (
+from zootopia.core.schema.tables import (
     Agent,
     Room,
     User,
     Tables,
-    ZootopiaMessage,
-    MessageProvider,
 )
+from zootopia.core.schema.message import ZootopiaMessage, MessageProvider
+
 from zootopia.manager.database import DatabaseManager
 from zootopia.core.exceptions import AgentNotFoundError
 from dataclasses import dataclass, field

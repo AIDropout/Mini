@@ -10,7 +10,8 @@ from zootopia.controller.agent.modules.intent.intent import (
     IntentFactory,
 )
 from datetime import datetime
-from zootopia.core.schema import IntentType, Schedule
+from zootopia.core.schema.intent import IntentType
+from zootopia.core.schema.tables import Schedule
 from zootopia.utils.utils import EnhancedJSONEncoder
 from zootopia.utils.time_utils import get_current_time_cst_iso8601
 

@@ -2,7 +2,7 @@
 from fastapi import HTTPException
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.payment.customer import CustomerManager
-from zootopia.core.schema import Tables, User
+from zootopia.core.schema.tables import Tables, User
 from zootopia.service.base import Service
 from fastapi.responses import JSONResponse
 

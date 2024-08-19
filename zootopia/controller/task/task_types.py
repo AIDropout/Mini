@@ -1,7 +1,7 @@
-from zootopia.core.schema import TaskType
+from zootopia.core.schema.task import TaskType
 from dataclasses import dataclass
 from typing import ClassVar
-from zootopia.core.schema import ZootopiaMessage
+from zootopia.core.schema.message import ZootopiaMessage
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Optional

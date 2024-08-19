@@ -1,7 +1,7 @@
 from celery import shared_task
 from zootopia.service.context_factory import ContextFactory
 from zootopia.manager.messaging import MessagingManagerFactory
-from zootopia.core.schema import TaskType
+from zootopia.core.schema.task import TaskType
 from zootopia.controller.agent.agent import AgentService
 from zootopia.controller.task.task_types import RemindTask, ReviveTask, RespondTask
 from zootopia.core.logger import get_logger

@@ -1,6 +1,6 @@
 from fastapi import Depends, APIRouter, Security
 from zootopia.api.security import verify_api_key
-from zootopia.core.schema import SignupRequest
+from zootopia.core.schema.request import SignupRequest
 from config.container import container
 from zootopia.service.signup_service import SignupService
 

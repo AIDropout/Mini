@@ -3,7 +3,6 @@ from zootopia.controller.task.task_processor import process_task
 from zootopia.server.redis.redis import redis_manager
 from zootopia.server.cancel import cancel_existing_task
 from zootopia.manager.database import DatabaseManager
-from zootopia.core.schema import TaskType, Schedule
 from datetime import datetime, timedelta
 from typing import Optional
 from zootopia.service.base import Service

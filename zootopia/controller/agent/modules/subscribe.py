@@ -1,4 +1,4 @@
-from zootopia.core.schema import (
+from zootopia.core.schema.tables import (
     Room,
     Message,
     Agent,
