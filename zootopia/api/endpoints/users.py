@@ -30,22 +30,6 @@ async def get_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-
-@router.get("/users/{phone_number}", response_model=User)
-async def get_user(
-    phone_number: str = Path(..., title="The phone number of the user to get"),
-    database_manager: DatabaseManager = Depends(lambda: get_database_manager()),
-    api_key: str = Security(verify_api_key),
-) -> User:
-    """Get a user by ID. Returns the retrieved User object"""
-    user = database_manager.get_row(
-        Tables.USERS.value, {Tables.USERS__phone_number.value: phone_number}
-    )
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-
 @router.patch("/users/{user_id}", response_model=User)
 async def update_user(
     user_id: int = Path(..., title="The ID of the user to update"),
