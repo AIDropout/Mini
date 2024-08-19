@@ -31,7 +31,22 @@ async def get_user(
     return user
 
 
-@router.patch("/users/{user_id}")
+@router.get("/users/{phone_number}", response_model=User)
+async def get_user(
+    phone_number: str = Path(..., title="The phone number of the user to get"),
+    database_manager: DatabaseManager = Depends(lambda: get_database_manager()),
+    api_key: str = Security(verify_api_key),
+) -> User:
+    """Get a user by ID. Returns the retrieved User object"""
+    user = database_manager.get_row(
+        Tables.USERS.value, {Tables.USERS__phone_number.value: phone_number}
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@router.patch("/users/{user_id}", response_model=User)
 async def update_user(
     user_id: int = Path(..., title="The ID of the user to update"),
     user: User = Body(..., title="The updated user object"),
@@ -78,7 +93,7 @@ async def delete_user(
 
 
 async def test_user_endpoints():
-    TEST_ID = 113 # Change as needed
+    TEST_ID = 113  # Change as needed
 
     async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
         # Test get_user
@@ -91,7 +106,7 @@ async def test_user_endpoints():
         )
 
         # # Test update_user
-        user_data = {'subscription_status': 'inactive'}
+        user_data = {"subscription_status": "inactive"}
         response = await client.patch(
             f"/users/{TEST_ID}",
             json=user_data,
@@ -104,7 +119,8 @@ async def test_user_endpoints():
 
         # # Test delete_user
         response = await client.delete(
-            f"/users/{TEST_ID}", headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"}
+            f"/users/{TEST_ID}",
+            headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"},
         )
         print(
             f"DELETE /users/{TEST_ID} - Status: {response.status_code}, Response: {response.json()}"
