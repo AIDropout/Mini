@@ -20,6 +20,13 @@ class Container:
         self.subscription_manager = SubscriptionManager()
         self.context_factory = ContextFactory(database_manager=self.database_manager)
 
+    def get_user_service(self):
+        from zootopia.service.user_service import UserService
+        return UserService(
+            database_manager=self.database_manager,
+            customer_manager=self.customer_manager
+        )
+
     def get_cron_service(self):
         from zootopia.service.cron_service import CronService
 
