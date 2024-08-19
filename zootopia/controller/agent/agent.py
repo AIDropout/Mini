@@ -9,14 +9,12 @@ from zootopia.core.schema import (
     IntentType,
 )
 from zootopia.controller.task.task_types import (
-    BaseTask,
     RespondTask,
     RemindTask,
     ReviveTask
 )
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
-from zootopia.service.context_factory import Context
 from zootopia.controller.agent.modules.intent import (
     FilterIntentInput,
     FilterIntentResult,
@@ -32,8 +30,7 @@ from zootopia.controller.agent.modules.intent import (
 from zootopia.controller.agent.modules.action import ActionModule
 from zootopia.controller.agent.modules.subscribe import SubscribeModule
 from zootopia.controller.agent.modules.memory import MemoryModule
-from zootopia.core.logger import logger
-from zootopia.controller.agent.event_logger import event_logger as el
+from zootopia.core.event_logger import event_logger as el
 from zootopia.utils.time_utils import get_current_time_readable
 from typing import Dict, Union, Optional
 from zootopia.service.base import Service
@@ -71,6 +68,8 @@ class AgentService(Service):
         self.intent_factory = IntentFactory()
 
     def configure(self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room) -> None:
+        """Sets room details for the agent and its modules"""
+        
         self.agent=agent
         self.user=user
         self.room=room

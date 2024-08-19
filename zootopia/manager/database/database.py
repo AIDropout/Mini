@@ -110,12 +110,12 @@ class DatabaseManager:
         return data
 
     @error_handler("Supabase")
-    def delete(self, table_name: str, *conditions) -> bool:
+    def delete(self, table_name: str, conditions: Dict[str, Any]) -> bool:
         query = self.supabase.table(table_name).delete()
-        for key, value in conditions:
+        for key, value in conditions.items():
             query = query.eq(key, value)
-        data, _ = query.execute()
-        return bool(data and data[1])
+        result = query.execute()
+        return len(result.data) > 0
 
     @error_handler("Supabase")
     def query(

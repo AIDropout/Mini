@@ -9,7 +9,7 @@ from config.config import config
 import random
 import asyncio
 from typing import List
-from zootopia.controller.agent.event_logger import event_logger as el
+from zootopia.core.event_logger import event_logger as el
 from datetime import datetime
 from zootopia.core.error import error_handler
 from zootopia.controller.agent.modules.base import AgentModule
