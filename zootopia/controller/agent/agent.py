@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from zootopia.core.schema.tables import (
     Room,
     Message,
