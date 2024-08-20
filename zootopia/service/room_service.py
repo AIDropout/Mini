@@ -27,23 +27,29 @@ class RoomService(Service):
         """Creates a new room & sends the first message"""
 
         try:
-            agent = self._get_agent(agent_id)
-            user = self.user_service.get_user(user_id)
-            existing_room = self.get_room(agent_id, user_id)
-            if existing_room:
+            # Check if the room already exists
+            room = self.get_room(agent_id, user_id)
+            if room:
                 raise HTTPException(
                     status_code=409, detail="User already has a chat with this agent"
                 )
-            
+
+            # Fetch the agent and user
+            agent = self._get_agent(agent_id)
+            user = self.user_service.get_user(user_id)
+
+            # Send the first message
             self.messaging_manager.set_receiver(user.phone_number)
             self.messaging_manager.set_sender(agent.bird_channel_id)
             await self.messaging_manager.send_message(agent.first_message)
 
+            # Create a new room
             new_room = self.database_manager.insert(
                 table_name=Tables.ROOMS,
                 item=Room(user_id=user_id, agent_id=agent_id),
             )
 
+            # Log the initial message
             self.database_manager.insert(
                 table_name=Tables.MESSAGES,
                 item=Message(
@@ -55,30 +61,26 @@ class RoomService(Service):
             )
 
             return new_room
+
         except Exception as e:
             logger.exception("Error in room creation process")
             raise HTTPException(status_code=500, detail=str(e))
 
-    def get_room(self, agent_id: str, user_id: str) -> Optional[Room]:
-        """Retrieves a room by agent_id and user_id"""
+    def get_room(
+        self, agent_id: str, user_id: str, raise_error: bool = False
+    ) -> Optional[Room]:
+        """Retrieves a room by agent_id and user_id, optionally raising an error if not found"""
 
         room = self.database_manager.get_row(
             Tables.ROOMS,
             conditions={
-                Tables.ROOMS__agent_id: str(agent_id),
-                Tables.ROOMS__user_id: str(user_id),
+                Tables.ROOMS__agent_id: agent_id,
+                Tables.ROOMS__user_id: user_id,
             },
         )
-        return room  # Return None if room is not found
-
-    def get_room_or_error(self, agent_id: str, user_id: str) -> Room:
-        """Retrieves a room by agent_id and user_id, raising an error if not found"""
-
-        room = self.get_room(agent_id, user_id)
-        if not room:
+        if raise_error and not room:
             raise HTTPException(status_code=404, detail="Room not found")
         return room
-
 
     def _get_agent(self, agent_id: str) -> Agent:
         """Retrieves an agent by id"""
