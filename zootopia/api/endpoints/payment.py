@@ -23,7 +23,7 @@ async def stripe_webhook(
 
 
 class Checkout(BaseModel):
-    user_id: int = Field(..., description="Unique identifier of the user.")
+    user_id: str = Field(..., description="Unique identifier of the user.")
 
 
 @router.post("/checkout")

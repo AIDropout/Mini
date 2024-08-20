@@ -7,6 +7,8 @@ from config.config import config
 from zootopia.core.schema.tables import TABLE_MODEL_MAP, TableModel
 from zootopia.core.error import error_handler
 from pydantic import BaseModel
+import uuid
+
 
 T = TypeVar("T", bound=TableModel)
 
@@ -15,10 +17,13 @@ class DatabaseManager:
     def __init__(self) -> None:
         self.supabase = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
 
-    @error_handler("Supabase")
     def insert(self, table_name: str, item: TableModel) -> TableModel:
-        # Removes 'id' field, since Supabase auto-increments
-        item_dict = item.model_dump(exclude={"id"})
+        item_dict = item.model_dump()
+
+        # Generate UUID for id if not specified
+        if "id" not in item_dict or item_dict["id"] is None:
+            item_dict["id"] = str(uuid.uuid4())
+
         data, _ = self.supabase.table(table_name).insert(item_dict).execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 

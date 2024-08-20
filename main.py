@@ -113,7 +113,7 @@ Helpful commands:
 - To view gunicorn ports run: ps aux | grep gunicorn
 - To kill gunicorn run: pkill -f gunicorn
 Flower (Flower hosts a localhost dashboard to view status of Celery tasks):
-- export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/ZOOTOPIA/ZOOTOPIA
+- export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/Untitled
 - View celery tasks via Flower: celery -A zootopia.server.celery.celery flower
 
 - To manually start Celery, open a new terminal: celery -A zootopia.server.celery.celery worker -n worker1@%h

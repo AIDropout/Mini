@@ -58,7 +58,7 @@ class CronService(Service):
                             db=self.database_manager,
                         )
 
-    def _is_room_eligible_for_revival(self, room: Room, user_id: int):
+    def _is_room_eligible_for_revival(self, room: Room, user_id: str):
         if not room.subscribe_msg_sent:
             return True
 

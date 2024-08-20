@@ -30,7 +30,7 @@ class BaseTask(ABC):
 @dataclass
 class RespondTask(BaseTask):
     user_message: ZootopiaMessage
-    room_id: int
+    room_id: str
     type: ClassVar[str] = TaskType.RESPOND
     instructions: ClassVar[str] = "Respond to the user via a short text"
     recent_message_count: ClassVar[int] = 10
@@ -56,7 +56,7 @@ class RemindTask(BaseTask):
 
 @dataclass
 class ReviveTask(BaseTask):
-    room_id: int
+    room_id: str
     type: ClassVar[str] = TaskType.REVIVE
     instructions: ClassVar[str] = (
         "Re-engage the chat since it has been silent for a while."

@@ -11,12 +11,6 @@ class BaseResponse(BaseModel):
     pass
 
 
-# Request Schemas
-class SignupRequest(BaseRequest):
-    agent_id: int
-    user_phone: str
-    birthday: Optional[str] = None
-
 
 class SendVerificationRequest(BaseRequest):
     phone_number: str

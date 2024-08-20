@@ -32,7 +32,6 @@ from .message import (
     _TelegramVenue,
 )
 from .request import (
-    SignupRequest,
 
     SendVerificationRequest,
     SendVerificationResponse,
@@ -54,7 +53,6 @@ __all__ = [
     "SendVerificationRequest",
     "ResendVerificationResponse",
     "SendVerificationResponse",
-    "SignupRequest",
     "SendVerificationRequest",
     "ResendVerificationRequest",
     "VerificationRequest",
@@ -89,6 +87,5 @@ __all__ = [
     "_TelegramLocation",
     "_TelegramDocument",
     "_TelegramVenue",
-    "SignupRequest",
     "TaskType",
 ]

@@ -13,8 +13,28 @@ from zootopia.api.security import verify_api_key
 from zootopia.utils.utils import is_ngrok_url
 from zootopia.core.logger import logger
 from config.container import container
+from zootopia.service.signup_service import SignupService
+from typing import Optional
+from pydantic import BaseModel
 
-router = APIRouter(prefix="/room", tags=["room"])
+router = APIRouter(prefix="/rooms", tags=["rooms"])
+
+
+class CreateRoomRequest(BaseModel):
+    agent_id: str
+    user_id: str
+    birthday: Optional[str] = None
+
+
+# @router.post("/signup")
+# async def signup_webhook(
+#     request: CreateRoomRequest,
+#     api_key: str = Security(verify_api_key),
+#     signup_service: SignupService = Depends(lambda: container.get_signup_service()),
+# ):
+#     return await signup_service.process_signup(
+#         agent_id=request.agent_id, user_id=request.user_id, birthday=request.birthday
+#     )
 
 
 @router.post("/respond")
@@ -53,7 +73,9 @@ async def revive_webhook(
 @router.post("/admin-message")
 async def send_admin_message(
     request: Request,
-    dashboard_service: DashboardService = Depends(lambda: container.get_dashboard_service()),
+    dashboard_service: DashboardService = Depends(
+        lambda: container.get_dashboard_service()
+    ),
     api_key: str = Security(verify_api_key),
 ):
     """Endpoint for sending messages from the admin dashboard."""

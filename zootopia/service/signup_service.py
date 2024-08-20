@@ -1,7 +1,6 @@
 from typing import Optional, Tuple
 from fastapi import HTTPException
 from zootopia.core.schema.tables import Tables, User, Agent, Room, Message
-from zootopia.core.schema.request import SignupRequest
 from zootopia.manager.messaging import BirdManager
 from zootopia.core.exceptions import RoomAlreadyExistsError, AgentNotFoundError
 from zootopia.manager.database import DatabaseManager
@@ -21,12 +20,12 @@ class SignupService(Service):
         self.messaging_manager = messaging_manager
         self.customer_manager = customer_manager
 
-    async def process_signup(self, request: SignupRequest):
+    async def process_signup(self, agent_id: str, user_id: str, birthday: str):
         """Creates a new room for the user with the selected agent & sends the first message"""
         try:
-            agent = self.get_agent(request.agent_id)
+            agent = self.get_agent(agent_id)
             user, room, is_new_user = self.get_or_create_user_and_room(
-                request.user_phone, request.agent_id, request.birthday
+                user_id, agent_id, birthday
             )
 
             self.messaging_manager.set_receiver(request.user_phone)
@@ -61,7 +60,7 @@ class SignupService(Service):
             logger.exception("Error in signup process")
             raise HTTPException(status_code=500, detail=str(e))
 
-    def get_agent(self, agent_id: int) -> Agent:
+    def get_agent(self, agent_id: str) -> Agent:
         agent = self.database_manager.get_row(
             Tables.AGENTS, conditions={Tables.AGENTS__id: agent_id}
         )
@@ -71,7 +70,7 @@ class SignupService(Service):
         return agent
 
     def get_or_create_user_and_room(
-        self, user_phone: str, agent_id: int, birthday: Optional[str] = None
+        self, user_phone: str, agent_id: str, birthday: Optional[str] = None
     ) -> Tuple[User, Room, bool]:
         existing_user = self.database_manager.get_row(
             Tables.USERS,

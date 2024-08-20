@@ -13,48 +13,45 @@ from config.config import config
 router = APIRouter()
 
 
-class UserCreate(BaseModel):
-    phone_number: str
-
-
 @router.post("/users", response_model=User)
 async def create_user(
-    user: UserCreate,
+    id: str = Body(..., title="UUID that Supabase Auth created on the frontend"),
+    phone_number: str = Body(..., title="The phone number of the new user"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> User:
-    return user_service.create_user(user.phone_number)
+    return user_service.create_user(id=id, phone_number=phone_number)
 
 
-@router.get("/users/{user_id}", response_model=User)
+@router.get("/users/{id}", response_model=User)
 async def get_user(
-    user_id: int = Path(..., title="The ID of the user to get"),
+    id: int = Path(..., title="The ID of the user to get"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> User:
     """Get a user by ID. Returns the retrieved User object"""
-    return user_service.get_user(user_id)
+    return user_service.get_user(id)
 
 
-@router.patch("/users/{user_id}", response_model=User)
+@router.patch("/users/{id}", response_model=User)
 async def update_user(
-    user_id: int = Path(..., title="The ID of the user to update"),
+    id: int = Path(..., title="The ID of the user to update"),
     user: User = Body(..., title="The updated user fields"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> User:
     """Update a user. Returns updated User object"""
-    return user_service.update_user(user_id=user_id, user_params=user)
+    return user_service.update_user(user_id=id, user_params=user)
 
 
 @router.delete("/users/{user_id}")
 async def delete_user(
-    user_id: int = Path(..., title="The ID of the user to delete"),
+    id: int = Path(..., title="The ID of the user to delete"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> None:
     """Delete a user. Returns the id of the deleted user."""
-    return user_service.delete_user(user_id)
+    return user_service.delete_user(id)
 
 
 async def test_user_endpoints():
@@ -62,7 +59,10 @@ async def test_user_endpoints():
 
     async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
         # Test create_user
-        user_data = {"phone_number": "+3142952259"}
+        user_data = {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "phone_number": "+13142952259",
+        }
 
         response = await client.post(
             f"/users",

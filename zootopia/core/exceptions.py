@@ -9,7 +9,7 @@ class ServiceError(Exception):
 
 
 class RoomAlreadyExistsError(Exception):
-    def __init__(self, phone_number: str, agent_id: int):
+    def __init__(self, phone_number: str, agent_id: str):
         super().__init__(
             f"Room with agent '{agent_id} & '{phone_number}' already exists"
         )
@@ -40,7 +40,7 @@ class MessageParsingError(Exception):
 
 
 class MessageInsertError(Exception):
-    def __init__(self, room_id: int, original_error: Exception, message: str = None):
+    def __init__(self, room_id: str, original_error: Exception, message: str = None):
         self.room_id = room_id
         self.original_error = original_error
         default_message = f"Failed to insert message into database for room_id {room_id}: {str(original_error)}"
