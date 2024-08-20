@@ -20,10 +20,6 @@ class LLMResponseParsingError(Exception):
         super().__init__(message)
 
 
-class AgentNotFoundError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
-
 
 class DatabaseConnectionError(Exception):
     def __init__(self, message="Failed to connect to the database"):

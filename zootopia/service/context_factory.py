@@ -6,9 +6,9 @@ from zootopia.core.schema.tables import (
     Tables,
 )
 from zootopia.core.schema.message import ZootopiaMessage, MessageProvider
+from fastapi import HTTPException
 
 from zootopia.manager.database import DatabaseManager
-from zootopia.core.exceptions import AgentNotFoundError
 from dataclasses import dataclass, field
 from zootopia.manager.messaging.factory import MessagingManagerFactory
 from zootopia.service.base import Service
@@ -85,9 +85,8 @@ class ContextFactory(Service):
             user = self._create_new_user(message)
 
         if not agent:
-            raise AgentNotFoundError(
-                f"Couldn't retrieve agent. Make sure the agent row matches incoming metadata: {message.metadata}"
-            )
+            raise HTTPException(status_code=404, detail="Agent not found")
+
 
         return user, agent
 

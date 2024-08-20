@@ -3,11 +3,8 @@ from pydantic import BaseModel
 from config.container import container
 from zootopia.api.security import verify_api_key
 from zootopia.core.schema.tables import User
-import asyncio
-import httpx
 from config.container import container
 from zootopia.service.user_service import UserService
-from config.config import config
 
 
 router = APIRouter()
@@ -104,4 +101,8 @@ async def test_user_endpoints():
 
 
 if __name__ == "__main__":
+    import asyncio
+    import httpx
+    from config.config import config
+
     asyncio.run(test_user_endpoints())

@@ -5,6 +5,7 @@ from fastapi import (
     HTTPException,
     Security,
     Depends,
+    Body,
 )
 from zootopia.service.reply_service import ReplyService
 from zootopia.service.cron_service import CronService
@@ -13,31 +14,31 @@ from zootopia.api.security import verify_api_key
 from zootopia.utils.utils import is_ngrok_url
 from zootopia.core.logger import logger
 from config.container import container
-from zootopia.service.signup_service import SignupService
+from zootopia.service.room_service import RoomService
 from typing import Optional
 from pydantic import BaseModel
+from zootopia.core.schema.tables import Room
 
-router = APIRouter(prefix="/rooms", tags=["rooms"])
+router = APIRouter()
 
 
 class CreateRoomRequest(BaseModel):
     agent_id: str
     user_id: str
-    birthday: Optional[str] = None
 
 
-# @router.post("/signup")
-# async def signup_webhook(
-#     request: CreateRoomRequest,
-#     api_key: str = Security(verify_api_key),
-#     signup_service: SignupService = Depends(lambda: container.get_signup_service()),
-# ):
-#     return await signup_service.process_signup(
-#         agent_id=request.agent_id, user_id=request.user_id, birthday=request.birthday
-#     )
+@router.post("/rooms")
+async def create_room(
+    agent_id: str = Body(..., title="Agent ID of the page the user signed up to"),
+    user_id: str = Body(..., title="The user's ID"),
+    room_service: RoomService = Depends(lambda: container.get_room_service()),
+    api_key: str = Security(verify_api_key),
+) -> Room:
+    """Creates a room and sends the first message to the user"""
+    return await room_service.create_room(agent_id=agent_id, user_id=user_id)
 
 
-@router.post("/respond")
+@router.post("/rooms/respond")
 async def respond_webhook(
     request: Request,
     reply_service: ReplyService = Depends(lambda: container.get_reply_service()),
@@ -52,7 +53,7 @@ async def respond_webhook(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/revive")
+@router.post("/rooms/revive")
 async def revive_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -70,7 +71,7 @@ async def revive_webhook(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/admin-message")
+@router.post("/rooms/admin-message")
 async def send_admin_message(
     request: Request,
     dashboard_service: DashboardService = Depends(
@@ -86,3 +87,57 @@ async def send_admin_message(
     except Exception as e:
         logger.exception("Error in send_admin_message")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def test_room_endpoints():
+
+    async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
+        # Test create_room
+        room_data = {
+            "agent_id": "f49c9af0-929b-4fe1-9522-6fe4a325bdf5",
+            "user_id": "550e8400-e29b-41d4-a716-446655440000",
+        }
+
+        response = await client.post(
+            "/rooms",
+            json=room_data,
+            headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"},
+        )
+        print(
+            f"POST /rooms - Status: {response.status_code}, Response: {response.json()}"
+        )
+
+        if response.status_code == 200:
+            created_room = response.json()
+            room_id = created_room.get("id")
+
+            # Test get_room (if you have this endpoint)
+            # response = await client.get(
+            #     f"/rooms/{room_id}",
+            #     headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"},
+            # )
+            # print(f"GET /rooms/{room_id} - Status: {response.status_code}, Response: {response.json()}")
+
+            # Test update_room (if you have this endpoint)
+            # update_data = {"some_field": "new_value"}
+            # response = await client.patch(
+            #     f"/rooms/{room_id}",
+            #     json=update_data,
+            #     headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"},
+            # )
+            # print(f"PATCH /rooms/{room_id} - Status: {response.status_code}, Response: {response.json()}")
+
+            # Test delete_room (if you have this endpoint)
+            # response = await client.delete(
+            #     f"/rooms/{room_id}",
+            #     headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"},
+            # )
+            # print(f"DELETE /rooms/{room_id} - Status: {response.status_code}, Response: {response.json()}")
+
+
+if __name__ == "__main__":
+    import httpx
+    import asyncio
+    from config.config import config
+
+    asyncio.run(test_room_endpoints())

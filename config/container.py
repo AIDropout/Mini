@@ -22,9 +22,10 @@ class Container:
 
     def get_user_service(self):
         from zootopia.service.user_service import UserService
+
         return UserService(
             database_manager=self.database_manager,
-            customer_manager=self.customer_manager
+            customer_manager=self.customer_manager,
         )
 
     def get_cron_service(self):
@@ -40,13 +41,14 @@ class Container:
 
         return SMSOTPService(bird_manager=self.messaging_manager_factory.bird_manager)
 
-    def get_signup_service(self):
-        from zootopia.service.signup_service import SignupService
+    def get_room_service(self):
+        from zootopia.service.room_service import RoomService
 
-        return SignupService(
+        return RoomService(
             database_manager=self.database_manager,
             messaging_manager=self.messaging_manager_factory.bird_manager,
             customer_manager=self.customer_manager,
+            user_service=self.get_user_service(),
         )
 
     def get_payment_service(self):
@@ -81,7 +83,9 @@ class Container:
         from zootopia.controller.agent.modules.action import ActionModule
         from zootopia.controller.agent.modules.memory import MemoryModule
 
-        action_module = ActionModule(llm_manager=LLMManager(llm_name=config.ACTION_MANAGER_LLM))
+        action_module = ActionModule(
+            llm_manager=LLMManager(llm_name=config.ACTION_MANAGER_LLM)
+        )
         memory_module = MemoryModule(database_manager=self.database_manager)
         subscribe_module = SubscribeModule(
             database_manager=self.database_manager,
