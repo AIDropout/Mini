@@ -8,11 +8,7 @@ from zootopia.core.schema.tables import (
 )
 from zootopia.core.schema.task import TaskType
 from zootopia.core.schema.intent import IntentType
-from zootopia.controller.task.task_types import (
-    RespondTask,
-    RemindTask,
-    ReviveTask
-)
+from zootopia.controller.task.task_types import RespondTask, RemindTask, ReviveTask
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
 from zootopia.controller.agent.modules.intent import (
@@ -52,7 +48,7 @@ class AgentService(Service):
         self.action = action_module
         self.memory = memory_module
         self.subscribe = subscribe_module
-        #TODO: properly inject intent configs
+        # TODO: properly inject intent configs
         default_configs = {
             IntentType.FILTER: IntentConfig(
                 message_count=5, confidence_threshold=Confidence.HIGH, enabled=True
@@ -67,19 +63,22 @@ class AgentService(Service):
         self.intent_config = IntentConfigManager(intent_configs or default_configs)
         self.intent_factory = IntentFactory()
 
-    def configure(self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room) -> None:
+    def configure(
+        self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room
+    ) -> None:
         """Sets room details for the agent and its modules"""
-        
-        self.agent=agent
-        self.user=user
-        self.room=room
+
+        self.agent = agent
+        self.user = user
+        self.room = room
         self.memory.configure(room, agent, user)
         self.action.configure(room, agent, user)
         self.subscribe.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
-    async def handle_chat_task(self, task: Union[RespondTask, RemindTask, ReviveTask]) -> bool:
-
+    async def handle_chat_task(
+        self, task: Union[RespondTask, RemindTask, ReviveTask]
+    ) -> bool:
         """Core logic for generates and sending message"""
 
         el.log(f"TASK: {task}")
@@ -107,21 +106,17 @@ class AgentService(Service):
                 )
                 if not result.continue_conversation:
                     return True
-                
+
                 # Process schedule intent
                 if self.intent_config.is_enabled(IntentType.SCHEDULE):
                     schedule_intent = self.intent_factory.create(IntentType.SCHEDULE)
                     if schedule_intent:
 
-                        existing_tasks = (
-                            self.database_manager.get_multiple_rows(
-                                table_name=Tables.SCHEDULE,
-                                conditions={
-                                    Tables.SCHEDULE__room_id: self.room.id
-                                },
-                                order_by=Tables.SCHEDULE__run_at,
-                                order_details=False,
-                            )
+                        existing_tasks = self.database_manager.get_multiple_rows(
+                            table_name=Tables.SCHEDULE,
+                            conditions={Tables.SCHEDULE__room_id: self.room.id},
+                            order_by=Tables.SCHEDULE__run_at,
+                            order_details=False,
                         )
 
                         el.log(
@@ -222,7 +217,7 @@ class AgentService(Service):
                 return False
 
             success = await self.action.handle_message_send(final_message)
-            el.log(f"{"[SUCCESS]" if success else "[FAILURE]"} BIRD SMS SENT: {success}")
+            el.log(f"BIRD SMS SENT: {success}")
 
             inserted_message = self.database_manager.insert(
                 Tables.MESSAGES,
