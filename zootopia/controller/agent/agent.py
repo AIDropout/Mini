@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from zootopia.core.schema.tables import (
     Room,
     Message,
@@ -84,7 +82,7 @@ class AgentService(Service):
 
         """Core logic for generates and sending message"""
 
-        el.log(f"🟢 TASK: {task}")
+        el.log(f"✔️ TASK: {task}")
 
         try:
             # Handle user message for respond tasks
@@ -93,12 +91,12 @@ class AgentService(Service):
                     task.user_message.content
                 )  # Was already inserted into database
 
-                el.log(f"🟢 RESPONDING TO: '{user_message}' in Room {task.room_id}")
+                el.log(f"✔️ RESPONDING TO: '{user_message}' in Room {task.room_id}")
 
                 # Handle subscribe
                 result = await self.subscribe.should_continue_conversation()
                 el.log(
-                    f"""{"🟢" if result.continue_conversation else "🔴"} ROOM SUBSCRIPTION STATUS:
+                    f"""{"✔️" if result.continue_conversation else "❌"} ROOM SUBSCRIPTION STATUS:
                     Continue conversation: {result.continue_conversation}.
                     Subscribe enabled for agent: {result.subscribe_enabled}.
                     User has subscription for agent: {result.subscription_status}.
@@ -127,7 +125,7 @@ class AgentService(Service):
                         )
 
                         el.log(
-                            f"🩵 Here are the existing scheduled tasks for room {self.room.id} 🩵 {existing_tasks}",
+                            f"✔️ Here are the existing scheduled tasks for room {self.room.id}: {existing_tasks}",
                         )
 
                         schedule_result: ScheduleIntentResult = schedule_intent.process(
@@ -151,7 +149,7 @@ class AgentService(Service):
                                 ),
                             )
 
-                            el.log(f"🩵 Scheduled a task: {inserted_task}")
+                            el.log(f"✔️ Scheduled a task: {inserted_task}")
 
             all_recent_messages = self.memory.get_recent_messages(
                 count=task.recent_message_count
@@ -175,15 +173,15 @@ class AgentService(Service):
                 instructions=task.instructions,
                 current_time=get_current_time_readable(),
             )
-            el.log(f"🟢 SYSTEM PROMPT FOR AGENT: {system_prompt}")
-            el.log(f"🟢 RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
+            el.log(f"✔️ SYSTEM PROMPT FOR AGENT: {system_prompt}")
+            el.log(f"✔️ RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
             # Generate agent message
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
             )
 
-            el.log(f"🟢 MAIN LLM RESPONSE: {response_text}")
+            el.log(f"✔️ MAIN LLM RESPONSE: {response_text}")
 
             # Use Filter intent to ensure quality of agent response
             filter_result = None
@@ -224,7 +222,7 @@ class AgentService(Service):
                 return False
 
             success = await self.action.handle_message_send(final_message)
-            el.log(f"{"🟢" if success else "🔴"} BIRD SMS SENT: {success}")
+            el.log(f"{"✔️" if success else "❌"} BIRD SMS SENT: {success}")
 
             inserted_message = self.database_manager.insert(
                 Tables.MESSAGES,
@@ -238,5 +236,5 @@ class AgentService(Service):
             )
 
         except Exception as e:
-            el.log(f"🔴 Unexpected error in processing chat: {str(e)}")
+            el.log(f"❌ Unexpected error in processing chat: {str(e)}")
             return False
