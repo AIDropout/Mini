@@ -2,6 +2,8 @@ from enum import Enum
 
 
 class SubscriptionStatus(Enum):
+    """Stripe Subscription object enum"""
+
     INCOMPLETE = "incomplete"
     INCOMPLETE_EXPIRED = "incomplete_expired"
     TRIALING = "trialing"
@@ -19,4 +21,4 @@ class SubscriptionStatus(Enum):
             raise ValueError(f"'{status}' is not a valid SubscriptionStatus")
 
     def __str__(self):
-        return self.value
+        return self

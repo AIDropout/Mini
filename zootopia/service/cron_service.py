@@ -24,22 +24,22 @@ class CronService(Service):
         self, background_tasks: BackgroundTasks, dev_mode: bool = False
     ):
         agents = self.database_manager.query(
-            Tables.AGENTS.value, ("id", "=", 1) if dev_mode else None
+            Tables.AGENTS, ("id", "=", 1) if dev_mode else None
         )
 
         for agent in agents:
             proactive_rooms = self.database_manager.query(
-                Tables.ROOMS.value,
-                (Tables.ROOMS__agent_id.value, agent.id),
-                (Tables.ROOMS__agent_proactivity.value, ">", 0),
+                Tables.ROOMS,
+                (Tables.ROOMS__agent_id, agent.id),
+                (Tables.ROOMS__agent_proactivity, ">", 0),
             )
 
             for room in proactive_rooms:
                 if self._is_room_eligible_for_revival(room, room.user_id):
                     last_message = self.database_manager.get_row(
-                        Tables.MESSAGES.value,
-                        {Tables.MESSAGES__room_id.value: room.id},
-                        order_by=Tables.MESSAGES__created_at.value,
+                        Tables.MESSAGES,
+                        {Tables.MESSAGES__room_id: room.id},
+                        order_by=Tables.MESSAGES__created_at,
                         order_desc=True,
                     )
 
@@ -63,9 +63,9 @@ class CronService(Service):
             return True
 
         user = self.database_manager.get_row(
-            Tables.USERS.value,
+            Tables.USERS,
             {
-                Tables.USERS__id.value: user_id,
+                Tables.USERS__id: user_id,
             },
         )
 

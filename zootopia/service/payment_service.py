@@ -29,8 +29,8 @@ class PaymentService(Service):
 
     async def create_checkout_session(self, user_id: str):
         user = self.database_manager.get_row(
-            Tables.USERS.value,
-            {Tables.USERS__id.value: user_id},
+            Tables.USERS,
+            {Tables.USERS__id: user_id},
         )
         phone_number = user.phone_number
         customer_id = user.customer_id
@@ -43,8 +43,8 @@ class PaymentService(Service):
 
     async def get_portal_link(self, user_id: str):
         user = self.database_manager.get_row(
-            Tables.USERS.value,
-            {Tables.USERS__id.value: user_id},
+            Tables.USERS,
+            {Tables.USERS__id: user_id},
         )
         customer_id = user.customer_id
         response = self._customer_manager.get_portal_link(customer_id)
@@ -95,13 +95,13 @@ class PaymentService(Service):
             )
 
             updated_customer = self.database_manager.update(
-                table_name=Tables.USERS.value,
+                table_name=Tables.USERS,
                 item=User(
                     stripe_customer_id=subscription.customer,
                     subscription_status=subscription.status,
                     subscription_id=subscription.id,
                 ),
-                condition_key=Tables.USERS__id.value,
+                condition_key=Tables.USERS__id,
                 condition_value=user_id,
             )
         except Exception as e:
@@ -116,13 +116,13 @@ class PaymentService(Service):
         try:
             user_id = subscription.metadata.get("user_id", None)
             updated_customer = self.database_manager.update(
-                table_name=Tables.USERS.value,
+                table_name=Tables.USERS,
                 item=User(
                     stripe_customer_id=subscription.customer,
                     subscription_status=subscription.status,
                     subscription_id=subscription.id,
                 ),
-                condition_key=Tables.USERS__id.value,
+                condition_key=Tables.USERS__id,
                 condition_value=user_id,
             )
         except Exception as e:

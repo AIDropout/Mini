@@ -25,11 +25,11 @@ class MemoryModule(AgentModule):
         - List[Dict[str, str]]: A list of dictionaries with 'role' and 'content' keys.
         """
         messages = self.database_manager.get_multiple_rows(
-            table_name=Tables.MESSAGES.value,
+            table_name=Tables.MESSAGES,
             max_rows=count,
-            order_by=Tables.MESSAGES__created_at.value,
+            order_by=Tables.MESSAGES__created_at,
             order_desc=True,
-            conditions={Tables.MESSAGES__room_id.value: self.room.id},
+            conditions={Tables.MESSAGES__room_id: self.room.id},
         )
 
         if not messages or not isinstance(messages, list):

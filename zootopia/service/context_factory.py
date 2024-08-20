@@ -28,15 +28,15 @@ class ContextFactory(Service):
 
     def create_cron_context(self, room_id) -> Context:
         room = self.database_manager.get_row(
-            Tables.ROOMS.value, conditions={Tables.ROOMS__id.value: room_id}
+            Tables.ROOMS, conditions={Tables.ROOMS__id: room_id}
         )
         user = self.database_manager.get_row(
-            Tables.USERS.value,
-            conditions={Tables.USERS__id.value: room.user_id},
+            Tables.USERS,
+            conditions={Tables.USERS__id: room.user_id},
         )
         agent = self.database_manager.get_row(
-            Tables.AGENTS.value,
-            conditions={Tables.AGENTS__id.value: room.agent_id},
+            Tables.AGENTS,
+            conditions={Tables.AGENTS__id: room.agent_id},
         )
 
         return Context(
@@ -62,26 +62,22 @@ class ContextFactory(Service):
 
         if message.provider == MessageProvider.TELEGRAM:
             user = self.database_manager.get_row(
-                Tables.USERS.value,
-                conditions={Tables.USERS__telegram_uid.value: message.metadata.uid},
+                Tables.USERS,
+                conditions={Tables.USERS__telegram_uid: message.metadata.uid},
             )
             agent = self.database_manager.get_row(
-                Tables.AGENTS.value,
-                conditions={
-                    Tables.AGENTS__telegram_chat_id.value: message.metadata.chat_id
-                },
+                Tables.AGENTS,
+                conditions={Tables.AGENTS__telegram_chat_id: message.metadata.chat_id},
             )
         elif message.provider == MessageProvider.BIRD:
             user = self.database_manager.get_row(
-                Tables.USERS.value,
-                conditions={
-                    Tables.USERS__phone_number.value: message.metadata.phone_number
-                },
+                Tables.USERS,
+                conditions={Tables.USERS__phone_number: message.metadata.phone_number},
             )
             agent = self.database_manager.get_row(
-                Tables.AGENTS.value,
+                Tables.AGENTS,
                 conditions={
-                    Tables.AGENTS__bird_channel_id.value: message.metadata.channel_id
+                    Tables.AGENTS__bird_channel_id: message.metadata.channel_id
                 },
             )
 
@@ -108,17 +104,17 @@ class ContextFactory(Service):
                 else None
             ),
         )
-        return self.database_manager.insert(Tables.USERS.value, new_user)
+        return self.database_manager.insert(Tables.USERS, new_user)
 
     def _get_or_create_room(self, user: User, agent: Agent) -> Room:
         room = self.database_manager.get_row(
-            Tables.ROOMS.value,
+            Tables.ROOMS,
             conditions={
-                Tables.ROOMS__user_id.value: user.id,
-                Tables.ROOMS__agent_id.value: agent.id,
+                Tables.ROOMS__user_id: user.id,
+                Tables.ROOMS__agent_id: agent.id,
             },
         )
         if not room:
             room = Room(user_id=user.id, agent_id=agent.id)
-            room = self.database_manager.insert(Tables.ROOMS.value, room)
+            room = self.database_manager.insert(Tables.ROOMS, room)
         return room

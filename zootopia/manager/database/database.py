@@ -161,8 +161,3 @@ class DatabaseManager:
 
         result = query.execute()
         return result.count
-
-    @error_handler("Supabase")
-    def phone_number_exists(self, phone_number: str) -> bool:
-        user = self.get_row("users", {"phone_number": phone_number})
-        return user is not None

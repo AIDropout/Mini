@@ -58,4 +58,4 @@ class DashboardService(Service):
                 sent_by_admin=True,
             )
 
-            self.database_manager.insert(Tables.MESSAGES.value, new_message)
+            self.database_manager.insert(Tables.MESSAGES, new_message)

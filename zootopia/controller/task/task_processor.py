@@ -29,18 +29,18 @@ def process_task(self, data: dict):
 
     try:
 
-        if task_type == TaskType.RESPOND.value:
+        if task_type == TaskType.RESPOND:
             messaging_manager = messaging_manager_factory.get_manager_from_request(
                 request
             )
             message = messaging_manager.receive_message(request)
             context = context_factory.create_message_context(message)
             task = RespondTask(user_message=message, room_id=room_id)
-        elif task_type == TaskType.REVIVE.value:
+        elif task_type == TaskType.REVIVE:
             context = context_factory.create_cron_context(room_id)
             messaging_manager = messaging_manager_factory._bird_manager
             task = ReviveTask(room_id)
-        elif task_type == TaskType.REMIND.value:
+        elif task_type == TaskType.REMIND:
             context = context_factory.create_cron_context(room_id)
             messaging_manager = messaging_manager_factory._bird_manager
             task = RemindTask()

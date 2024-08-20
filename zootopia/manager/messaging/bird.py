@@ -211,8 +211,8 @@ class BirdManager(MessagingBase):
                 expires_at = response_data.get("expiresAt")
                 status = response_data.get("status")
                 is_active = status in [
-                    VerificationStatus.ACCEPTED.value,
-                    VerificationStatus.PENDING.value,
+                    VerificationStatus.ACCEPTED,
+                    VerificationStatus.PENDING,
                 ]
                 return is_sent, is_active, expires_at
             else:
@@ -223,7 +223,7 @@ class BirdManager(MessagingBase):
             error_code = error_data.get("code")
             error_message = error_data.get("message", "Unknown error")
 
-            if error_code == ErrorCode.MAX_ATTEMPTS_REACHED.value:
+            if error_code == ErrorCode.MAX_ATTEMPTS_REACHED:
                 logger.warning(
                     f"Max attempts reached for verification ID {verification_id}: {error_message}"
                 )
@@ -277,10 +277,10 @@ class BirdManager(MessagingBase):
 
             status = verification_data.get("status")
 
-            is_verified = status == VerificationStatus.VERIFIED.value
+            is_verified = status == VerificationStatus.VERIFIED
             is_active = status in [
-                VerificationStatus.ACCEPTED.value,
-                VerificationStatus.PENDING.value,
+                VerificationStatus.ACCEPTED,
+                VerificationStatus.PENDING,
             ]
 
             return is_verified, is_active
@@ -290,10 +290,10 @@ class BirdManager(MessagingBase):
             error_code = error_data.get("code")
             error_message = error_data.get("message", "Unknown error")
 
-            if error_code == ErrorCode.MAX_ATTEMPTS_REACHED.value:
+            if error_code == ErrorCode.MAX_ATTEMPTS_REACHED:
                 logger.warning(f"Maxed attempts reached for ID {verification_id}. ")
                 return False, False
-            elif error_code == ErrorCode.VERIFICATION_CODE_MISMATCH.value:
+            elif error_code == ErrorCode.VERIFICATION_CODE_MISMATCH:
                 details = error_data.get("details", {})
                 logger.warning(
                     f"Incorrect code for ID {verification_id}. "

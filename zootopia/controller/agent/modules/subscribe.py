@@ -85,10 +85,10 @@ class SubscribeModule(AgentModule):
             int: The count of agent messages.
         """
         count = self.database_manager.count_rows(
-            table_name=Tables.MESSAGES.value,
+            table_name=Tables.MESSAGES,
             conditions={
-                Tables.MESSAGES__room_id.value: self.room.id,
-                Tables.MESSAGES__sender_id.value: self.agent.id,
+                Tables.MESSAGES__room_id: self.room.id,
+                Tables.MESSAGES__sender_id: self.agent.id,
             },
         )
         logger.info(f"Agent message count in room {self.room.id}: {count} 🟡🟡🟡")
@@ -109,7 +109,7 @@ class SubscribeModule(AgentModule):
 
         # Store the subscription message
         self.database_manager.insert(
-            Tables.MESSAGES.value,
+            Tables.MESSAGES,
             Message(
                 room_id=self.room.id,
                 sender_id=self.agent.id,
@@ -119,9 +119,9 @@ class SubscribeModule(AgentModule):
 
         # Update the room to indicate the subscription message was sent
         response = (
-            self.database_manager.supabase.table(Tables.ROOMS.value)
-            .update({Tables.ROOMS__subscribe_msg_sent.value: True})
-            .eq(Tables.ROOMS__id.value, self.room.id)
+            self.database_manager.supabase.table(Tables.ROOMS)
+            .update({Tables.ROOMS__subscribe_msg_sent: True})
+            .eq(Tables.ROOMS__id, self.room.id)
             .execute()
         )
 

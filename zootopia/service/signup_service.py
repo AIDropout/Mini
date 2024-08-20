@@ -34,7 +34,7 @@ class SignupService(Service):
             await self.messaging_manager.send_message(agent.first_message)
 
             self.database_manager.insert(
-                table_name=Tables.MESSAGES.value,
+                table_name=Tables.MESSAGES,
                 item=Message(
                     room_id=room.id,
                     sender_id=agent.id,
@@ -63,7 +63,7 @@ class SignupService(Service):
 
     def get_agent(self, agent_id: int) -> Agent:
         agent = self.database_manager.get_row(
-            Tables.AGENTS.value, conditions={Tables.AGENTS__id.value: agent_id}
+            Tables.AGENTS, conditions={Tables.AGENTS__id: agent_id}
         )
 
         if not agent:
@@ -74,36 +74,36 @@ class SignupService(Service):
         self, user_phone: str, agent_id: int, birthday: Optional[str] = None
     ) -> Tuple[User, Room, bool]:
         existing_user = self.database_manager.get_row(
-            Tables.USERS.value,
-            conditions={Tables.USERS__phone_number.value: user_phone},
+            Tables.USERS,
+            conditions={Tables.USERS__phone_number: user_phone},
         )
 
         if existing_user:
             existing_room = self.database_manager.get_row(
-                Tables.ROOMS.value,
+                Tables.ROOMS,
                 conditions={
-                    Tables.ROOMS__user_id.value: existing_user.id,
-                    Tables.ROOMS__agent_id.value: agent_id,
+                    Tables.ROOMS__user_id: existing_user.id,
+                    Tables.ROOMS__agent_id: agent_id,
                 },
             )
             if existing_room:
                 raise RoomAlreadyExistsError(user_phone, agent_id)
 
             new_room = self.database_manager.insert(
-                table_name=Tables.ROOMS.value,
+                table_name=Tables.ROOMS,
                 item=Room(user_id=existing_user.id, agent_id=agent_id),
             )
             return existing_user, new_room, False
 
         customer = self.customer_manager.create_customer(phone=user_phone)
         new_user = self.database_manager.insert(
-            table_name=Tables.USERS.value,
+            table_name=Tables.USERS,
             item=User(
                 phone_number=user_phone, birthday=birthday, customer_id=customer.id
             ),
         )
         new_room = self.database_manager.insert(
-            table_name=Tables.ROOMS.value,
+            table_name=Tables.ROOMS,
             item=Room(user_id=new_user.id, agent_id=agent_id),
         )
         return new_user, new_room, True

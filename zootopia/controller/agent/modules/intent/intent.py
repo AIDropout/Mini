@@ -7,14 +7,14 @@ from zootopia.manager.llm import LLMManager
 from config.config import config
 
 
-class Confidence(Enum):
+class Confidence(str, Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
 
     def __ge__(self, other: "Confidence") -> bool:
         order = ["LOW", "MEDIUM", "HIGH"]
-        return order.index(self.value) >= order.index(other.value)
+        return order.index(self) >= order.index(other)
 
 
 class IntentConfig(BaseModel):

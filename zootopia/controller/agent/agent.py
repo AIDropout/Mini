@@ -115,11 +115,11 @@ class AgentService(Service):
 
                         existing_tasks = (
                             self.database_manager.get_multiple_rows(
-                                table_name=Tables.SCHEDULE.value,
+                                table_name=Tables.SCHEDULE,
                                 conditions={
-                                    Tables.SCHEDULE__room_id.value: self.room.id
+                                    Tables.SCHEDULE__room_id: self.room.id
                                 },
-                                order_by=Tables.SCHEDULE__run_at.value,
+                                order_by=Tables.SCHEDULE__run_at,
                                 order_details=False,
                             )
                         )
@@ -139,11 +139,11 @@ class AgentService(Service):
 
                         if schedule_result.approved:
                             inserted_task = self.database_manager.insert(
-                                table_name=Tables.SCHEDULE.value,
+                                table_name=Tables.SCHEDULE,
                                 item=Schedule(
                                     room_id=self.room.id,
                                     run_at=schedule_result.run_at,
-                                    type=TaskType.REMIND.value,
+                                    type=TaskType.REMIND,
                                     task=schedule_result.task,
                                     complete=False,
                                 ),
@@ -225,12 +225,12 @@ class AgentService(Service):
             el.log(f"{"🟢" if success else "🔴"} BIRD SMS SENT: {success}")
 
             inserted_message = self.database_manager.insert(
-                Tables.MESSAGES.value,
+                Tables.MESSAGES,
                 Message(
                     room_id=self.room.id,
                     sender_id=self.agent.id,
                     content=final_message,
-                    type=task.type.value,
+                    type=task.type,
                     log=el.get_logs(),
                 ),
             )

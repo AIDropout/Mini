@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 import json
 
 
-class Tables(Enum):
+class Tables(str, Enum):
     """Tables available in the database."""
 
     AGENTS = "agents"
@@ -57,6 +57,9 @@ class Tables(Enum):
     SCHEDULE__type = "type"  # respond, remind, revive
     SCHEDULE__info = "info"
     SCHEDULE__complete = "complete"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 def utc_now():
@@ -151,9 +154,9 @@ TableModel = Union[
     Schedule,
 ]
 TABLE_MODEL_MAP = {
-    Tables.USERS.value: User,
-    Tables.AGENTS.value: Agent,
-    Tables.ROOMS.value: Room,
-    Tables.MESSAGES.value: Message,
-    Tables.SCHEDULE.value: Schedule,
+    Tables.USERS: User,
+    Tables.AGENTS: Agent,
+    Tables.ROOMS: Room,
+    Tables.MESSAGES: Message,
+    Tables.SCHEDULE: Schedule,
 }

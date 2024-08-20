@@ -31,7 +31,7 @@ class BaseTask(ABC):
 class RespondTask(BaseTask):
     user_message: ZootopiaMessage
     room_id: int
-    type: ClassVar[TaskType] = TaskType.RESPOND
+    type: ClassVar[str] = TaskType.RESPOND
     instructions: ClassVar[str] = "Respond to the user via a short text"
     recent_message_count: ClassVar[int] = 10
 
@@ -43,7 +43,7 @@ class RespondTask(BaseTask):
 @dataclass
 class RemindTask(BaseTask):
     name: str
-    type: ClassVar[TaskType] = TaskType.REMIND
+    type: ClassVar[str] = TaskType.REMIND
     instructions: ClassVar[str] = (
         "This event was scheduled for this time. Send a message based on it."
     )
@@ -57,7 +57,7 @@ class RemindTask(BaseTask):
 @dataclass
 class ReviveTask(BaseTask):
     room_id: int
-    type: ClassVar[TaskType] = TaskType.REVIVE
+    type: ClassVar[str] = TaskType.REVIVE
     instructions: ClassVar[str] = (
         "Re-engage the chat since it has been silent for a while."
     )
@@ -81,7 +81,7 @@ class ScheduledTaskInfo:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "type": self.task.type.value,
+            "type": self.task.type,
             "response_time": self.response_time.isoformat(),
             "creation_time": self.creation_time.isoformat(),
             "original_request": self.original_request,

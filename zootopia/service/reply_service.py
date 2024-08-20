@@ -36,7 +36,7 @@ class ReplyService(Service):
         context = self.context_factory.create_message_context(message)
 
         inserted_message = self.database_manager.insert(
-            Tables.MESSAGES.value,
+            Tables.MESSAGES,
             Message(
                 room_id=context.room.id,
                 sender_id=context.user.id,
@@ -45,7 +45,7 @@ class ReplyService(Service):
         )
 
         recent_messages = self.database_manager.get_multiple_rows(
-            Tables.MESSAGES.value,
+            Tables.MESSAGES,
             max_rows=5,
             order_by="created_at",
             order_desc=True,
