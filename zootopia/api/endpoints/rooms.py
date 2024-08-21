@@ -94,8 +94,8 @@ async def test_room_endpoints():
     async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
         # Test create_room
         room_data = {
-            "agent_id": "f49c9af0-929b-4fe1-9522-6fe4a325bdf5",
-            "user_id": "550e8400-e29b-41d4-a716-446655440000",
+            "agent_id": "6e37a9d5-4426-4f05-ad31-3918392ad58a",
+            "user_id": "946f4f9d-1111-495e-b59d-5f3704deb11b",
         }
 
         response = await client.post(

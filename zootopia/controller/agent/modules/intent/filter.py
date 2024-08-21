@@ -1,15 +1,14 @@
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 import json
-from zootopia.controller.agent.modules.intent.intent import (
+from zootopia.controller.agent.modules.intent.intent_processor import (
     IntentInput,
     IntentOutput,
     IntentResult,
     Confidence,
     IntentProcessor,
-    IntentFactory,
 )
-from zootopia.utils.utils import EnhancedJSONEncoder
+# from zootopia.utils.utils import EnhancedJSONEncoder
 from zootopia.core.logger import logger
 from zootopia.core.schema.intent import IntentType
 from zootopia.core.exceptions import LLMResponseParsingError
@@ -51,9 +50,7 @@ class FilterIntentResult(IntentResult):
         return f"FilterResult(from_user={self.from_user}, approved={self.approved}, confidence={self.confidence})"
 
 
-@IntentFactory.register(IntentType.FILTER)
 class FilterIntent(
-    IntentProcessor[FilterIntentInput, FilterIntentOutput, FilterIntentResult]
 ):
     TEMPLATE: str = """
     You are quality check for the fidelity of the following real person:
@@ -90,7 +87,7 @@ class FilterIntent(
         output_format = json.dumps(
             FilterIntentOutput(confidence="HIGH", proposed_message="").__dict__,
             indent=2,
-            cls=EnhancedJSONEncoder,
+            # cls=EnhancedJSONEncoder,
         )
 
         system_prompt = self.TEMPLATE.format(

@@ -211,8 +211,8 @@ class BirdManager(MessagingBase):
                 expires_at = response_data.get("expiresAt")
                 status = response_data.get("status")
                 is_active = status in [
-                    VerificationStatus.ACCEPTED,
-                    VerificationStatus.PENDING,
+                    VerificationStatus.ACCEPTED.value,
+                    VerificationStatus.PENDING.value,
                 ]
                 return is_sent, is_active, expires_at
             else:
@@ -277,11 +277,17 @@ class BirdManager(MessagingBase):
 
             status = verification_data.get("status")
 
-            is_verified = status == VerificationStatus.VERIFIED
+            print(status)
+            print(VerificationStatus.VERIFIED.value)
+
+            is_verified = status == VerificationStatus.VERIFIED.value
             is_active = status in [
-                VerificationStatus.ACCEPTED,
-                VerificationStatus.PENDING,
+                VerificationStatus.ACCEPTED.value,
+                VerificationStatus.PENDING.value,
             ]
+            print(is_verified)
+            print(is_active)
+            print("______")
 
             return is_verified, is_active
 
@@ -290,10 +296,10 @@ class BirdManager(MessagingBase):
             error_code = error_data.get("code")
             error_message = error_data.get("message", "Unknown error")
 
-            if error_code == ErrorCode.MAX_ATTEMPTS_REACHED:
+            if error_code == ErrorCode.MAX_ATTEMPTS_REACHED.value:
                 logger.warning(f"Maxed attempts reached for ID {verification_id}. ")
                 return False, False
-            elif error_code == ErrorCode.VERIFICATION_CODE_MISMATCH:
+            elif error_code == ErrorCode.VERIFICATION_CODE_MISMATCH.value:
                 details = error_data.get("details", {})
                 logger.warning(
                     f"Incorrect code for ID {verification_id}. "

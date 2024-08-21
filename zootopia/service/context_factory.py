@@ -12,6 +12,7 @@ from zootopia.manager.database import DatabaseManager
 from dataclasses import dataclass, field
 from zootopia.manager.messaging.factory import MessagingManagerFactory
 from zootopia.service.base import Service
+from zootopia.service.user_service import UserService
 
 
 @dataclass
@@ -82,11 +83,11 @@ class ContextFactory(Service):
             )
 
         if not user:
-            user = self._create_new_user(message)
+            # user = self.user_service.create_user(message)
+            pass
 
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
-
 
         return user, agent
 

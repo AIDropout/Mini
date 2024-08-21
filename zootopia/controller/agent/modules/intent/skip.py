@@ -2,41 +2,33 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from zootopia.core.schema.intent import IntentType
 import json
-from zootopia.controller.agent.modules.intent.intent import (
+from zootopia.controller.agent.modules.intent.intent_processor import (
     IntentInput,
     IntentOutput,
     IntentResult,
     Confidence,
     IntentProcessor,
-    IntentFactory,
 )
 from zootopia.core.exceptions import LLMResponseParsingError
 from zootopia.core.logger import logger
-from zootopia.utils.utils import EnhancedJSONEncoder
+# from zootopia.utils.utils import EnhancedJSONEncoder
 
 
 @dataclass
 class SkipIntentInput(IntentInput):
     agent_prompt: str
     messages: List[Dict[str, str]]
-    message: str
-
-    def __repr__(self) -> str:
-        return f"SkipIntentInput(recent_messages_count={len(self.messages)})"
 
 
 @dataclass
 class SkipIntentOutput(IntentOutput):
-    confidence: Confidence
-    reason: str
+    # Inherits confidence and reason from IntentOutput
+    pass
 
 
 @dataclass
 class SkipIntentResult(IntentResult):
-    analyzed_message: str
-    approved: bool
     confidence: Confidence
-    reason: str
 
     @property
     def message(self) -> str:
@@ -46,8 +38,7 @@ class SkipIntentResult(IntentResult):
         return f"SkipIntentResult(approved={self.approved}, reason='{self.reason[:50]}...')"
 
 
-@IntentFactory.register(IntentType.SKIP)
-class SkipIntent(IntentProcessor[SkipIntentInput, SkipIntentOutput, SkipIntentResult]):
+class SkipIntent():
     TEMPLATE: str = """
     Your task is to analyze the given conversation and determine if there's a need for a response.
 
@@ -82,7 +73,7 @@ class SkipIntent(IntentProcessor[SkipIntentInput, SkipIntentOutput, SkipIntentRe
         output_format = json.dumps(
             SkipIntentOutput(confidence=Confidence.HIGH, reason="").__dict__,
             indent=2,
-            cls=EnhancedJSONEncoder,
+            # cls=EnhancedJSONEncoder,
         )
 
         system_prompt = self.TEMPLATE.format(

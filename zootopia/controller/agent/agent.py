@@ -1,35 +1,16 @@
-from zootopia.core.schema.tables import (
-    Room,
-    Message,
-    Schedule,
-    Agent,
-    User,
-    Tables,
-)
-from zootopia.core.schema.task import TaskType
-from zootopia.core.schema.intent import IntentType
-from zootopia.controller.task.task_types import RespondTask, RemindTask, ReviveTask
-from zootopia.manager.database import DatabaseManager
-from zootopia.manager.messaging import MessagingManager
-from zootopia.controller.agent.modules.intent import (
-    FilterIntentInput,
-    FilterIntentResult,
-    SkipIntentInput,
-    SkipIntentResult,
-    Confidence,
-    IntentConfig,
-    IntentConfigManager,
-    IntentFactory,
-    ScheduleIntentInput,
-    ScheduleIntentResult,
-)
+from typing import Union
+from zootopia.service.base import Service
+# from zootopia.controller.agent.modules.intent.intent import IntentModule
 from zootopia.controller.agent.modules.action import ActionModule
 from zootopia.controller.agent.modules.subscribe import SubscribeModule
 from zootopia.controller.agent.modules.memory import MemoryModule
+from zootopia.manager.database import DatabaseManager
+from zootopia.manager.messaging import MessagingManager
 from zootopia.core.event_logger import event_logger as el
+from zootopia.controller.task.task_types import RespondTask, RemindTask, ReviveTask
+from zootopia.core.schema.task import TaskType
+from zootopia.core.schema.tables import Room, Message, Schedule, Agent, User, Tables
 from zootopia.utils.time_utils import get_current_time_readable
-from typing import Dict, Union, Optional
-from zootopia.service.base import Service
 
 
 class AgentService(Service):
@@ -39,7 +20,7 @@ class AgentService(Service):
         action_module: ActionModule,
         memory_module: MemoryModule,
         subscribe_module: SubscribeModule,
-        intent_configs: Dict[str, IntentConfig] = None,
+        # intent_module: IntentModule,
     ) -> None:
         super().__init__(database_manager)
         self.agent: Agent = None
@@ -48,20 +29,7 @@ class AgentService(Service):
         self.action = action_module
         self.memory = memory_module
         self.subscribe = subscribe_module
-        # TODO: properly inject intent configs
-        default_configs = {
-            IntentType.FILTER: IntentConfig(
-                message_count=5, confidence_threshold=Confidence.HIGH, enabled=True
-            ),
-            IntentType.SCHEDULE: IntentConfig(
-                message_count=3, confidence_threshold=Confidence.MEDIUM, enabled=False
-            ),
-            IntentType.SKIP: IntentConfig(
-                message_count=3, confidence_threshold=Confidence.HIGH, enabled=True
-            ),
-        }
-        self.intent_config = IntentConfigManager(intent_configs or default_configs)
-        self.intent_factory = IntentFactory()
+        # self.intent = intent_module
 
     def configure(
         self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room
@@ -74,6 +42,7 @@ class AgentService(Service):
         self.memory.configure(room, agent, user)
         self.action.configure(room, agent, user)
         self.subscribe.configure(room, agent, user)
+        # self.intent.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
     async def handle_chat_task(
@@ -107,44 +76,7 @@ class AgentService(Service):
                 if not result.continue_conversation:
                     return True
 
-                # Process schedule intent
-                if self.intent_config.is_enabled(IntentType.SCHEDULE):
-                    schedule_intent = self.intent_factory.create(IntentType.SCHEDULE)
-                    if schedule_intent:
-
-                        existing_tasks = self.database_manager.get_multiple_rows(
-                            table_name=Tables.SCHEDULE,
-                            conditions={Tables.SCHEDULE__room_id: self.room.id},
-                            order_by=Tables.SCHEDULE__run_at,
-                            order_details=False,
-                        )
-
-                        el.log(
-                            f"Here are the existing scheduled tasks for room {self.room.id}: {existing_tasks}",
-                        )
-
-                        schedule_result: ScheduleIntentResult = schedule_intent.process(
-                            input=ScheduleIntentInput(
-                                message=user_message, existing_tasks=existing_tasks
-                            ),
-                            confidence_threshold=self.intent_config.get_confidence_threshold(
-                                IntentType.SCHEDULE
-                            ),
-                        )
-
-                        if schedule_result.approved:
-                            inserted_task = self.database_manager.insert(
-                                table_name=Tables.SCHEDULE,
-                                item=Schedule(
-                                    room_id=self.room.id,
-                                    run_at=schedule_result.run_at,
-                                    type=TaskType.REMIND,
-                                    task=schedule_result.task,
-                                    complete=False,
-                                ),
-                            )
-
-                            el.log(f"Scheduled a task: {inserted_task}")
+                # inserted_task = self.intent.process_schedule_intent()
 
             all_recent_messages = self.memory.get_recent_messages(
                 count=task.recent_message_count
@@ -178,43 +110,8 @@ class AgentService(Service):
 
             el.log(f"MAIN LLM RESPONSE: {response_text}")
 
-            # Use Filter intent to ensure quality of agent response
-            filter_result = None
-            if not self.intent_config.is_enabled(IntentType.FILTER):
-                filter_result = FilterIntentResult(
-                    from_user=False,
-                    analyzed_message=response_text,
-                    approved=True,
-                    confidence=Confidence.HIGH,
-                    proposed_message="",
-                )
-            else:
-                filter_intent = self.intent_factory.create(IntentType.FILTER)
-                if filter_intent:
-                    filter_messages = self.intent_config.get_past_messages(
-                        IntentType.FILTER, all_recent_messages
-                    )
-                    filter_result: FilterIntentResult = filter_intent.process(
-                        input=FilterIntentInput(
-                            from_user=False,
-                            agent_prompt=self.agent.prompt,
-                            messages=filter_messages,
-                            message=response_text,
-                        ),
-                        confidence_threshold=self.intent_config.get_confidence_threshold(
-                            IntentType.FILTER
-                        ),
-                    )
-
-            el.log(f"{filter_result.message}")
-
-            # If approved by filter or if there's a high-confidence proposed message, send and store
-            if filter_result.approved:
-                final_message = response_text
-            elif filter_result.proposed_message:
-                final_message = filter_result.proposed_message
-            else:
-                return False
+            # final_message = self.intent.process_filter_intent(response_text)
+            final_message = response_text  # TEMP
 
             success = await self.action.handle_message_send(final_message)
             el.log(f"BIRD SMS SENT: {success}")

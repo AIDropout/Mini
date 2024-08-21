@@ -34,7 +34,7 @@ async def configure_local_webhooks() -> None:
     ngrok_connection = ngrok.connect(addr=f"{LOCAL_URL}:{PORT}", proto="http")
     logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
 
-    webhook = f"{ngrok_connection.public_url}/room/respond"
+    webhook = f"{ngrok_connection.public_url}/rooms/respond"
     _telegram = TelegramManager()
     _bird = BirdManager()
 

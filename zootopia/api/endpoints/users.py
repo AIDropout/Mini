@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Request, Depends, Security, Path, Body
 from pydantic import BaseModel
-from config.container import container
 from zootopia.api.security import verify_api_key
 from zootopia.core.schema.tables import User
 from config.container import container
 from zootopia.service.user_service import UserService
+from config.config import config
 
 
 router = APIRouter()
@@ -57,8 +57,8 @@ async def test_user_endpoints():
     async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
         # Test create_user
         user_data = {
-            "id": "550e8400-e29b-41d4-a716-446655440000",
-            "phone_number": "+13142952259",
+            "id": "946f4f9d-1111-495e-b59d-5f3704deb11b",
+            "phone_number": "+13143209682",
         }
 
         response = await client.post(

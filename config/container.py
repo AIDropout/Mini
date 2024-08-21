@@ -82,6 +82,14 @@ class Container:
         from zootopia.controller.agent.modules.subscribe import SubscribeModule
         from zootopia.controller.agent.modules.action import ActionModule
         from zootopia.controller.agent.modules.memory import MemoryModule
+        from zootopia.controller.agent.modules.intent import (
+            # IntentModule,
+            IntentConfigManager,
+            INTENT_CONFIGS,
+            # FilterIntent,
+            # SkipIntent,
+            # ScheduleIntent,
+        )
 
         action_module = ActionModule(
             llm_manager=LLMManager(llm_name=config.ACTION_MANAGER_LLM)
@@ -93,11 +101,19 @@ class Container:
             memory_module=memory_module,
         )
 
+        # intent_module = IntentModule(
+        #     database_manager=self.database_manager,
+        #     filter_intent=FilterIntent(INTENT_CONFIGS.type),
+        #     skip_intent=SkipIntent(),
+        #     schedule_intent=ScheduleIntent(),
+        # )
+
         return AgentService(
             database_manager=self.database_manager,
             action_module=action_module,
             memory_module=memory_module,
             subscribe_module=subscribe_module,
+            # intent_module=intent_module,
         )
 
     def get_reply_service(self):

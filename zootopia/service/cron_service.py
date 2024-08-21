@@ -62,14 +62,16 @@ class CronService(Service):
         if not room.subscribe_msg_sent:
             return True
 
-        user = self.database_manager.get_row(
-            Tables.USERS,
+        # TODO: add current date
+        subscription = self.database_manager.get_row(
+            Tables.SUBSCRIPTIONS,
             {
-                Tables.USERS__id: user_id,
+                Tables.SUBSCRIPTIONS__user_id: user_id,
+                Tables.SUBSCRIPTIONS__status: SubscriptionStatus.ACTIVE
             },
         )
 
-        return user.subscription_status == SubscriptionStatus.ACTIVE
+        return subscription is not None
 
     def _should_send_proactive_message(
         self,

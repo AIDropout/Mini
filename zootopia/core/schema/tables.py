@@ -50,6 +50,11 @@ class Tables(str, Enum):
     MESSAGES__sent_by_admin = "sent_by_admin"
     MESSAGES__log = "log"
 
+    SUBSCRIPTIONS = "subscriptions"
+    SUBSCRIPTIONS__id = "id"
+    SUBSCRIPTIONS__user_id = "user_id"
+    SUBSCRIPTIONS__status = "status"
+
     SCHEDULE = "schedule"
     SCHEDULE__id = "id"
     SCHEDULE__room_id = "room_id"
@@ -97,8 +102,6 @@ class User(BaseModel):
     birthday: Optional[str] = Field(default=None)
     telegram_uid: Optional[str] = Field(default=None)
     customer_id: Optional[str] = Field(default=None)
-    subscription_id: Optional[str] = Field(default=None)
-    subscription_status: Optional[str] = Field(default=None)
 
 
 class Room(BaseModel):
@@ -141,6 +144,12 @@ class Message(BaseModel):
         return value
 
 
+class Subscription(BaseModel):
+    id: str
+    user_id: str
+    status: str
+
+
 class Schedule(BaseModel):
     id: str = Field(default_factory=generate_uuid)
     room_id: str
@@ -158,6 +167,7 @@ TableModel = Union[
     Room,
     Message,
     Schedule,
+    Subscription
 ]
 TABLE_MODEL_MAP = {
     Tables.USERS: User,
@@ -165,4 +175,5 @@ TABLE_MODEL_MAP = {
     Tables.ROOMS: Room,
     Tables.MESSAGES: Message,
     Tables.SCHEDULE: Schedule,
+    Tables.SUBSCRIPTIONS: Subscription
 }

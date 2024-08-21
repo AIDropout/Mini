@@ -1,18 +1,17 @@
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 import json
-from zootopia.controller.agent.modules.intent.intent import (
+from zootopia.controller.agent.modules.intent.intent_processor import (
     IntentInput,
     IntentOutput,
     IntentResult,
     Confidence,
     IntentProcessor,
-    IntentFactory,
 )
 from datetime import datetime
 from zootopia.core.schema.intent import IntentType
 from zootopia.core.schema.tables import Schedule
-from zootopia.utils.utils import EnhancedJSONEncoder
+# from zootopia.utils.utils import EnhancedJSONEncoder
 from zootopia.utils.time_utils import get_current_time_cst_iso8601
 
 
@@ -55,9 +54,7 @@ class ScheduleIntentResult(IntentResult):
         )
 
 
-@IntentFactory.register(IntentType.SCHEDULE)
 class ScheduleIntent(
-    IntentProcessor[ScheduleIntentInput, ScheduleIntentOutput, ScheduleIntentResult]
 ):
     TEMPLATE: str = """
     You are texting someone who just sent the following text:
@@ -96,7 +93,7 @@ class ScheduleIntent(
         output_format = json.dumps(
             ScheduleIntentOutput(confidence=Confidence.HIGH).__dict__,
             indent=2,
-            cls=EnhancedJSONEncoder,
+            # cls=EnhancedJSONEncoder,
         )
 
         system_prompt = self.TEMPLATE.format(

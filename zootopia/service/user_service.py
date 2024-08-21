@@ -1,4 +1,3 @@
-# services/room_service.py
 from fastapi import HTTPException
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.payment.customer import CustomerManager

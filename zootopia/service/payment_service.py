@@ -5,7 +5,7 @@ from zootopia.manager.payment import (
     SubscriptionManager,
 )
 from zootopia.manager.database import DatabaseManager
-from zootopia.core.schema.tables import Tables, User
+from zootopia.core.schema.tables import Tables, User, Subscription
 from config.config import config
 import stripe
 from datetime import datetime
@@ -94,15 +94,24 @@ class PaymentService(Service):
                 subscription_id
             )
 
-            updated_customer = self.database_manager.update(
+            self.database_manager.update(
                 table_name=Tables.USERS,
                 item=User(
                     stripe_customer_id=subscription.customer,
-                    subscription_status=subscription.status,
-                    subscription_id=subscription.id,
                 ),
                 condition_key=Tables.USERS__id,
                 condition_value=user_id,
+            )
+
+            # Check if subscription already exists
+
+            self.database_manager.insert(
+                table_name=Tables.SUBSCRIPTIONS,
+                item=Subscription(
+                    id=subscription.id,
+                    user_id=user_id,
+                    status=subscription.status,
+                ),
             )
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")

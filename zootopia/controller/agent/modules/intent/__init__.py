@@ -1,25 +1,30 @@
-from .intent import (
+from .intent_processor import (
     IntentInput,
     IntentOutput,
     IntentResult,
     Confidence,
-    IntentConfig,
-    IntentConfigManager,
-    IntentFactory,
     IntentProcessor,
 )
+from .intent_config import IntentConfigManager, INTENT_CONFIGS, IntentConfig
 from .schedule import (
     ScheduleIntent,
     ScheduleIntentInput,
     ScheduleIntentOutput,
     ScheduleIntentResult,
 )
-from .filter import FilterIntentInput, FilterIntentOutput, FilterIntentResult
+from .filter import (
+    FilterIntent,
+    FilterIntentInput,
+    FilterIntentOutput,
+    FilterIntentResult,
+)
 from .skip import SkipIntent, SkipIntentInput, SkipIntentOutput, SkipIntentResult
+# from .intent import IntentModule
 
 __all__ = [
-    "Confidence",
     "IntentConfig",
+    "Confidence",
+    "INTENT_CONFIGS",
     "IntentConfigManager",
     "IntentFactory",
     "IntentProcessor",
@@ -42,4 +47,5 @@ __all__ = [
     "SkipIntentInput",
     "SkipIntentOutput",
     "SkipIntentResult",
+    # "IntentModule",
 ]
