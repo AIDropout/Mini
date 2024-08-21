@@ -1,43 +1,69 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
-from typing import List
-from dotenv import load_dotenv
+import yaml
+from pydantic_settings import BaseSettings
 
-load_dotenv()
+
+# Load YAML configuration
+def load_yaml_config(file_path: str):
+    with open(file_path, "r") as file:
+        return yaml.safe_load(file)
+
+
+yaml_config = load_yaml_config("config.yaml")
+
+
+class MemoryQdrantConfig(BaseSettings):
+    url: str
+    api_key: str
+    collection_name: str
+    embedding_model_dims: int
+
+
+class MemoryLiteLLMConfig(BaseSettings):
+    model: str
+    temperature: float
+    max_tokens: int
 
 
 class Config(BaseSettings):
-    ZOOTOPIA_API_KEY: str = Field(..., env="ZOOTOPIA_API_KEY")
-    SUPABASE_URL: str = Field(..., env="SUPABASE_URL")
-    SUPABASE_KEY: str = Field(..., env="SUPABASE_KEY")
-    TELEGRAM_BOT_TOKEN: str = Field(..., env="TELEGRAM_BOT_TOKEN")
-    BIRD_API_URL: str = Field("https://api.bird.com")
-    BIRD_ORGANIZATION_ID: str = Field(..., env="BIRD_ORGANIZATION_ID")
-    BIRD_WORKSPACE_ID: str = Field(..., env="BIRD_WORKSPACE_ID")
-    BIRD_API_KEY: str = Field(..., env="BIRD_API_KEY")
-    BIRD_SIGNING_KEY: str = Field(..., env="BIRD_SIGNING_KEY")
-    REDIS_URL: str = Field(..., env="REDIS_URL")
-    FILTER_LLM: str = Field("groq/llama-3.1-70b-versatile", env="FILTER_LLM")
-    SKIP_LLM: str = Field("groq/llama-3.1-70b-versatile", env="SKIP_LLM")
-    ACTION_MANAGER_LLM: str = Field(
-        "claude-3-5-sonnet-20240620", env="ACTION_MANAGER_LLM"
-    )
-    INTENT_MANAGER_LLM: str = Field(
-        "claude-3-5-sonnet-20240620", env="INTENT_MANAGER_LLM"
-    )
-    MEMORY_MANAGER_LLM: str = Field(
-        "claude-3-5-sonnet-20240620", env="MEMORY_MANAGER_LLM"
-    )
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
-    )
+    ENVIRONMENT: str
+    ZOOTOPIA_API_KEY: str
+    OPENAI_API_KEY: str
+    ANTHROPIC_API_KEY: str
+    GROQ_API_KEY: str
+    TELEGRAM_BOT_TOKEN: str
+    BIRD_API_URL: str = "https://api.bird.com"
+    BIRD_API_KEY: str
+    BIRD_ORGANIZATION_ID: str
+    BIRD_WORKSPACE_ID: str
+    BIRD_DEV_CHANNEL_ID: str
+    BIRD_SIGNING_KEY: str
+    SUPABASE_URL: str
+    SUPABASE_KEY: str
+    GOOGLE_API_KEY: str
+    GEMINI_API_KEY: str
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    REDIS_URL: str
+    FLOWER_UNAUTHENTICATED_API: bool
+    FILTER_LLM: str
+    SKIP_LLM: str
+    ACTION_MANAGER_LLM: str
+    INTENT_MANAGER_LLM: str
+    MEMORY_MANAGER_LLM: str
+    STRIPE_SECRET_KEY_TEST: str
+    STRIPE_WEBHOOK_SECRET: str
+    STRIPE_PRODUCT_PRICE_ID: str
+    PHONE_OTP_CHANNEL_ID: str
+    FRONTEND_URL: str
+    MEMORY_VECTOR_STORE_PROVIDER: str
+    MEMORY_QDRANT_CONFIG: MemoryQdrantConfig
+    MEMORY_LLM_PROVIDER: str
+    MEMORY_LITELLM_CONFIG: MemoryLiteLLMConfig
 
-    STRIPE_SECRET_KEY_TEST: str = Field(..., env="STRIPE_SECRET_KEY_TEST")
-    STRIPE_WEBHOOK_SECRET: str = Field(..., env="STRIPE_WEBHOOK_SECRET")
-
-    STRIPE_PRODUCT_PRICE_ID: str = Field(..., env="STRIPE_PRODUCT_LOOKUP_KEY")
-    PHONE_OTP_CHANNEL_ID: str = Field(..., env="PHONE_OTP_CHANNEL_ID")
-    FRONTEND_URL: str = Field(..., env="FRONTEND_URL")
+    @classmethod
+    def from_yaml(cls, yaml_data: dict):
+        return cls(**yaml_data)
 
 
-config = Config()
+# Create config instance from YAML
+config = Config.from_yaml(yaml_config)

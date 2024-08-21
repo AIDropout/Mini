@@ -1,11 +1,13 @@
-from typing import List, Dict, Optional, Union
+import json
+import re
+from typing import Dict, List, Optional, Union
+
 import litellm
 from litellm import get_supported_openai_params
-from zootopia.core.logger import logger
+
 from zootopia.core.error import error_handler
-from zootopia.core.exceptions import ServiceError, MessageParsingError
-import re
-import json
+from zootopia.core.exceptions import MessageParsingError
+from zootopia.core.logger import logger
 
 
 class LLMManager:
@@ -113,9 +115,9 @@ class LLMManager:
 
         try:
             json_data = json.loads(cleaned_output)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as jde:
             raise MessageParsingError(
                 f"Invalid JSON output from LLM. Instead got {llm_output}"
-            )
+            ) from jde
 
         return json_data

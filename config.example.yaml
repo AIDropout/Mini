@@ -1,0 +1,53 @@
+ENVIRONMENT: local
+
+ZOOTOPIA_API_KEY: key
+
+OPENAI_API_KEY: key
+ANTHROPIC_API_KEY: key
+GROQ_API_KEY: key
+
+TELEGRAM_BOT_TOKEN: key
+
+BIRD_API_URL: https://api.bird.com
+BIRD_API_KEY: key
+BIRD_ORGANIZATION_ID: key
+BIRD_WORKSPACE_ID: key
+BIRD_DEV_CHANNEL_ID: key
+BIRD_SIGNING_KEY: key
+
+SUPABASE_URL: url
+SUPABASE_KEY: key
+
+GOOGLE_API_KEY: key
+GOOGLE_CLIENT_ID: key
+GOOGLE_CLIENT_SECRET: key
+GEMINI_API_KEY: key
+
+REDIS_URL: url
+FLOWER_UNAUTHENTICATED_API: bool
+
+FILTER_LLM: "groq/llama-3.1-70b-versatile"
+SKIP_LLM: "groq/llama-3.1-70b-versatile"
+ACTION_MANAGER_LLM: "claude-3-5-sonnet-20240620"
+INTENT_MANAGER_LLM: "claude-3-5-sonnet-20240620"
+MEMORY_MANAGER_LLM: "claude-3-5-sonnet-20240620"
+
+STRIPE_SECRET_KEY_TEST: key
+STRIPE_WEBHOOK_SECRET: key
+STRIPE_PRODUCT_PRICE_ID: key
+
+PHONE_OTP_CHANNEL_ID: key
+FRONTEND_URL: http://localhost:3000/
+
+MEMORY_VECTOR_STORE_PROVIDER: qdrant
+MEMORY_QDRANT_CONFIG:
+  url: url
+  api_key: key
+  collection_name: test
+  embedding_model_dims: 768
+
+MEMORY_LLM_PROVIDER: litellm
+MEMORY_LITELLM_CONFIG:
+  model: gemini/gemini-pro
+  temperature: 0.2
+  max_tokens: 1000
