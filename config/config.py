@@ -2,15 +2,6 @@ import yaml
 from pydantic_settings import BaseSettings
 
 
-# Load YAML configuration
-def load_yaml_config(file_path: str):
-    with open(file_path, "r") as file:
-        return yaml.safe_load(file)
-
-
-yaml_config = load_yaml_config("config.yaml")
-
-
 class MemoryQdrantConfig(BaseSettings):
     url: str
     api_key: str
@@ -61,9 +52,11 @@ class Config(BaseSettings):
     MEMORY_LITELLM_CONFIG: MemoryLiteLLMConfig
 
     @classmethod
-    def from_yaml(cls, yaml_data: dict):
+    def from_yaml(cls, file_path: str):
+        with open(file_path, "r") as file:
+            yaml_data = yaml.safe_load(file)
         return cls(**yaml_data)
 
 
 # Create config instance from YAML
-config = Config.from_yaml(yaml_config)
+config = Config.from_yaml("config.yaml")
