@@ -1,6 +1,6 @@
 from typing import Union
 from zootopia.service.base import Service
-# from zootopia.controller.agent.modules.intent.intent import IntentModule
+from zootopia.controller.agent.modules.intent.filter import FilterModule
 from zootopia.controller.agent.modules.action import ActionModule
 from zootopia.controller.agent.modules.subscribe import SubscribeModule
 from zootopia.controller.agent.modules.memory import MemoryModule
@@ -20,7 +20,7 @@ class AgentService(Service):
         action_module: ActionModule,
         memory_module: MemoryModule,
         subscribe_module: SubscribeModule,
-        # intent_module: IntentModule,
+        filter_module: FilterModule,
     ) -> None:
         super().__init__(database_manager)
         self.agent: Agent = None
@@ -29,7 +29,7 @@ class AgentService(Service):
         self.action = action_module
         self.memory = memory_module
         self.subscribe = subscribe_module
-        # self.intent = intent_module
+        self.filter = filter_module
 
     def configure(
         self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room
@@ -42,7 +42,7 @@ class AgentService(Service):
         self.memory.configure(room, agent, user)
         self.action.configure(room, agent, user)
         self.subscribe.configure(room, agent, user)
-        # self.intent.configure(room, agent, user)
+        self.filter.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
     async def handle_chat_task(
@@ -61,7 +61,6 @@ class AgentService(Service):
 
                 el.log(f"RESPONDING TO: '{user_message}' in Room {task.room_id}")
 
-                # Handle subscribe
                 result = await self.subscribe.should_continue_conversation()
                 el.log(
                     f"""ROOM SUBSCRIPTION STATUS:
@@ -76,13 +75,10 @@ class AgentService(Service):
                 if not result.continue_conversation:
                     return True
 
-                # inserted_task = self.intent.process_schedule_intent()
-
             all_recent_messages = self.memory.get_recent_messages(
                 count=task.recent_message_count
             )
 
-            # Create the prompt for the agent message
             system_prompt_template = """
             {agent_prompt}
 
@@ -103,15 +99,15 @@ class AgentService(Service):
             el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
             el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
-            # Generate agent message
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
             )
 
             el.log(f"MAIN LLM RESPONSE: {response_text}")
 
-            # final_message = self.intent.process_filter_intent(response_text)
-            final_message = response_text  # TEMP
+            final_message = self.filter.process_message(
+                all_recent_messages, response_text
+            )
 
             success = await self.action.handle_message_send(final_message)
             el.log(f"BIRD SMS SENT: {success}")

@@ -1,14 +1,13 @@
-# container.py
+from config.config import config
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManagerFactory
 from zootopia.manager.llm import LLMManager
+from zootopia.service.context_factory import ContextFactory
 from zootopia.manager.payment import (
     CheckoutManager,
     CustomerManager,
     SubscriptionManager,
 )
-from zootopia.service.context_factory import ContextFactory
-from config.config import config
 
 
 class Container:
@@ -82,13 +81,10 @@ class Container:
         from zootopia.controller.agent.modules.subscribe import SubscribeModule
         from zootopia.controller.agent.modules.action import ActionModule
         from zootopia.controller.agent.modules.memory import MemoryModule
-        from zootopia.controller.agent.modules.intent import (
-            # IntentModule,
-            IntentConfigManager,
-            INTENT_CONFIGS,
-            # FilterIntent,
-            # SkipIntent,
-            # ScheduleIntent,
+        from zootopia.controller.agent.modules.intent.filter import FilterModule
+        from zootopia.controller.agent.modules.intent.intent import (
+            IntentConfig,
+            Confidence,
         )
 
         action_module = ActionModule(
@@ -101,19 +97,23 @@ class Container:
             memory_module=memory_module,
         )
 
-        # intent_module = IntentModule(
-        #     database_manager=self.database_manager,
-        #     filter_intent=FilterIntent(INTENT_CONFIGS.type),
-        #     skip_intent=SkipIntent(),
-        #     schedule_intent=ScheduleIntent(),
-        # )
+        filter_module = FilterModule.from_config(
+            IntentConfig(
+                message_input_count=5,
+                confidence_threshold=Confidence.HIGH,
+                enabled=True,
+            ),
+            llm_manager=LLMManager(
+                llm_name=config.ACTION_MANAGER_LLM  # Configure a Filter LLM
+            ),
+        )
 
         return AgentService(
             database_manager=self.database_manager,
             action_module=action_module,
             memory_module=memory_module,
             subscribe_module=subscribe_module,
-            # intent_module=intent_module,
+            filter_module=filter_module,
         )
 
     def get_reply_service(self):
@@ -127,5 +127,4 @@ class Container:
         )
 
 
-# Create a global instance of the container
-container = Container()
+container = Container()  # Global instance of the container

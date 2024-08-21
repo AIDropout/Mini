@@ -1,57 +1,20 @@
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass
+from typing import List, Dict, Any, Optional, Union
 import json
-from zootopia.controller.agent.modules.intent.intent_processor import (
-    IntentInput,
-    IntentOutput,
-    IntentResult,
-    Confidence,
-    IntentProcessor,
-)
-# from zootopia.utils.utils import EnhancedJSONEncoder
+from zootopia.core.event_logger import event_logger as el
 from zootopia.core.logger import logger
-from zootopia.core.schema.intent import IntentType
 from zootopia.core.exceptions import LLMResponseParsingError
+from zootopia.controller.agent.modules.intent.intent import (
+    IntentConfig,
+    IntentDetector,
+    Confidence,
+)
+from zootopia.manager.llm import LLMManager
+
+# TODO: use this to slice the messages
+# messages[-config.message_count :]
 
 
-@dataclass
-class FilterIntentInput(IntentInput):
-    from_user: bool
-    agent_prompt: str
-    messages: List[Dict[str, str]]
-    message: str
-
-    def __repr__(self) -> str:
-        return f"FilterInput(from_user={self.from_user}, new_message='{self.message[:20]}...')"
-
-
-@dataclass
-class FilterIntentOutput(IntentOutput):
-    confidence: Confidence
-    proposed_message: str = ""
-
-
-@dataclass
-class FilterIntentResult(IntentResult):
-    from_user: bool
-    analyzed_message: str
-    approved: bool
-    confidence: Confidence
-    proposed_message: str = ""
-
-    @property
-    def message(self) -> str:
-        if self.approved:
-            return f"🟢 FILTER RESULT: Approved (Confidence: {self.confidence})"
-        else:
-            return f"🔴 FILTER RESULT: Rejected [{self.analyzed_message}] (Confidence: {self.confidence}). 🟢 NEW PROPOSED MESSAGE: {self.proposed_message}"
-
-    def __repr__(self) -> str:
-        return f"FilterResult(from_user={self.from_user}, approved={self.approved}, confidence={self.confidence})"
-
-
-class FilterIntent(
-):
+class FilterModule(IntentDetector):
     TEMPLATE: str = """
     You are quality check for the fidelity of the following real person:
     {agent_prompt}
@@ -76,50 +39,76 @@ class FilterIntent(
     {output_format}
 
     Provide a proposed message if low or medium confidence about message.
-
     """
 
-    def process(
+    def __init__(
         self,
-        input: FilterIntentInput,
-        confidence_threshold: Optional[Confidence] = None,
-    ) -> FilterIntentResult:
+        enabled: bool,
+        message_input_count: int,
+        confidence_threshold: Confidence,
+        llm_manager: LLMManager,
+    ):
+        super().__init__(
+            enabled=enabled,
+            llm_manager=llm_manager,
+            message_input_count=message_input_count,
+            confidence_threshold=confidence_threshold,
+        )
+
+    @classmethod
+    def from_config(cls, config: IntentConfig, llm_manager: LLMManager):
+        enabled = config.enabled
+        message_input_count = config.message_input_count
+        confidence_threshold = config.confidence_threshold
+
+        return cls(enabled, message_input_count, confidence_threshold, llm_manager)
+
+    def process_message(
+        self, all_recent_messages: List[Dict[str, str]], input_text: str
+    ) -> str:
+        """
+        - Quality checks agent response
+        - If it doesn't pass, returns a new revised message to send
+        - Returns same message if this module is disabled via config
+        """
+
+        if not self.enabled:
+            return input_text
+
+        """Filters the new agent message"""
+
         output_format = json.dumps(
-            FilterIntentOutput(confidence="HIGH", proposed_message="").__dict__,
-            indent=2,
-            # cls=EnhancedJSONEncoder,
+            {"confidence": "HIGH", "proposed_message": ""}, indent=2
         )
 
         system_prompt = self.TEMPLATE.format(
-            agent_prompt=input.agent_prompt,
-            new_message=input.message,
-            messages=input.messages,
+            agent_prompt=self.agent.prompt,
+            new_message=input_text,
+            messages=all_recent_messages,
             output_format=output_format,
         )
 
-        response = self._generate_llm_response(system_prompt, "Verify the message.")
-        result = self._parse_response(response, input.message, confidence_threshold)
-
-        return result
-
-    def _parse_response(
-        self,
-        response: Dict[str, Any],
-        analyzed_message: str,
-        confidence_threshold: Optional[Confidence],
-    ) -> FilterIntentResult:
+        response = self.llm_manager.generate_response(
+            messages=[{"role": "user", "content": input_text}],
+            system_prompt=system_prompt,
+            json_mode=True,
+        )
         try:
-            output = FilterIntentOutput(**response)
-            confidence = Confidence[output.confidence.upper()]
-            approved = confidence >= (confidence_threshold or Confidence.LOW)
+            confidence = response["confidence"].upper()
+            proposed_message = response["proposed_message"]
+            approved = confidence >= (self.confidence_threshold or "LOW")
 
-            return FilterIntentResult(
-                from_user=False,
-                analyzed_message=analyzed_message,
-                approved=approved,
-                confidence=confidence,
-                proposed_message=output.proposed_message,
-            )
+            if approved:
+                el.log(f"🟢 FILTER RESULT: Approved (Confidence: {confidence})")
+                return input_text
+            else:
+                el.log(
+                    f"🔴 FILTER RESULT: Rejected [{input_text}] (Confidence: {confidence}). 🟢 NEW PROPOSED MESSAGE: {proposed_message}"
+                )
+                return proposed_message
+
         except (KeyError, ValueError) as e:
             logger.error(f"Error parsing filter intent response: {str(e)}")
             raise LLMResponseParsingError()
+
+        # TODO: add retry configuration
