@@ -101,8 +101,3 @@ uv pip freeze > requirements.txt
 ## Contributors
 
 [![Contributors](https://contrib.rocks/image?repo=AIDropout/ZOOTOPIA)](https://github.com/AIDropout/ZOOTOPIA/graphs/contributors)
-
-## License
-
-[MIT License](LICENSE.md).
-

@@ -123,16 +123,14 @@ class PaymentService(Service):
         """Handles the customer.subscription.deleted event."""
         logger.debug(f"Handling customer.subscription.deleted event")
         try:
-            user_id = subscription.metadata.get("user_id", None)
-            updated_customer = self.database_manager.update(
-                table_name=Tables.USERS,
-                item=User(
-                    stripe_customer_id=subscription.customer,
+            # user_id = subscription.metadata.get("user_id", None)
+            updated_subscription = self.database_manager.update(
+                table_name=Tables.SUBSCRIPTIONS,
+                item=Subscription(
                     subscription_status=subscription.status,
-                    subscription_id=subscription.id,
                 ),
-                condition_key=Tables.USERS__id,
-                condition_value=user_id,
+                condition_key=Tables.SUBSCRIPTIONS__id,
+                condition_value=subscription.id,
             )
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")

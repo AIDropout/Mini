@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from zootopia.core.schema.tables import (
     Agent,
     Room,
@@ -7,7 +7,7 @@ from zootopia.core.schema.tables import (
 )
 from zootopia.core.schema.message import ZootopiaMessage, MessageProvider
 from fastapi import HTTPException
-
+import uuid
 from zootopia.manager.database import DatabaseManager
 from dataclasses import dataclass, field
 from zootopia.manager.messaging.factory import MessagingManagerFactory
@@ -23,9 +23,10 @@ class Context:
 
 
 class ContextFactory(Service):
-    def __init__(self, database_manager: DatabaseManager):
+    def __init__(self, database_manager: DatabaseManager, user_service: UserService):
         super().__init__(database_manager)
         self.messaging_manager_factory = MessagingManagerFactory()
+        self.user_service = user_service
 
     def create_cron_context(self, room_id) -> Context:
         room = self.database_manager.get_row(
@@ -49,6 +50,21 @@ class ContextFactory(Service):
     def create_message_context(self, message: ZootopiaMessage) -> Context:
 
         user, agent = self._get_user_and_agent_from_db(message)
+
+        if user is None:
+            print("____")
+            print(self.user_service)
+            user = self.user_service.create_user(
+                id=str(
+                    uuid.uuid4()
+                ),  # If user verifies later, this will be replaced with Supabase Auth uuid
+                phone_number=(
+                    message.metadata.phone_number
+                    if message.provider == MessageProvider.BIRD
+                    else None
+                ),
+            )
+
         room = self._get_or_create_room(user, agent)
 
         return Context(
@@ -57,7 +73,9 @@ class ContextFactory(Service):
             room=room,
         )
 
-    def _get_user_and_agent_from_db(self, message: ZootopiaMessage):
+    def _get_user_and_agent_from_db(
+        self, message: ZootopiaMessage
+    ) -> Tuple[Optional[User], Agent]:
         user = None
         agent = None
 
@@ -82,29 +100,10 @@ class ContextFactory(Service):
                 },
             )
 
-        if not user:
-            # user = self.user_service.create_user(message)
-            pass
-
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
 
         return user, agent
-
-    def _create_new_user(self, message: ZootopiaMessage) -> User:
-        new_user = User(
-            telegram_uid=(
-                message.metadata.uid
-                if message.provider == MessageProvider.TELEGRAM
-                else None
-            ),
-            phone_number=(
-                message.metadata.phone_number
-                if message.provider == MessageProvider.BIRD
-                else None
-            ),
-        )
-        return self.database_manager.insert(Tables.USERS, new_user)
 
     def _get_or_create_room(self, user: User, agent: Agent) -> Room:
         room = self.database_manager.get_row(

@@ -8,44 +8,67 @@ from zootopia.manager.payment import (
     CustomerManager,
     SubscriptionManager,
 )
+from typing import Optional
+from zootopia.service.user_service import UserService
 
 
 class Container:
     def __init__(self):
         self.database_manager = DatabaseManager()
-        self.messaging_manager_factory = MessagingManagerFactory()
+        self.messaging_manager_factory: Optional[MessagingManagerFactory] = None
         self.checkout_manager = CheckoutManager()
         self.customer_manager = CustomerManager.from_config(config)
         self.subscription_manager = SubscriptionManager()
-        self.context_factory = ContextFactory(database_manager=self.database_manager)
+        self.user_service: Optional[UserService] = None
+        self._context_factory: Optional[ContextFactory] = None
+
+    def get_messaging_manager_factory(self):
+        from zootopia.manager.messaging import MessagingManagerFactory
+
+        if self.messaging_manager_factory is None:
+            self.messaging_manager_factory = MessagingManagerFactory()
+
+        return self.messaging_manager_factory
 
     def get_user_service(self):
         from zootopia.service.user_service import UserService
 
-        return UserService(
-            database_manager=self.database_manager,
-            customer_manager=self.customer_manager,
-        )
+        if self.user_service is None:
+            self.user_service = UserService(
+                database_manager=self.database_manager,
+                customer_manager=self.customer_manager,
+            )
+        return self.user_service
+
+    def get_context_factory(self) -> ContextFactory:
+        if self._context_factory is None:
+            self._context_factory = ContextFactory(
+                database_manager=self.database_manager,
+                user_service=self.get_user_service(),
+            )
+        return self._context_factory
 
     def get_cron_service(self):
         from zootopia.service.cron_service import CronService
 
         return CronService(
             database_manager=self.database_manager,
-            messaging_manager=self.messaging_manager_factory.bird_manager,
+            messaging_manager=self.get_messaging_manager_factory().bird_manager,
         )
 
     def get_sms_otp_service(self):
         from zootopia.service.sms_otp_service import SMSOTPService
 
-        return SMSOTPService(bird_manager=self.messaging_manager_factory.bird_manager)
+        return SMSOTPService(
+            bird_manager=self.get_messaging_manager_factory().bird_manager
+        )
 
     def get_room_service(self):
         from zootopia.service.room_service import RoomService
 
         return RoomService(
             database_manager=self.database_manager,
-            messaging_manager=self.messaging_manager_factory.bird_manager,
+            messaging_manager=self.get_messaging_manager_factory().bird_manager,
             customer_manager=self.customer_manager,
             user_service=self.get_user_service(),
         )
@@ -65,8 +88,8 @@ class Container:
 
         return DashboardService(
             database_manager=self.database_manager,
-            messaging_manager_factory=self.messaging_manager_factory,
-            context_factory=self.context_factory,
+            messaging_manager_factory=self.get_messaging_manager_factory(),
+            context_factory=self.get_context_factory(),
         )
 
     def get_scheduler_service(self):
@@ -121,8 +144,8 @@ class Container:
 
         return ReplyService(
             database_manager=self.database_manager,
-            messaging_manager_factory=self.messaging_manager_factory,
-            context_factory=self.context_factory,
+            messaging_manager_factory=self.get_messaging_manager_factory(),
+            context_factory=self.get_context_factory(),
             scheduler_service=self.get_scheduler_service(),
         )
 

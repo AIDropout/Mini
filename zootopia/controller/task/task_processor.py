@@ -1,15 +1,11 @@
 from celery import shared_task
-from zootopia.service.context_factory import ContextFactory
-from zootopia.manager.messaging import MessagingManagerFactory
+from config.container import container
+from zootopia.server.cancel import cancel_existing_task
 from zootopia.core.schema.task import TaskType
-from zootopia.controller.agent.agent import AgentService
 from zootopia.controller.task.task_types import RemindTask, ReviveTask, RespondTask
 from zootopia.core.logger import get_logger
-import asyncio
 from datetime import datetime
-from zootopia.server.cancel import cancel_existing_task
-from config.container import container
-from zootopia.manager.database import DatabaseManager
+import asyncio
 
 logger = get_logger(__name__)
 
@@ -17,9 +13,9 @@ logger = get_logger(__name__)
 @shared_task(bind=True, max_retries=2)
 def process_task(self, data: dict):
     logger.info(f"🔴🔴🔴 running at {datetime.now()}")
-    messaging_manager_factory = MessagingManagerFactory()
+    messaging_manager_factory = container.get_messaging_manager_factory()
     messaging_manager = None
-    context_factory = ContextFactory(database_manager=DatabaseManager())
+    context_factory = container.get_context_factory()
     context = None
     task = None
 
@@ -59,11 +55,11 @@ def process_task(self, data: dict):
             user=context.user,
             room=context.room,
         )
-        
+
         success = asyncio.run(agent.handle_chat_task(task))
 
         if success:
-            cancel_existing_task(context.room.id)
+            cancel_existing_task(room_id)
 
     except Exception as exc:
         logger.error(f"Error processing task: {exc}")

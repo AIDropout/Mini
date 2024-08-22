@@ -66,8 +66,8 @@ class AgentService(Service):
                     f"""ROOM SUBSCRIPTION STATUS:
                     Continue conversation: {result.continue_conversation}.
                     Subscribe enabled for agent: {result.subscribe_enabled}.
-                    User has subscription for agent: {result.subscription_status}.
-                    # of Agent messages in Room: {result.agent_message_count}.
+                    User has subscription for agent: {result.user_is_subscribed}.
+                    # of Agent messages in Room: {result.agent_messages_in_room_count}.
                     Agent free message limit: {result.free_msg_limit}.
                     Subscribe message sent: {result.subscribe_msg_sent}.
                 """

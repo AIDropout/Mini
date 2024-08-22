@@ -19,8 +19,8 @@ from zootopia.core.schema.subscription import SubscriptionStatus
 class ConversationStatus:
     continue_conversation: bool
     subscribe_enabled: bool
-    subscription_status: bool
-    agent_message_count: int
+    user_is_subscribed: bool
+    agent_messages_in_room_count: int
     free_msg_limit: int
     subscribe_msg_sent: bool
 
@@ -49,32 +49,43 @@ class SubscribeModule(AgentModule):
         Returns:
             dict: A dictionary containing relevant information and whether to continue.
         """
-        continue_conversation = True
-        subscribe_enabled = self.agent.subscribe_enabled
-        subscription_status = False
-        agent_message_count = await self._get_agent_message_count()
-        free_msg_limit = self.agent.free_msg_limit
-        subscribe_msg_sent = self.room.subscribe_msg_sent
+        agent_messages_in_room_count = await self._get_agent_message_count()
 
-        if subscribe_enabled:
-            subscription_status = self.user.subscription_status
-            if (
-                subscription_status != SubscriptionStatus.ACTIVE
-                and agent_message_count >= free_msg_limit
-            ):
-                if not subscribe_msg_sent:
-                    await self._send_subscribe_message()
-                    subscribe_msg_sent = True
-                continue_conversation = False
-
-        return ConversationStatus(
-            continue_conversation=continue_conversation,
-            subscribe_enabled=subscribe_enabled,
-            subscription_status=subscription_status,
-            agent_message_count=agent_message_count,
-            free_msg_limit=free_msg_limit,
-            subscribe_msg_sent=subscribe_msg_sent,
+        status = ConversationStatus(
+            continue_conversation=True,
+            subscribe_enabled=self.agent.subscribe_enabled,
+            user_is_subscribed=False,
+            agent_messages_in_room_count=agent_messages_in_room_count,
+            free_msg_limit=self.agent.free_msg_limit,
+            subscribe_msg_sent=self.room.subscribe_msg_sent,
         )
+
+        if not status.subscribe_enabled:
+            return status
+
+        status.user_is_subscribed = self._check_user_is_subscribed()
+
+        if (
+            not status.user_is_subscribed
+            and agent_messages_in_room_count >= status.free_msg_limit
+        ):
+            status.continue_conversation = False
+            if not status.subscribe_msg_sent:
+                await self._send_subscribe_message()
+                status.subscribe_msg_sent = True
+
+        return status
+
+    def _check_user_is_subscribed(self) -> bool:
+        """Check if the user has an active subscription."""
+        subscription = self.database_manager.get_row(
+            Tables.SUBSCRIPTIONS,
+            {
+                Tables.SUBSCRIPTIONS__user_id: self.user.id,
+                Tables.SUBSCRIPTIONS__status: SubscriptionStatus.ACTIVE,
+            },
+        )
+        return subscription is not None
 
     @error_handler("SubscribeManager")
     async def _get_agent_message_count(self) -> int:
@@ -118,14 +129,12 @@ class SubscribeModule(AgentModule):
         )
 
         # Update the room to indicate the subscription message was sent
-        response = (
-            self.database_manager.supabase.table(Tables.ROOMS)
-            .update({Tables.ROOMS__subscribe_msg_sent: True})
-            .eq(Tables.ROOMS__id, self.room.id)
-            .execute()
-        )
-
-        # Update the local room object
         self.room.subscribe_msg_sent = True
+        self.database_manager.update(
+            Tables.ROOMS,
+            Room(subscribe_msg_sent=True),
+            condition_key=Tables.ROOMS__id,
+            condition_value=self.room.id,
+        )
 
         logger.info(f"Sent subscription message for room {self.room.id}")
