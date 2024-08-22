@@ -50,6 +50,7 @@ class Config(BaseSettings):
     MEMORY_QDRANT_CONFIG: MemoryQdrantConfig
     MEMORY_LLM_PROVIDER: str
     MEMORY_LITELLM_CONFIG: MemoryLiteLLMConfig
+    ENABLE_RESPONSE_DELAY: bool
 
     @classmethod
     def from_yaml(cls, file_path: str):

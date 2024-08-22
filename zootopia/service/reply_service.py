@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from zootopia.core.logger import get_logger
 from zootopia.service.base import Service
 from zootopia.service.context_factory import ContextFactory
+from config.config import config
 
 logger = get_logger(__name__)
 
@@ -89,7 +90,8 @@ class ReplyService(Service):
             )  # Default delay if there's an error parsing time
 
         # for debugging
-        return 1
+        if not config.ENABLE_RESPONSE_DELAY:
+            return 1
 
         # Determine delay based on time since last message
         if time_since_last_message < 60:  # Within a minute

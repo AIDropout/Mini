@@ -71,7 +71,7 @@ class AgentService(Service):
             )
             el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
-            system_prompt = self._generate_system_prompt(task.instructions)
+            system_prompt = self._construct_system_prompt(task.instructions)
             el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
 
             response_text = self.action.generate_message(
@@ -86,13 +86,13 @@ class AgentService(Service):
             success = await self.action.handle_message_send(final_message)
             el.log(f"BIRD SMS SENT: {success}")
 
-            inserted_message = self._insert_message(task, final_message)
+            inserted_message = self._insert_agent_message(task, final_message)
 
         except Exception as e:
             el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")
             return False
 
-    def _generate_system_prompt(self, instructions: str) -> str:
+    def _construct_system_prompt(self, instructions: str) -> str:
         return f"""
         {self.agent.prompt}
 
@@ -105,10 +105,9 @@ class AgentService(Service):
         It is now {get_current_time_readable()}
         """
 
-    def _insert_message(
+    def _insert_agent_message(
         self, task: Union[RespondTask, RemindTask, ReviveTask], content: str
     ) -> Message:
-        """Inserts the agent message"""
 
         return self.database_manager.insert(
             Tables.MESSAGES,
