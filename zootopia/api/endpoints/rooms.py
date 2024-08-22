@@ -22,10 +22,6 @@ from zootopia.core.schema.tables import Room
 router = APIRouter()
 
 
-class CreateRoomRequest(BaseModel):
-    agent_id: str
-    user_id: str
-
 
 @router.post("/rooms")
 async def create_room(

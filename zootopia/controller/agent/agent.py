@@ -8,9 +8,9 @@ from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
 from zootopia.core.event_logger import event_logger as el
 from zootopia.controller.task.task_types import RespondTask, RemindTask, ReviveTask
-from zootopia.core.schema.task import TaskType
 from zootopia.core.schema.tables import Room, Message, Schedule, Agent, User, Tables
 from zootopia.utils.time_utils import get_current_time_readable
+from zootopia.core.logger import get_logger
 
 
 class AgentService(Service):
@@ -23,6 +23,7 @@ class AgentService(Service):
         filter_module: FilterModule,
     ) -> None:
         super().__init__(database_manager)
+        self.logger = get_logger(__name__)
         self.agent: Agent = None
         self.user: User = None
         self.room: Room = None
@@ -40,9 +41,9 @@ class AgentService(Service):
         self.user = user
         self.room = room
         self.memory.configure(room, agent, user)
-        self.action.configure(room, agent, user)
-        self.subscribe.configure(room, agent, user)
         self.filter.configure(room, agent, user)
+        self.subscribe.configure(room, agent, user)
+        self.action.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
     async def handle_chat_task(
@@ -53,56 +54,29 @@ class AgentService(Service):
         el.log(f"TASK: {task}")
 
         try:
-            # Handle user message for respond tasks
             if isinstance(task, RespondTask):
-                user_message = (
-                    task.user_message.content
-                )  # Was already inserted into database
 
-                el.log(f"RESPONDING TO: '{user_message}' in Room {task.room_id}")
+                el.log(
+                    f"RESPONDING TO: '{task.user_message.content}' in Room {task.room_id}"
+                )
 
                 result = await self.subscribe.should_continue_conversation()
-                el.log(
-                    f"""ROOM SUBSCRIPTION STATUS:
-                    Continue conversation: {result.continue_conversation}.
-                    Subscribe enabled for agent: {result.subscribe_enabled}.
-                    User has subscription for agent: {result.user_is_subscribed}.
-                    # of Agent messages in Room: {result.agent_messages_in_room_count}.
-                    Agent free message limit: {result.free_msg_limit}.
-                    Subscribe message sent: {result.subscribe_msg_sent}.
-                """
-                )
+                self.logger.info(f"Room subscription status: {repr(result)}")
+
                 if not result.continue_conversation:
                     return True
 
             all_recent_messages = self.memory.get_recent_messages(
                 count=task.recent_message_count
             )
-
-            system_prompt_template = """
-            {agent_prompt}
-
-            Your task: {instructions}
-
-            - Carefully consider the context of recent messages to:
-            a) Avoid repeating information already provided.
-            b) Identify opportunities to drive the conversation forward, keeping it fresh and lively.
-
-            It is now {current_time}
-            """
-
-            system_prompt = system_prompt_template.format(
-                agent_prompt=self.agent.prompt,
-                instructions=task.instructions,
-                current_time=get_current_time_readable(),
-            )
-            el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
             el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
+
+            system_prompt = self._generate_system_prompt(task.instructions)
+            el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
 
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
             )
-
             el.log(f"MAIN LLM RESPONSE: {response_text}")
 
             final_message = self.filter.process_message(
@@ -112,17 +86,37 @@ class AgentService(Service):
             success = await self.action.handle_message_send(final_message)
             el.log(f"BIRD SMS SENT: {success}")
 
-            inserted_message = self.database_manager.insert(
-                Tables.MESSAGES,
-                Message(
-                    room_id=self.room.id,
-                    sender_id=self.agent.id,
-                    content=final_message,
-                    type=task.type,
-                    log=el.get_logs(),
-                ),
-            )
+            inserted_message = self._insert_message(task, final_message)
 
         except Exception as e:
             el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")
             return False
+
+    def _generate_system_prompt(self, instructions: str) -> str:
+        return f"""
+        {self.agent.prompt}
+
+        Your task: {instructions}
+
+        - Carefully consider the context of recent messages to:
+        a) Avoid repeating information already provided.
+        b) Identify opportunities to drive the conversation forward, keeping it fresh and lively.
+
+        It is now {get_current_time_readable()}
+        """
+
+    def _insert_message(
+        self, task: Union[RespondTask, RemindTask, ReviveTask], content: str
+    ) -> Message:
+        """Inserts the agent message"""
+
+        return self.database_manager.insert(
+            Tables.MESSAGES,
+            Message(
+                room_id=self.room.id,
+                sender_id=self.agent.id,
+                content=content,
+                type=task.type,
+                log=el.get_logs(),
+            ),
+        )

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, Security
+from fastapi import APIRouter, Request, Depends, Security, Body
 from pydantic import BaseModel, Field
 from zootopia.service.payment_service import PaymentService
 from config.container import container
@@ -22,29 +22,21 @@ async def stripe_webhook(
     return True
 
 
-class Checkout(BaseModel):
-    user_id: str = Field(..., description="Unique identifier of the user.")
-
-
 @router.post("/checkout")
 async def create_checkout_session(
-    data: Checkout,
-    request: Request,
+    user_id: str = Body(..., embed=True),
     payment_service: PaymentService = Depends(lambda: container.get_payment_service()),
     api_key: str = Security(verify_api_key),
-) -> Dict:
-    """Returns { url: [link to checkout session] }"""
-
-    return await payment_service.create_checkout_session(data.user_id)
+) -> Dict[str, str]:
+    """Returns {"url": "https://example.com/checkout/session123"}"""
+    return await payment_service.create_checkout_session(user_id)
 
 
 @router.get("/portal/{user_id}")
 async def get_portal_link(
     user_id: str,
-    request: Request,
     payment_service: PaymentService = Depends(lambda: container.get_payment_service()),
     api_key: str = Security(verify_api_key),
-) -> Dict:
-    """Returns { url: [portal link] }"""
-
+) -> Dict[str, str]:
+    """Returns {"url": "https://example.com/portal-link"""
     return await payment_service.get_portal_link(user_id)

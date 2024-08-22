@@ -94,17 +94,6 @@ class PaymentService(Service):
                 subscription_id
             )
 
-            self.database_manager.update(
-                table_name=Tables.USERS,
-                item=User(
-                    stripe_customer_id=subscription.customer,
-                ),
-                condition_key=Tables.USERS__id,
-                condition_value=user_id,
-            )
-
-            # Check if subscription already exists
-
             self.database_manager.insert(
                 table_name=Tables.SUBSCRIPTIONS,
                 item=Subscription(

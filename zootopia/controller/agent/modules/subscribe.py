@@ -24,6 +24,17 @@ class ConversationStatus:
     free_msg_limit: int
     subscribe_msg_sent: bool
 
+    def __repr__(self) -> str:
+        return (
+            f"ConversationStatus("
+            f"continue_conversation={self.continue_conversation}, "
+            f"subscribe_enabled={self.subscribe_enabled}, "
+            f"user_is_subscribed={self.user_is_subscribed}, "
+            f"agent_messages_in_room_count={self.agent_messages_in_room_count}, "
+            f"free_msg_limit={self.free_msg_limit}, "
+            f"subscribe_msg_sent={self.subscribe_msg_sent})"
+        )
+
 
 class SubscribeModule(AgentModule):
     """
