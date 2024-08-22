@@ -1,16 +1,17 @@
 from typing import Union
-from zootopia.service.base import Service
-from zootopia.controller.agent.modules.intent.filter import FilterModule
+
 from zootopia.controller.agent.modules.action import ActionModule
-from zootopia.controller.agent.modules.subscribe import SubscribeModule
+from zootopia.controller.agent.modules.intent.filter import FilterModule
 from zootopia.controller.agent.modules.memory import MemoryModule
+from zootopia.controller.agent.modules.subscribe import SubscribeModule
+from zootopia.controller.task.task_types import RemindTask, RespondTask, ReviveTask
+from zootopia.core.event_logger import event_logger as el
+from zootopia.core.logger import get_logger
+from zootopia.core.schema.tables import Agent, Message, Room, Schedule, Tables, User
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
-from zootopia.core.event_logger import event_logger as el
-from zootopia.controller.task.task_types import RespondTask, RemindTask, ReviveTask
-from zootopia.core.schema.tables import Room, Message, Schedule, Agent, User, Tables
-from zootopia.utils.time_utils import get_current_time_readable
-from zootopia.core.logger import get_logger
+from zootopia.service.base import Service
+from zootopia.utils.time import get_current_time_readable
 
 
 class AgentService(Service):
