@@ -1,10 +1,35 @@
+from datetime import datetime
 from enum import Enum
+
 from fastapi import HTTPException
 from pydantic import BaseModel
-from datetime import datetime
 
 
 class ServiceError(Exception):
+    pass
+
+
+class TimeManagerError(Exception):
+    """Base class for exceptions raised by TimeManager."""
+
+    pass
+
+
+class TimezoneFetchError(TimeManagerError):
+    """Exception raised for errors in fetching timezones."""
+
+    pass
+
+
+class TimeFetchError(TimeManagerError):
+    """Exception raised for errors in fetching time data."""
+
+    pass
+
+
+class InvalidTimezoneError(TimeManagerError):
+    """Exception raised for invalid timezones."""
+
     pass
 
 
@@ -18,7 +43,6 @@ class RoomAlreadyExistsError(Exception):
 class LLMResponseParsingError(Exception):
     def __init__(self, message="Failed to parse LLM response"):
         super().__init__(message)
-
 
 
 class DatabaseConnectionError(Exception):

@@ -15,6 +15,13 @@ class MemoryLiteLLMConfig(BaseSettings):
     max_tokens: int
 
 
+class TimeApiConfig(BaseSettings):
+    url_from_timezone: str = "https://timeapi.io/api/time/current/zone?timeZone="
+    url_from_ip: str = "https://timeapi.io/api/time/current/ip?ipAddress="
+    url_available_timezones: str = "https://timeapi.io/api/timezone/availabletimezones"
+    default_timezone: str = "UTC"
+
+
 class Config(BaseSettings):
     ENVIRONMENT: str
     ZOOTOPIA_API_KEY: str
@@ -46,6 +53,7 @@ class Config(BaseSettings):
     STRIPE_PRODUCT_PRICE_ID: str
     PHONE_OTP_CHANNEL_ID: str
     FRONTEND_URL: str
+    TIME_API: TimeApiConfig = TimeApiConfig()
     MEMORY_VECTOR_STORE_PROVIDER: str
     MEMORY_QDRANT_CONFIG: MemoryQdrantConfig
     MEMORY_LLM_PROVIDER: str
