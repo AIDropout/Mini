@@ -50,7 +50,8 @@ class ActionModule(AgentModule):
 
                 if i < len(messages) - 1:
                     await asyncio.sleep(random.uniform(0, 10))
-            except Exception:
+            except Exception as e:
+                logger.error(str(e))
                 overall_success = False
 
         return overall_success

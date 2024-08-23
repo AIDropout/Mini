@@ -6,54 +6,54 @@ from zootopia.controller.task.task_types import RemindTask, ReviveTask, RespondT
 from zootopia.core.logger import get_logger
 from datetime import datetime
 import asyncio
+from typing import Literal
 
 logger = get_logger(__name__)
 
 
 @shared_task(bind=True, max_retries=2)
-def process_task(self, data: dict):
-    logger.info(f"🔴🔴🔴 running at {datetime.now()}")
-    messaging_manager_factory = container.get_messaging_manager_factory()
-    messaging_manager = None
-    context_factory = container.get_context_factory()
-    context = None
-    task = None
-
-    request = data["original_request"]
-    task_type = data["type"]
-    room_id = data["room_id"]
-
+def process_task(
+    self,
+    room_id: str,
+    task_id: str,
+    task_type: Literal[TaskType.REMIND, TaskType.RESPOND, TaskType.REVIVE],
+):
     try:
+        logger.info(f"🔴🔴🔴 running at {datetime.now()}")
+        redis_manager = container.get_redis_manager()
+        messaging_manager_factory = container.get_messaging_manager_factory()
+        messaging_manager = messaging_manager_factory.bird_manager
+
+        task_json = redis_manager.get(f"{room_id}:{task_id}")
+        if not task_json:
+            logger.error(f"Task {task_id} in room {room_id} not found in Redis")
+            return
+
+        task: RespondTask = None
 
         if task_type == TaskType.RESPOND:
-            messaging_manager = messaging_manager_factory.get_manager_from_request(
-                request
-            )
-            message = messaging_manager.receive_message(request)
-            context = context_factory.create_message_context(message)
-            task = RespondTask(user_message=message, room_id=room_id)
-        elif task_type == TaskType.REVIVE:
-            context = context_factory.create_cron_context(room_id)
-            messaging_manager = messaging_manager_factory._bird_manager
-            task = ReviveTask(room_id)
+            task = RespondTask.model_validate_json(task_json)
         elif task_type == TaskType.REMIND:
-            context = context_factory.create_cron_context(room_id)
-            messaging_manager = messaging_manager_factory._bird_manager
-            task = RemindTask()
-        else:
-            raise NotImplementedError(f"Unknown task type {task_type}")
+            pass
+        elif task_type == TaskType.REVIVE:
+            pass
 
-        if not task:
-            logger.warning(f"Invalid task data: {data}")
+        if not task or not messaging_manager:
+            logger.error(
+                f"Failed to initialize task or messaging manager for task {task_id}"
+            )
             return
+
+        messaging_manager.set_receiver(task.context.user.phone_number)
+        messaging_manager.set_sender(task.context.agent.bird_channel_id)
 
         agent = container.get_agent_service()
 
         agent.configure(
             messaging_manager=messaging_manager,
-            agent=context.agent,
-            user=context.user,
-            room=context.room,
+            agent=task.context.agent,
+            user=task.context.user,
+            room=task.context.room,
         )
 
         success = asyncio.run(agent.handle_chat_task(task))
@@ -61,6 +61,8 @@ def process_task(self, data: dict):
         if success:
             cancel_existing_task(room_id)
 
-    except Exception as exc:
-        logger.error(f"Error processing task: {exc}")
-        self.retry(exc=exc, countdown=60)
+        redis_manager.delete(f"task:{task_id}")
+
+    except Exception as e:
+        logger.exception(f"Error processing task {task_id}: {str(e)}")
+        raise self.retry(exc=e)

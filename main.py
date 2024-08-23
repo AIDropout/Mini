@@ -7,7 +7,7 @@ from pyngrok import ngrok
 from zootopia.api import router as api_router
 from zootopia.core.logger import logger
 from zootopia.manager.messaging import TelegramManager, BirdManager
-from zootopia.server.redis.redis import redis_manager
+from zootopia.server.redis import RedisManager
 
 
 LOCAL_URL = "127.0.0.1"
@@ -54,6 +54,7 @@ async def lifespan(app: FastAPI):
     """Life cycle of FastAPI server"""
     celery_worker_process = None
     # Before Start
+    redis_manager = RedisManager()
     redis_manager.initialize()
     if os.getenv("ENVIRONMENT") == "local":
         # Start Celery worker

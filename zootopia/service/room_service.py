@@ -106,3 +106,15 @@ class RoomService(Service):
             agent_ids.add(room['agent_id'])
 
         return list(agent_ids)
+    
+    def get_user_rooms(self, user_id: str) -> Optional[List[Room]]:
+        rooms = self.database_manager.get_multiple_rows(
+            Tables.ROOMS,
+            max_rows=20,
+            order_by=Tables.ROOMS__created_at,  # TODO: add last msg sent col in ROOM
+            order_desc=True,
+            conditions={Tables.ROOMS__user_id: user_id},
+        )
+        if not rooms:
+            raise HTTPException(status_code=404, detail="Rooms not found")
+        return rooms

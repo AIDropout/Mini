@@ -1,5 +1,6 @@
 import yaml
 from pydantic_settings import BaseSettings
+from pathlib import Path
 
 
 class MemoryQdrantConfig(BaseSettings):
@@ -59,11 +60,20 @@ class Config(BaseSettings):
     MEMORY_LLM_PROVIDER: str
     MEMORY_LITELLM_CONFIG: MemoryLiteLLMConfig
     ENABLE_RESPONSE_DELAY: bool
+    FILE_STORE: str
+    FILE_STORE_PATH: str
 
     @classmethod
     def from_yaml(cls, file_path: str):
         with open(file_path, "r") as file:
             yaml_data = yaml.safe_load(file)
+
+        project_root = Path(file_path).parent.parent
+        downloads_path = project_root / "downloads"
+        yaml_data["FILE_STORE_PATH"] = yaml_data.get("FILE_STORE_PATH") or str(
+            downloads_path
+        )
+
         return cls(**yaml_data)
 
 

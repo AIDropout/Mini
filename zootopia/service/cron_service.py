@@ -4,7 +4,7 @@ from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
 from zootopia.core.schema.tables import Tables, Message, Room, User
 from zootopia.controller.task.task_scheduler import SchedulerService
-from zootopia.controller.task.task_types import ReviveTask, ScheduledTaskInfo
+from zootopia.controller.task.task_types import ReviveTask
 from zootopia.core.error import error_handler
 from zootopia.service.base import Service
 from datetime import datetime, timedelta, timezone
@@ -48,15 +48,17 @@ class CronService(Service):
                         last_message_time=last_message.created_at,
                     ):
                         revive_task = ReviveTask(room_id=room.id)
-                        scheduled_task_info = ScheduledTaskInfo(
-                            task=revive_task, delay=0
-                        )
+                        #TODO:
+                        # 
+                        # scheduled_task_info = ScheduledTaskInfo(
+                        #     task=revive_task, delay=0
+                        # )
 
-                        await SchedulerService.schedule_task(
-                            task_data=scheduled_task_info.to_dict(),
-                            delay=0,
-                            db=self.database_manager,
-                        )
+                        # await SchedulerService.schedule_task(
+                        #     task_data=scheduled_task_info.to_dict(),
+                        #     delay=0,
+                        #     db=self.database_manager,
+                        # )
 
     def _is_room_eligible_for_revival(self, room: Room, user_id: str):
         if not room.subscribe_msg_sent:

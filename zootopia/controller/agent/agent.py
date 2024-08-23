@@ -58,7 +58,7 @@ class AgentService(Service):
             if isinstance(task, RespondTask):
 
                 el.log(
-                    f"RESPONDING TO: '{task.user_message.content}' in Room {task.room_id}"
+                    f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}"
                 )
 
                 result = await self.subscribe.should_continue_conversation()

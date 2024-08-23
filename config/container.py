@@ -10,6 +10,7 @@ from zootopia.manager.payment import (
 )
 from typing import Optional
 from zootopia.service.user_service import UserService
+from zootopia.server.redis import RedisManager
 
 
 class Container:
@@ -21,6 +22,13 @@ class Container:
         self.subscription_manager = SubscriptionManager()
         self.user_service: Optional[UserService] = None
         self._context_factory: Optional[ContextFactory] = None
+        self.redis_manager: Optional[RedisManager] = None
+
+    def get_redis_manager(self):
+        if self.redis_manager is None:
+            self.redis_manager = RedisManager()
+
+        return self.redis_manager
 
     def get_messaging_manager_factory(self):
         from zootopia.manager.messaging import MessagingManagerFactory
@@ -39,6 +47,11 @@ class Container:
                 customer_manager=self.customer_manager,
             )
         return self.user_service
+
+    def get_agent_service(self):
+        from zootopia.service.agent_service import AgentService
+
+        return AgentService(database_manager=self.database_manager)
 
     def get_context_factory(self) -> ContextFactory:
         if self._context_factory is None:
@@ -64,7 +77,7 @@ class Container:
         )
 
     def get_room_service(self):
-        from zootopia.service.room_service import RoomService
+        from zootopia.service._room_service import RoomService
 
         return RoomService(
             database_manager=self.database_manager,
@@ -97,6 +110,7 @@ class Container:
 
         return SchedulerService(
             database_manager=self.database_manager,
+            redis_manager=self.get_redis_manager(),
         )
 
     def get_agent_service(self):

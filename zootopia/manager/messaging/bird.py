@@ -1,6 +1,6 @@
 """SMS Messaging class utilizing Bird API"""
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 import requests
 from config.config import config
 from zootopia.core.logger import logger
@@ -11,11 +11,18 @@ from zootopia.core.schema.message import (
     MessageType,
     BirdMetadata,
 )
+from zootopia.core.schema.bird import BirdRequest
 from zootopia.core.schema.sms_otp import VerificationStatus, ErrorCode
 from zootopia.core.error import error_handler
 import asyncio
+from zootopia.core.logger import get_logger
+import os
+from urllib.parse import urlparse
+from pathlib import Path
+from zootopia.storage import get_file_store
 
-# logger = get_logger(__name__)
+
+logger = get_logger(__name__)
 
 
 class BirdManager(MessagingBase):
@@ -43,22 +50,66 @@ class BirdManager(MessagingBase):
     @error_handler("Bird SMS")
     def receive_message(self, request_body: dict) -> ZootopiaMessage:
         """Handle an incoming message from a Bird SMS sender."""
-        bird_message = request_body["payload"]
-        phone_number = bird_message["sender"]["contact"]["identifierValue"]
-        channel_id = bird_message["channelId"]
+        request_object = BirdRequest.model_validate(request_body)
+
+        bird_message = request_object.payload
+        phone_number = bird_message.sender.contact.identifierValue
+        channel_id = bird_message.channelId
         self.set_receiver(phone_number)
         self.set_sender(channel_id)
-        message_text = bird_message["body"]["text"]["text"]
 
-        metadata = BirdMetadata(channel_id=channel_id, phone_number=phone_number)
+        body = bird_message.body
         message_type = MessageType.TEXT
+        content = ""
+        downloaded_media_paths = []
+
+        if body.type == "text" and body.text:
+            message_type = MessageType.TEXT
+            content = body.text.text
+        elif body.type == "file" and body.file:
+            if body.file.text:
+                message_type = MessageType.TEXT_AND_FILE
+                content = body.file.text
+            else:
+                message_type = MessageType.FILE
+
+            bird_media_urls = [file.mediaUrl for file in body.file.files]
+            downloaded_media_paths = self._download_media_urls(bird_media_urls)
+
+        text_part = f"text [{content}]" if content else "no text"
+        image_part = f"{len(downloaded_media_paths)} media files"
+        logger.info(f"Received message with {text_part} and {image_part}")
 
         return ZootopiaMessage(
-            content=message_text,
-            metadata=metadata,
+            content=content,
+            metadata=BirdMetadata(channel_id=channel_id, phone_number=phone_number),
             provider=MessageProvider.BIRD,
             type=message_type,
+            media_paths=downloaded_media_paths,
         )
+
+    def _download_media_urls(self, media_urls: List[str]) -> List[str]:
+        """Download media files from Bird API and return the list of downloaded paths."""
+        downloaded_paths = []
+
+        for api_url in media_urls:
+            try:
+                response = requests.get(api_url, headers=self._api_header)
+                response.raise_for_status()
+
+                file_id = os.path.basename(urlparse(api_url).path)
+                file_extension = Path(file_id).suffix or ".jpg"
+                filename = f"{file_id}{file_extension}"
+
+                fs = get_file_store()
+                fs.write(filename, response.content)
+
+                logger.info(f"Successfully downloaded media: {filename}")
+                downloaded_paths.append(filename)
+            except requests.RequestException as e:
+                logger.error(f"Failed to download media from {api_url}: {e}")
+
+        return downloaded_paths
 
     @error_handler("Bird SMS")
     async def send_message(self, message: str) -> Tuple[bool, Dict[str, Any]]:
@@ -170,16 +221,11 @@ class BirdManager(MessagingBase):
         # Log the verification request
         logger.info(f"Verification request sent: {verification_data['id']}")
 
-        is_sent = False
-        if verification_data.get("steps"):
-            attempt_status = verification_data["steps"][0]["attempts"][0]["status"]
-            logger.info(f"Attempt status: {attempt_status}")
-            is_sent = attempt_status in ["sent", "accepted"]
-
-        expires_at = verification_data.get("expiresAt", "")
-        verification_id = verification_data.get("id", "")
-
-        logger.info(f"Returning: is_sent={is_sent}, expires_at={expires_at}, verification_id={verification_id}")
+        is_sent = (
+            verification_data["steps"][0]["attempts"][0]["status"] == "sent"
+            if verification_data["steps"]
+            else False
+        )
         expires_at = verification_data.get("expiresAt", "")
         verification_id = verification_data.get("id", "")
 

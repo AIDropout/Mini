@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from zootopia.api.endpoints import rooms, sms_otp, payment, users
+from zootopia.api.endpoints import rooms, users, sms_otp, payment
 
 router = APIRouter()
 

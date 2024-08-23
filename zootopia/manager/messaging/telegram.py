@@ -12,11 +12,14 @@ from zootopia.core.schema.message import (
     ZootopiaMessage,
     MessageProvider,
     MessageType,
+    TelegramMetadata,
+)
+from zootopia.core.schema.telegram import (
     TelegramMessage,
     _TelegramMessageDocument,
     _TelegramMessagePhoto,
-    TelegramMetadata,
 )
+
 from zootopia.core.error import error_handler
 from zootopia.core.logger import logger
 

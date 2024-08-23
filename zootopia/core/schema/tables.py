@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Type, Union, Any, Literal
 from pydantic import BaseModel, Field, field_validator
 import json
 import uuid
-from uuid import UUID
 
 
 class Tables(str, Enum):
@@ -161,19 +160,12 @@ class Schedule(BaseModel):
     complete: bool = Field(default=False)
 
 
-TableModel = Union[
-    User,
-    Agent,
-    Room,
-    Message,
-    Schedule,
-    Subscription
-]
+TableModel = Union[User, Agent, Room, Message, Schedule, Subscription]
 TABLE_MODEL_MAP = {
     Tables.USERS: User,
     Tables.AGENTS: Agent,
     Tables.ROOMS: Room,
     Tables.MESSAGES: Message,
     Tables.SCHEDULE: Schedule,
-    Tables.SUBSCRIPTIONS: Subscription
+    Tables.SUBSCRIPTIONS: Subscription,
 }

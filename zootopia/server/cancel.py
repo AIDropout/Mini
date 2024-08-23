@@ -1,5 +1,5 @@
 from zootopia.server.celery import celery_app
-from zootopia.server.redis.redis import redis_manager
+from config.container import container
 from zootopia.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -15,15 +15,22 @@ def cancel_existing_task(room_id: str) -> bool:
     Returns:
         bool: True if a task was cancelled, False otherwise.
     """
-    existing_task_id = redis_manager.get_scheduled_task(room_id)
+    redis_manager = container.get_redis_manager()
 
-    if existing_task_id:
+    pattern = f"{room_id}:*"
+    tasks_cancelled = False
+
+    for key in redis_manager.scan_iter(match=pattern):
+        # Extract the task_id from the key
+        _, task_id = key.split(":", 1)
+
         # Cancel the existing task
-        celery_app.control.revoke(
-            existing_task_id.decode(), terminate=True, signal="SIGKILL"
-        )
-        redis_manager.delete_scheduled_task(room_id)
-        logger.info(f"🍊 Canceled previous task for room id {room_id}.")
-        return True
+        celery_app.control.revoke(task_id, terminate=True, signal="SIGKILL")
+        redis_manager.delete(key)
+        logger.info(f"🍊 Canceled task {task_id} for room id {room_id}.")
+        tasks_cancelled = True
 
-    return False
+    if not tasks_cancelled:
+        logger.info(f"No tasks found for room id {room_id}.")
+
+    return tasks_cancelled

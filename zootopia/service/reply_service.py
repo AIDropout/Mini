@@ -5,12 +5,14 @@ from zootopia.manager.messaging import MessagingManagerFactory
 from zootopia.core.schema.tables import Message, Tables
 from zootopia.core.error import error_handler
 from zootopia.controller.task.task_scheduler import SchedulerService
-from zootopia.controller.task.task_types import ScheduledTaskInfo, RespondTask
+from zootopia.controller.task.task_types import RespondTask
 from datetime import datetime, timezone
 from zootopia.core.logger import get_logger
 from zootopia.service.base import Service
 from zootopia.service.context_factory import ContextFactory
 from config.config import config
+import os
+from urllib.parse import urlparse
 
 logger = get_logger(__name__)
 
@@ -30,10 +32,12 @@ class ReplyService(Service):
 
     @error_handler("ReplyService")
     def handle_respond(self, request_body: dict):
+        print(request_body)
         messaging_manager = self.messaging_manager_factory.get_manager_from_request(
             request_body
         )
         message = messaging_manager.receive_message(request_body)
+
         context = self.context_factory.create_message_context(message)
 
         inserted_message = self.database_manager.insert(
@@ -48,22 +52,16 @@ class ReplyService(Service):
         recent_messages = self.database_manager.get_multiple_rows(
             Tables.MESSAGES,
             max_rows=5,
-            order_by="created_at",
+            order_by=Tables.MESSAGES__created_at,
             order_desc=True,
-            conditions={"room_id": context.room.id},
+            conditions={Tables.MESSAGES__room_id: context.room.id},
         )
         delay = self._calculate_response_delay(recent_messages)
 
-        scheduled_task_info = ScheduledTaskInfo(
-            task=RespondTask(user_message=message, room_id=context.room.id),
+        self.scheduler_service.schedule_respond(
             delay=delay,
-            original_request=request_body,
-        )
-
-        self.scheduler_service.schedule_task(
-            task_data=scheduled_task_info.to_dict(),
-            delay=delay,
-            db=self.database_manager,
+            message=message,
+            context=context,
         )
 
     def _calculate_response_delay(self, messages: List[Message]) -> int:
