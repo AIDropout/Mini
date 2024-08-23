@@ -5,6 +5,8 @@ from zootopia.core.schema.tables import User
 from config.container import container
 from zootopia.service.user_service import UserService
 from config.config import config
+from uuid import UUID
+
 
 
 router = APIRouter()
@@ -22,12 +24,12 @@ async def create_user(
 
 @router.get("/users/{id}", response_model=User)
 async def get_user(
-    id: int = Path(..., title="The ID of the user to get"),
+    id: UUID = Path(..., title="The ID of the user to get"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> User:
     """Get a user by ID. Returns the retrieved User object"""
-    return user_service.get_user(id)
+    return user_service.get_user(str(id))
 
 
 @router.patch("/users/{id}", response_model=User)
