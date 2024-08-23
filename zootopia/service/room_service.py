@@ -7,7 +7,7 @@ from zootopia.core.logger import logger
 from zootopia.service.base import Service
 from zootopia.service.user_service import UserService
 from zootopia.core.schema.task import TaskType
-from typing import Optional
+from typing import Optional, List
 
 
 class RoomService(Service):
@@ -92,3 +92,17 @@ class RoomService(Service):
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
         return agent
+
+    def get_user_agent(self, user_id: str) -> List[str]:
+        """Get all agent_ids associated with a user"""
+        agent_ids = set()
+        
+        rooms = self.database_manager.get_multiple_rows(
+            table_name=Tables.ROOMS,
+            conditions={Tables.ROOMS__user_id: user_id},
+        )
+        
+        for room in rooms:
+            agent_ids.add(room['agent_id'])
+
+        return list(agent_ids)

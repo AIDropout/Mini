@@ -15,7 +15,7 @@ from zootopia.utils.utils import is_ngrok_url
 from zootopia.core.logger import logger
 from config.container import container
 from zootopia.service.room_service import RoomService
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from zootopia.core.schema.tables import Room
 
@@ -32,6 +32,18 @@ async def create_room(
 ) -> Room:
     """Creates a room and sends the first message to the user"""
     return await room_service.create_room(agent_id=agent_id, user_id=user_id)
+
+@router.get("/rooms/agent/{user_id}")
+def get_user_agent(
+    user_id: str,
+    room_service: RoomService = Depends(lambda: container.get_room_service()),
+    api_key: str = Security(verify_api_key),
+):
+    """Get all agent_ids associated with a user"""
+    agent_ids = room_service.get_user_agent(user_id)
+    if not agent_ids:
+        raise HTTPException(status_code=404, detail=f"No agents found for user_id: {user_id}")
+    return {"agent_ids": agent_ids}
 
 
 @router.post("/rooms/respond")
@@ -84,7 +96,6 @@ async def send_admin_message(
         logger.exception("Error in send_admin_message")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 async def test_room_endpoints():
 
     async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
@@ -106,6 +117,14 @@ async def test_room_endpoints():
         if response.status_code == 200:
             created_room = response.json()
             room_id = created_room.get("id")
+            user_id = room_data["user_id"]
+
+            # Test get_user_agent
+            response = await client.get(
+                f"/rooms/agent/{user_id}",
+                headers={"Authorization": f"Bearer {config.ZOOTOPIA_API_KEY}"},
+            )
+            print(f"GET /rooms/agent/{user_id} - Status: {response.status_code}, Response: {response.json()}")
 
             # Test get_room (if you have this endpoint)
             # response = await client.get(
