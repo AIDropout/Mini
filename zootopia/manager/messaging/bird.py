@@ -170,11 +170,16 @@ class BirdManager(MessagingBase):
         # Log the verification request
         logger.info(f"Verification request sent: {verification_data['id']}")
 
-        is_sent = (
-            verification_data["steps"][0]["attempts"][0]["status"] == "sent"
-            if verification_data["steps"]
-            else False
-        )
+        is_sent = False
+        if verification_data.get("steps"):
+            attempt_status = verification_data["steps"][0]["attempts"][0]["status"]
+            logger.info(f"Attempt status: {attempt_status}")
+            is_sent = attempt_status in ["sent", "accepted"]
+
+        expires_at = verification_data.get("expiresAt", "")
+        verification_id = verification_data.get("id", "")
+
+        logger.info(f"Returning: is_sent={is_sent}, expires_at={expires_at}, verification_id={verification_id}")
         expires_at = verification_data.get("expiresAt", "")
         verification_id = verification_data.get("id", "")
 
