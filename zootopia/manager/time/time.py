@@ -12,7 +12,12 @@ from zootopia.core.exceptions import (
 class TimeManager:
     """Handles time-related operations using external APIs, with caching for user-specific data."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, user_ip: str | None = None, user_timezone: str | None = None
+    ) -> None:
+        if user_timezone is not None and not self._is_available_timezone(user_timezone):
+            raise InvalidTimezoneError(timezone=user_timezone)
+
         self.timeout = 10
         self.default_timezone = config.TIME_API.default_timezone
         self.api_url_timezone = config.TIME_API.url_from_timezone
@@ -21,8 +26,8 @@ class TimeManager:
 
         self.available_timezones = self.fetch_available_timezones()
 
-        self.user_ip = None
-        self.user_timezone = None
+        self.user_ip = user_ip
+        self.user_timezone = user_timezone
 
     def set_user_ip(self, ip_address: str) -> None:
         """Sets and caches the user's IP address."""
@@ -40,7 +45,7 @@ class TimeManager:
         if self._is_available_timezone(timezone):
             self.user_timezone = timezone
         else:
-            raise InvalidTimezoneError(f"'{timezone}' is not a valid timezone.")
+            raise InvalidTimezoneError(timezone=timezone)
 
     def fetch_available_timezones(self) -> list:
         """Fetches the list of available timezones from the API."""
@@ -62,10 +67,10 @@ class TimeManager:
         except requests.exceptions.RequestException as e:
             raise TimezoneFetchError(f"Error fetching timezone: {e}") from e
 
-    def fetch_current_time(self, timezone: str | None = None) -> str:
-        """Gets the current time for the specified timezone or the cached user's timezone."""
+    def fetch_current_datetime(self, timezone: str | None = None) -> str:
+        """Gets the current datetime for the specified timezone or the cached user's timezone."""
         if timezone is not None and not self._is_available_timezone(timezone):
-            raise InvalidTimezoneError(f"'{timezone}' is not a valid timezone.")
+            raise InvalidTimezoneError(timezone=timezone)
 
         timezone = timezone or self.user_timezone or self.default_timezone
         try:
@@ -73,12 +78,12 @@ class TimeManager:
             response = requests.get(url, timeout=self.timeout)
             response.raise_for_status()
             time_data = response.json()
-            return time_data.get("date", "Time data not available")
+            return time_data.get("dateTime", "Time data not available")
         except requests.exceptions.RequestException as e:
-            raise TimeFetchError(f"Error fetching time: {e}") from e
+            raise TimeFetchError(f"Error fetching date: {e}") from e
 
-    def get_user_time(self) -> str:
+    def get_user_datetime(self) -> str:
         """Gets the current time for the cached user's IP or timezone."""
         if not self.user_timezone:
             raise TimeManagerError("User's timezone is not set.")
-        return self.fetch_current_time(self.user_timezone)
+        return self.fetch_current_datetime(self.user_timezone)

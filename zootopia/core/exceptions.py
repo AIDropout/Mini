@@ -30,7 +30,11 @@ class TimeFetchError(TimeManagerError):
 class InvalidTimezoneError(TimeManagerError):
     """Exception raised for invalid timezones."""
 
-    pass
+    def __init__(self, timezone: str) -> None:
+        self.timezone = timezone
+        super().__init__(
+            f"'{self.timezone}' is not an available timezone. Use fetch_available_timezones to check what's available."
+        )
 
 
 class RoomAlreadyExistsError(Exception):
