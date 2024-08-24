@@ -5,6 +5,7 @@ ZOOTOPIA_API_KEY: key
 OPENAI_API_KEY: key
 ANTHROPIC_API_KEY: key
 GROQ_API_KEY: key
+GEMINI_API_KEY: key
 
 TELEGRAM_BOT_TOKEN: key
 
@@ -21,17 +22,18 @@ SUPABASE_KEY: key
 GOOGLE_API_KEY: key
 GOOGLE_CLIENT_ID: key
 GOOGLE_CLIENT_SECRET: key
-GEMINI_API_KEY: key
 
 REDIS_URL: url
 FLOWER_UNAUTHENTICATED_API: bool
 
 FILTER_LLM: "groq/llama-3.1-70b-versatile"
 SKIP_LLM: "groq/llama-3.1-70b-versatile"
-ACTION_MANAGER_LLM_PROVIDER: "ANTHROPIC"
+ACTION_MANAGER_LLM_PROVIDER: "ANTHROPIC_API_KEY"
 ACTION_MANAGER_LLM: "claude-3-5-sonnet-20240620"
 INTENT_MANAGER_LLM: "claude-3-5-sonnet-20240620"
 MEMORY_MANAGER_LLM: "claude-3-5-sonnet-20240620"
+VISION_MANAGER_LLM_PROVIDER: "OPENAI_API_KEY"
+VISION_MANAGER_LLM: "gpt-4o-mini"
 
 STRIPE_SECRET_KEY_TEST: key
 STRIPE_WEBHOOK_SECRET: key
@@ -52,3 +54,15 @@ MEMORY_LITELLM_CONFIG:
   model: gemini/gemini-pro
   temperature: 0.2
   max_tokens: 1000
+
+MEMORY_EMBEDDINGS_PROVIDER: huggingface
+
+ENABLE_RESPONSE_DELAY: true
+
+TIME_API:
+  default_timezone: "America/Chicago"
+
+AWS_S3_CONFIG:
+  access_key: key
+  secret_access_key: key
+  bucket: bucket
