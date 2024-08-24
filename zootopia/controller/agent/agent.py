@@ -61,6 +61,22 @@ class AgentService(Service):
         try:
             if isinstance(task, RespondTask):
 
+
+                if len(task.user_message.media_urls) > 0:
+                    description = self.vision.handle_images(
+                        task.user_message.media_urls
+                    )
+                    task.user_message.content += f"\n\nUser sent an image: {description}"
+
+                    inserted_message = self.database_manager.insert(
+                        Tables.MESSAGES,
+                        Message(
+                            room_id=self.room.id,
+                            sender_id=self.user.id,
+                            content=task.user_message.content,
+                        ),
+                    )
+                    
                 inserted_message = self.database_manager.insert(
                     Tables.MESSAGES,
                     Message(
@@ -69,12 +85,7 @@ class AgentService(Service):
                         content=task.user_message.content,
                     ),
                 )
-
-                if len(task.user_message.media_urls) > 0:
-                    description = self.vision.handle_images(
-                        task.user_message.media_urls
-                    )
-                    task.user_message.content += f"\n\nImage context: {description}"
+        
 
                 el.log(
                     f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}"

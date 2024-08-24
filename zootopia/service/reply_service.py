@@ -48,7 +48,6 @@ class ReplyService(Service):
             conditions={Tables.MESSAGES__room_id: context.room.id},
         )
         delay = self._calculate_response_delay(recent_messages)
-
         self.scheduler_service.schedule_respond(
             delay=delay,
             message=message,

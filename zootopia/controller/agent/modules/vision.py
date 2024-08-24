@@ -7,6 +7,8 @@ from zootopia.core.error import error_handler
 from zootopia.controller.agent.modules.base import AgentModule
 from zootopia.manager.database import DatabaseManager
 from zootopia.core.schema.tables import Tables, Message
+import base64
+import httpx
 
 
 class VisionModule(AgentModule):
@@ -36,3 +38,5 @@ class VisionModule(AgentModule):
                 content=generation,
             ),
         )
+
+        return generation
