@@ -197,8 +197,7 @@ class LLMManager:
 
         response = self._attempt_completion(model=self.llm_name, messages=messages)
 
-        content = response.choices[0].message.content
-        return content
+        return response.choices[0].message.content
 
     @error_handler("LLM")
     def _check_vision_support(self) -> bool:

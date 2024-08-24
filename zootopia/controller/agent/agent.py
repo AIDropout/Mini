@@ -4,6 +4,7 @@ from zootopia.controller.agent.modules.action import ActionModule
 from zootopia.controller.agent.modules.intent.filter import FilterModule
 from zootopia.controller.agent.modules.memory import MemoryModule
 from zootopia.controller.agent.modules.subscribe import SubscribeModule
+from zootopia.controller.agent.modules.vision import VisionModule
 from zootopia.controller.task.task_types import RemindTask, RespondTask, ReviveTask
 from zootopia.core.event_logger import event_logger as el
 from zootopia.core.logger import get_logger
@@ -22,6 +23,7 @@ class AgentService(Service):
         memory_module: MemoryModule,
         subscribe_module: SubscribeModule,
         filter_module: FilterModule,
+        vision_module: VisionModule,
     ) -> None:
         super().__init__(database_manager)
         self.logger = get_logger(__name__)
@@ -32,6 +34,7 @@ class AgentService(Service):
         self.memory = memory_module
         self.subscribe = subscribe_module
         self.filter = filter_module
+        self.vision = vision_module
 
     def configure(
         self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room
@@ -45,6 +48,7 @@ class AgentService(Service):
         self.filter.configure(room, agent, user)
         self.subscribe.configure(room, agent, user)
         self.action.configure(room, agent, user)
+        self.vision.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
     async def handle_chat_task(
@@ -56,6 +60,21 @@ class AgentService(Service):
 
         try:
             if isinstance(task, RespondTask):
+
+                inserted_message = self.database_manager.insert(
+                    Tables.MESSAGES,
+                    Message(
+                        room_id=self.room.id,
+                        sender_id=self.user.id,
+                        content=task.user_message.content,
+                    ),
+                )
+
+                if len(task.user_message.media_urls) > 0:
+                    description = self.vision.handle_images(
+                        task.user_message.media_urls
+                    )
+                    task.user_message.content += f"\n\nImage context: {description}"
 
                 el.log(
                     f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}"
@@ -87,7 +106,8 @@ class AgentService(Service):
             success = await self.action.handle_message_send(final_message)
             el.log(f"BIRD SMS SENT: {success}")
 
-            inserted_message = self._insert_agent_message(task, final_message)
+            if success:
+                inserted_message = self._insert_agent_message(task, final_message)
 
         except Exception as e:
             el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")

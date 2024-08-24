@@ -20,7 +20,7 @@ import os
 from urllib.parse import urlparse
 from pathlib import Path
 from zootopia.storage import get_file_store
-
+from uuid import uuid4
 
 logger = get_logger(__name__)
 
@@ -61,7 +61,7 @@ class BirdManager(MessagingBase):
         body = bird_message.body
         message_type = MessageType.TEXT
         content = ""
-        downloaded_media_paths = []
+        aws_media_urls = []
 
         if body.type == "text" and body.text:
             message_type = MessageType.TEXT
@@ -74,10 +74,22 @@ class BirdManager(MessagingBase):
                 message_type = MessageType.FILE
 
             bird_media_urls = [file.mediaUrl for file in body.file.files]
-            downloaded_media_paths = self._download_media_urls(bird_media_urls)
+
+            # Upload media to AWS and get URLs
+            fs = get_file_store()
+            for api_url in bird_media_urls:
+                try:
+                    response = requests.get(api_url, headers=self._api_header)
+                    response.raise_for_status()
+                    key = f"{config.ENVIRONMENT}/{uuid4()}"
+                    fs.write(key, response.content)
+                    url = fs.generate_presigned_url(key)
+                    aws_media_urls.append(url)
+                except requests.RequestException as e:
+                    logger.error(f"Failed to download media from {api_url}: {e}")
 
         text_part = f"text [{content}]" if content else "no text"
-        image_part = f"{len(downloaded_media_paths)} media files"
+        image_part = f"{len(aws_media_urls)} media files"
         logger.info(f"Received message with {text_part} and {image_part}")
 
         return ZootopiaMessage(
@@ -85,31 +97,8 @@ class BirdManager(MessagingBase):
             metadata=BirdMetadata(channel_id=channel_id, phone_number=phone_number),
             provider=MessageProvider.BIRD,
             type=message_type,
-            media_paths=downloaded_media_paths,
+            media_urls=aws_media_urls,
         )
-
-    def _download_media_urls(self, media_urls: List[str]) -> List[str]:
-        """Download media files from Bird API and return the list of downloaded paths."""
-        downloaded_paths = []
-
-        for api_url in media_urls:
-            try:
-                response = requests.get(api_url, headers=self._api_header)
-                response.raise_for_status()
-
-                file_id = os.path.basename(urlparse(api_url).path)
-                file_extension = Path(file_id).suffix or ".jpg"
-                filename = f"{file_id}{file_extension}"
-
-                fs = get_file_store()
-                fs.write(filename, response.content)
-
-                logger.info(f"Successfully downloaded media: {filename}")
-                downloaded_paths.append(filename)
-            except requests.RequestException as e:
-                logger.error(f"Failed to download media from {api_url}: {e}")
-
-        return downloaded_paths
 
     @error_handler("Bird SMS")
     async def send_message(self, message: str) -> Tuple[bool, Dict[str, Any]]:
@@ -121,8 +110,8 @@ class BirdManager(MessagingBase):
             "body": {"type": "text", "text": {"text": message}},
         }
         response = requests.post(url, headers=self._api_header, json=payload)
-        response.raise_for_status()  # This will raise an HTTPError for bad responses
         response_data = response.json()
+        response.raise_for_status()  # This will raise an HTTPError for bad responses
 
         details = {
             "channel_id": self._channel_id,
@@ -222,7 +211,7 @@ class BirdManager(MessagingBase):
         logger.info(f"Verification request sent: {verification_data['id']}")
 
         is_sent = (
-            verification_data["steps"][0]["attempts"][0]["status"] == "sent"
+            verification_data["steps"][0]["attempts"][0]["status"] == "accepted"
             if verification_data["steps"]
             else False
         )

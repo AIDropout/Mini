@@ -31,4 +31,4 @@ class ZootopiaMessage(BaseModel):
     metadata: Union[TelegramMetadata, BirdMetadata]
     provider: MessageProvider
     type: MessageType
-    media_paths: List[str] = Field(default_factory=list)
+    media_urls: List[str] = Field(default_factory=list)

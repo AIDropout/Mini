@@ -8,6 +8,7 @@ from zootopia.api import router as api_router
 from zootopia.core.logger import logger
 from zootopia.manager.messaging import TelegramManager, BirdManager
 from zootopia.server.redis import RedisManager
+from config.config import config
 
 
 LOCAL_URL = "127.0.0.1"
@@ -38,8 +39,7 @@ async def configure_local_webhooks() -> None:
     _telegram = TelegramManager()
     _bird = BirdManager()
 
-    if bird_dev_channel_id := os.getenv("BIRD_DEV_CHANNEL_ID"):
-        _bird.set_sender(bird_dev_channel_id)
+    _bird.set_sender(config.BIRD_DEV_CHANNEL_ID)
 
     await asyncio.gather(
         _telegram.register_webhook(webhook),
@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
     # Before Start
     redis_manager = RedisManager()
     redis_manager.initialize()
-    if os.getenv("ENVIRONMENT") == "local":
+    if config.ENVIRONMENT == "local":
         # Start Celery worker
         celery_worker_process = subprocess.Popen(
             [

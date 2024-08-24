@@ -62,9 +62,6 @@ Make sure Python, [ngrok](https://ngrok.com/), and [uv]() are installed.
    # 4. Install dependencies  
    uv pip install -r requirements.txt
 
-   # 5. Mount env variables
-   source .env
-
    ```
 
 Copy `local.template.yaml` to a new file called `local.yaml` in the same directory

@@ -32,7 +32,7 @@ class SMSOTPService:
                     code_length=request.code_length,
                 )
             )
-            print(expires_at)
+            print(is_sent)
             return SendVerificationResponse(
                 is_sent=is_sent,
                 expires_at=expires_at,

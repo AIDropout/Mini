@@ -8,7 +8,6 @@ from config.config import config
 from uuid import UUID
 
 
-
 router = APIRouter()
 
 

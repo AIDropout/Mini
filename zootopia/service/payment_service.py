@@ -10,6 +10,7 @@ from config.config import config
 import stripe
 from datetime import datetime
 from zootopia.core.logger import get_logger
+from fastapi import HTTPException
 
 logger = get_logger(__name__)
 
@@ -32,6 +33,12 @@ class PaymentService(Service):
             Tables.USERS,
             {Tables.USERS__id: user_id},
         )
+
+        if not user:
+            raise HTTPException(
+                status_code=404, detail=f"User with id {user_id} not found"
+            )
+        
         phone_number = user.phone_number
         customer_id = user.customer_id
 

@@ -52,8 +52,6 @@ class ContextFactory(Service):
         user, agent = self._get_user_and_agent_from_db(message)
 
         if user is None:
-            print("____")
-            print(self.user_service)
             user = self.user_service.create_user(
                 id=str(
                     uuid.uuid4()

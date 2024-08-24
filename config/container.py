@@ -12,6 +12,7 @@ from zootopia.manager.payment import (
 from zootopia.server.redis import RedisManager
 from zootopia.service.context_factory import ContextFactory
 from zootopia.service.user_service import UserService
+from zootopia.core.rate_limiter import RateLimiter
 
 
 class Container:
@@ -24,6 +25,15 @@ class Container:
         self.user_service: Optional[UserService] = None
         self._context_factory: Optional[ContextFactory] = None
         self.redis_manager: Optional[RedisManager] = None
+        self.rate_limiter: Optional[RateLimiter] = None
+
+    def get_rate_limiter(self):
+        if self.rate_limiter is None:
+            self.rate_limiter = RateLimiter(
+                redis_manager=self.get_redis_manager(), max_calls=3, period=300
+            )
+
+        return self.rate_limiter
 
     def get_redis_manager(self):
         if self.redis_manager is None:
@@ -78,7 +88,7 @@ class Container:
         )
 
     def get_room_service(self):
-        from zootopia.service._room_service import RoomService
+        from zootopia.service.room_service import RoomService
 
         return RoomService(
             database_manager=self.database_manager,
@@ -124,6 +134,7 @@ class Container:
         )
         from zootopia.controller.agent.modules.memory import MemoryModule
         from zootopia.controller.agent.modules.subscribe import SubscribeModule
+        from zootopia.controller.agent.modules.vision import VisionModule
 
         action_module = ActionModule(
             llm_manager=LLMManager(
@@ -150,12 +161,21 @@ class Container:
             ),
         )
 
+        vision_module = VisionModule(
+            database_manager=self.database_manager,
+            llm_manager=LLMManager(
+                llm_name=config.VISION_MANAGER_LLM,
+                llm_provider="OPENAI_API_KEY",
+            ),
+        )
+
         return AgentService(
             database_manager=self.database_manager,
             action_module=action_module,
             memory_module=memory_module,
             subscribe_module=subscribe_module,
             filter_module=filter_module,
+            vision_module=vision_module,
         )
 
     def get_reply_service(self):

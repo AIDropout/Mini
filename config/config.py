@@ -24,6 +24,12 @@ class TimeApiConfig(BaseSettings):
     default_timezone: str = "America/Chicago"
 
 
+class AWSS3Config(BaseSettings):
+    access_key: str
+    secret_access_key: str
+    bucket: str
+
+
 class Config(BaseSettings):
     ENVIRONMENT: str
     ZOOTOPIA_API_KEY: str
@@ -51,6 +57,7 @@ class Config(BaseSettings):
     ACTION_MANAGER_LLM: str
     INTENT_MANAGER_LLM: str
     MEMORY_MANAGER_LLM: str
+    VISION_MANAGER_LLM: str
     STRIPE_SECRET_KEY_TEST: str
     STRIPE_WEBHOOK_SECRET: str
     STRIPE_PRODUCT_PRICE_ID: str
@@ -61,10 +68,9 @@ class Config(BaseSettings):
     MEMORY_QDRANT_CONFIG: MemoryQdrantConfig
     MEMORY_LLM_PROVIDER: str
     MEMORY_LITELLM_CONFIG: MemoryLiteLLMConfig
-    MEMORY_EMBEDDINGS_PROVIDER: str
+    # MEMORY_EMBEDDINGS_PROVIDER: str
     ENABLE_RESPONSE_DELAY: bool
-    FILE_STORE: str
-    FILE_STORE_PATH: str
+    AWS_S3_CONFIG: AWSS3Config
 
     @classmethod
     def from_yaml(cls, file_path: str):

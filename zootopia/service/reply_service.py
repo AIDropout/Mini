@@ -40,15 +40,6 @@ class ReplyService(Service):
 
         context = self.context_factory.create_message_context(message)
 
-        inserted_message = self.database_manager.insert(
-            Tables.MESSAGES,
-            Message(
-                room_id=context.room.id,
-                sender_id=context.user.id,
-                content=message.content,
-            ),
-        )
-
         recent_messages = self.database_manager.get_multiple_rows(
             Tables.MESSAGES,
             max_rows=5,
@@ -88,6 +79,8 @@ class ReplyService(Service):
             )  # Default delay if there's an error parsing time
 
         # for debugging
+        logger.info("___")
+        logger.info(config.ENABLE_RESPONSE_DELAY)
         if not config.ENABLE_RESPONSE_DELAY:
             return 1
 
