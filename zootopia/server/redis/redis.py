@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from typing import Generator, Any, Optional
 from zootopia.core.logger import get_logger
 from config.config import config
+from time import time 
 
 logger = get_logger(__name__)
 
@@ -55,3 +56,25 @@ class RedisManager:
         with self.get_connection() as client:
             for key in client.scan_iter(match=match, count=count):
                 yield key.decode('utf-8')
+
+    def check_rate_limit(self, key: str, max_calls: int, period: int) -> bool:
+        """
+        Check if the rate limit has been exceeded for a given key.
+        
+        :param key: The rate limit key (e.g., phone number and IP combination)
+        :param max_calls: Maximum number of calls allowed in the period
+        :param period: Time period in seconds
+        :return: True if rate limited, False otherwise
+        """
+        with self.get_connection() as client:
+            current_time = int(time())
+            rate_limit_key = f"rate_limit:{key}"
+
+            pipe = client.pipeline()
+            pipe.zremrangebyscore(rate_limit_key, 0, current_time - period)
+            pipe.zcard(rate_limit_key)
+            pipe.zadd(rate_limit_key, {str(current_time): current_time})
+            pipe.expire(rate_limit_key, period)
+            _, call_count, _, _ = pipe.execute()
+
+            return call_count >= max_calls
