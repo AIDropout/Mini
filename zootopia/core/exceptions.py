@@ -1,11 +1,10 @@
-from datetime import datetime
-from enum import Enum
-
-from fastapi import HTTPException
-from pydantic import BaseModel
-
-
 class ServiceError(Exception):
+    pass
+
+
+class MemoryAdditionError(Exception):
+    """Exception raised when adding a memory fails."""
+
     pass
 
 

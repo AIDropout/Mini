@@ -1,6 +1,7 @@
 import yaml
 from pydantic_settings import BaseSettings
-from pathlib import Path
+
+from zootopia.core.schema.llm import LLMProviders
 
 
 class MemoryQdrantConfig(BaseSettings):
@@ -20,7 +21,7 @@ class TimeApiConfig(BaseSettings):
     url_from_timezone: str = "https://timeapi.io/api/time/current/zone?timeZone="
     url_from_ip: str = "https://timeapi.io/api/time/current/ip?ipAddress="
     url_available_timezones: str = "https://timeapi.io/api/timezone/availabletimezones"
-    default_timezone: str = "UTC"
+    default_timezone: str = "America/Chicago"
 
 
 class Config(BaseSettings):
@@ -46,6 +47,7 @@ class Config(BaseSettings):
     FLOWER_UNAUTHENTICATED_API: bool
     FILTER_LLM: str
     SKIP_LLM: str
+    ACTION_MANAGER_LLM_PROVIDER: LLMProviders
     ACTION_MANAGER_LLM: str
     INTENT_MANAGER_LLM: str
     MEMORY_MANAGER_LLM: str
@@ -59,6 +61,7 @@ class Config(BaseSettings):
     MEMORY_QDRANT_CONFIG: MemoryQdrantConfig
     MEMORY_LLM_PROVIDER: str
     MEMORY_LITELLM_CONFIG: MemoryLiteLLMConfig
+    MEMORY_EMBEDDINGS_PROVIDER: str
     ENABLE_RESPONSE_DELAY: bool
     FILE_STORE: str
     FILE_STORE_PATH: str
@@ -67,13 +70,6 @@ class Config(BaseSettings):
     def from_yaml(cls, file_path: str):
         with open(file_path, "r") as file:
             yaml_data = yaml.safe_load(file)
-
-        project_root = Path(file_path).parent.parent
-        downloads_path = project_root / "downloads"
-        yaml_data["FILE_STORE_PATH"] = yaml_data.get("FILE_STORE_PATH") or str(
-            downloads_path
-        )
-
         return cls(**yaml_data)
 
 

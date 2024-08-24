@@ -28,6 +28,7 @@ FLOWER_UNAUTHENTICATED_API: bool
 
 FILTER_LLM: "groq/llama-3.1-70b-versatile"
 SKIP_LLM: "groq/llama-3.1-70b-versatile"
+ACTION_MANAGER_LLM_PROVIDER: "ANTHROPIC"
 ACTION_MANAGER_LLM: "claude-3-5-sonnet-20240620"
 INTENT_MANAGER_LLM: "claude-3-5-sonnet-20240620"
 MEMORY_MANAGER_LLM: "claude-3-5-sonnet-20240620"

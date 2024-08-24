@@ -1,10 +1,14 @@
+import json
 import traceback
 from functools import wraps
-import json
-from zootopia.core.logger import logger
-from zootopia.core.exceptions import MessageParsingError, ServiceError, HTTPException
-from pydantic import ValidationError
+
 import requests
+from fastapi import HTTPException
+from pydantic import ValidationError
+
+from zootopia.core.exceptions import MessageParsingError, ServiceError
+from zootopia.core.logger import logger
+
 
 def error_handler(service_name):
     """Decorator to handle API errors consistently with detailed error reporting"""
@@ -38,7 +42,7 @@ def error_handler(service_name):
                         response_content = e.response.json()
                     except json.JSONDecodeError:
                         response_content = e.response.text
-                
+
                 error_message = (
                     f"HTTP error in {service_name} operation {func.__name__}:\n"
                     f"Status code: {e.response.status_code}\n"
