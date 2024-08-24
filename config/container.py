@@ -1,6 +1,7 @@
 from typing import Optional
 
 from config.config import config
+from zootopia.core.rate_limiter import RateLimiter
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.llm import LLMManager
 from zootopia.manager.messaging import MessagingManagerFactory
@@ -12,7 +13,6 @@ from zootopia.manager.payment import (
 from zootopia.server.redis import RedisManager
 from zootopia.service.context_factory import ContextFactory
 from zootopia.service.user_service import UserService
-from zootopia.core.rate_limiter import RateLimiter
 
 
 class Container:
@@ -165,7 +165,7 @@ class Container:
             database_manager=self.database_manager,
             llm_manager=LLMManager(
                 llm_name=config.VISION_MANAGER_LLM,
-                llm_provider="OPENAI_API_KEY",
+                llm_provider=config.VISION_MANAGER_LLM_PROVIDER,
             ),
         )
 
