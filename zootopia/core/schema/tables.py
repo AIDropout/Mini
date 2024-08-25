@@ -148,6 +148,10 @@ class Subscription(BaseModel):
     user_id: str
     status: str
 
+class UserWithSubscription(BaseModel):
+    user: User
+    subscription: Optional[Subscription] = None
+
 
 class Schedule(BaseModel):
     id: str = Field(default_factory=generate_uuid)

@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.payment.customer import CustomerManager
-from zootopia.core.schema.tables import Tables, User
+from zootopia.core.schema.tables import Tables, User, UserWithSubscription
 from zootopia.service.base import Service
 from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
@@ -31,11 +31,15 @@ class UserService(Service):
                 )
             raise HTTPException(status_code=500, detail="Error creating user")
 
-    def get_user(self, id: str) -> User:
+    def get_user(self, id: str) -> UserWithSubscription:
         user = self.database_manager.get_row(Tables.USERS, {Tables.USERS__id: id})
+        subscription = self.database_manager.get_row(
+            Tables.SUBSCRIPTIONS, {Tables.SUBSCRIPTIONS__user_id: id}
+        )
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        return user
+        user_data = UserWithSubscription(user=user, subscription=subscription)
+        return user_data
 
     def update_user(self, id: str, user_params) -> User:
         existing_user = self.database_manager.get_row(

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends, Security, Path, Body
 from pydantic import BaseModel
 from zootopia.api.security import verify_api_key
-from zootopia.core.schema.tables import User
+from zootopia.core.schema.tables import User, UserWithSubscription
 from config.container import container
 from zootopia.service.user_service import UserService
 from config.config import config
@@ -26,7 +26,7 @@ async def get_user(
     id: UUID = Path(..., title="The ID of the user to get"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
-) -> User:
+) -> UserWithSubscription:
     """Get a user by ID. Returns the retrieved User object"""
     return user_service.get_user(str(id))
 
