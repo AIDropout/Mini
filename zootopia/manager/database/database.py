@@ -34,7 +34,7 @@ class DatabaseManager:
         item: BaseModel,
         condition_key: str,
         condition_value: Any,
-    ) -> Dict[str, Any]:
+    ) -> TableModel:
         # Only include fields that are set (not None)
         update_data = {k: v for k, v in item.model_dump().items() if v is not None}
 
@@ -50,7 +50,9 @@ class DatabaseManager:
         data, _ = query.execute()
         if not data or not data[1]:
             raise ValueError(f"No data returned for update on {table_name}")
-        return data[1][0]
+
+        model_class = TABLE_MODEL_MAP[table_name]
+        return model_class(**data[1][0])
 
     @error_handler("Supabase")
     def get_row(

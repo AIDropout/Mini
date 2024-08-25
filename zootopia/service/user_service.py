@@ -1,10 +1,12 @@
 from fastapi import HTTPException
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.payment.customer import CustomerManager
-from zootopia.core.schema.tables import Tables, User, UserWithSubscription
+from zootopia.core.schema.tables import Tables, User, Room
+from zootopia.core.schema.subscription import SubscriptionStatus
 from zootopia.service.base import Service
 from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
+from typing import List
 
 
 class UserService(Service):
@@ -31,15 +33,11 @@ class UserService(Service):
                 )
             raise HTTPException(status_code=500, detail="Error creating user")
 
-    def get_user(self, id: str) -> UserWithSubscription:
+    def get_user(self, id: str) -> User:
         user = self.database_manager.get_row(Tables.USERS, {Tables.USERS__id: id})
-        subscription = self.database_manager.get_row(
-            Tables.SUBSCRIPTIONS, {Tables.SUBSCRIPTIONS__user_id: id}
-        )
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        user_data = UserWithSubscription(user=user, subscription=subscription)
-        return user_data
+        return user
 
     def update_user(self, id: str, user_params) -> User:
         existing_user = self.database_manager.get_row(
@@ -72,3 +70,17 @@ class UserService(Service):
         if not deleted_user_id:
             raise HTTPException(status_code=400, detail="Failed to delete user")
         return JSONResponse(status_code=200, content="Succesfully deleted user")
+
+    def get_user_rooms(self, user_id: str) -> List[Room]:
+        """Get all rooms that a user is in"""
+        rooms = self.database_manager.get_multiple_rows(
+            table_name=Tables.ROOMS,
+            conditions={Tables.ROOMS__user_id: user_id},
+        )
+
+        if not rooms:
+            raise HTTPException(
+                status_code=404, detail="User does not have any rooms with any agents"
+            )
+
+        return rooms

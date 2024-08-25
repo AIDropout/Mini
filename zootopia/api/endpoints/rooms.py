@@ -44,21 +44,6 @@ async def create_room(
     return await room_service.create_room(agent_id=agent_id, user_id=user_id)
 
 
-@router.get("/rooms/agent/{user_id}")
-def get_user_agent(
-    user_id: str,
-    room_service: RoomService = Depends(lambda: container.get_room_service()),
-    api_key: str = Security(verify_api_key),
-):
-    """Get all agent_ids associated with a user"""
-    agent_ids = room_service.get_user_agent(user_id)
-    if not agent_ids:
-        raise HTTPException(
-            status_code=404, detail=f"No agents found for user_id: {user_id}"
-        )
-    return {"agent_ids": agent_ids}
-
-
 @router.post("/rooms/respond")
 async def respond_webhook(
     request: Request,

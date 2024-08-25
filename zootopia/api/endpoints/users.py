@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Request, Depends, Security, Path, Body
 from pydantic import BaseModel
 from zootopia.api.security import verify_api_key
-from zootopia.core.schema.tables import User, UserWithSubscription
+from zootopia.core.schema.tables import User, Room
 from config.container import container
 from zootopia.service.user_service import UserService
 from config.config import config
 from uuid import UUID
+from typing import List
 
 
 router = APIRouter()
@@ -21,14 +22,24 @@ async def create_user(
     return user_service.create_user(id=id, phone_number=phone_number)
 
 
-@router.get("/users/{id}", response_model=User)
-async def get_user(
-    id: UUID = Path(..., title="The ID of the user to get"),
+@router.get("/users/{user_id}/rooms")
+def get_user_rooms(
+    user_id: str = Path(..., title="The ID of the user to get"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
-) -> UserWithSubscription:
+) -> List[Room]:
+    """Get all rooms that a user is in"""
+    return user_service.get_user_rooms(user_id)
+
+
+@router.get("/users/{user_id}", response_model=User)
+async def get_user(
+    user_id: str = Path(..., title="The ID of the user to get"),
+    user_service: UserService = Depends(lambda: container.get_user_service()),
+    api_key: str = Security(verify_api_key),
+) -> User:
     """Get a user by ID. Returns the retrieved User object"""
-    return user_service.get_user(str(id))
+    return user_service.get_user(id)
 
 
 @router.patch("/users/{id}", response_model=User)

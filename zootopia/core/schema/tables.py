@@ -101,6 +101,7 @@ class User(BaseModel):
     birthday: Optional[str] = Field(default=None)
     telegram_uid: Optional[str] = Field(default=None)
     customer_id: Optional[str] = Field(default=None)
+    is_subscribed: bool = Field(default=False)
 
 
 class Room(BaseModel):
@@ -147,10 +148,6 @@ class Subscription(BaseModel):
     id: str
     user_id: str
     status: str
-
-class UserWithSubscription(BaseModel):
-    user: User
-    subscription: Optional[Subscription] = None
 
 
 class Schedule(BaseModel):

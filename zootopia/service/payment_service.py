@@ -38,7 +38,7 @@ class PaymentService(Service):
             raise HTTPException(
                 status_code=404, detail=f"User with id {user_id} not found"
             )
-        
+
         phone_number = user.phone_number
         customer_id = user.customer_id
 
@@ -109,6 +109,13 @@ class PaymentService(Service):
                     status=subscription.status,
                 ),
             )
+
+            self.database_manager.update(
+                Tables.USERS,
+                User(is_subscribed=True),
+                condition_key=Tables.USERS__id,
+                condition_value=user_id,
+            )
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")
             raise e
@@ -127,6 +134,13 @@ class PaymentService(Service):
                 ),
                 condition_key=Tables.SUBSCRIPTIONS__id,
                 condition_value=subscription.id,
+            )
+
+            self.database_manager.update(
+                Tables.USERS,
+                User(is_subscribed=False),
+                condition_key=Tables.USERS__id,
+                condition_value=updated_subscription.user_id,
             )
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")
