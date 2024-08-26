@@ -49,7 +49,7 @@ MEMORY_VECTOR_STORE_PROVIDER: qdrant
 MEMORY_QDRANT_CONFIG:
   url: url
   api_key: key
-  collection_name: test
+  collection_name: testing # or 'prod' for production
   embedding_model_dims: 768
 
 MEMORY_LLM_PROVIDER: litellm
