@@ -61,12 +61,13 @@ class AgentService(Service):
         try:
             if isinstance(task, RespondTask):
 
-
                 if len(task.user_message.media_urls) > 0:
                     description = self.vision.handle_images(
                         task.user_message.media_urls
                     )
-                    task.user_message.content += f"\n\nUser sent an image: {description}"
+                    task.user_message.content += (
+                        f"\n\nUser sent an image: {description}"
+                    )
 
                     inserted_message = self.database_manager.insert(
                         Tables.MESSAGES,
@@ -76,7 +77,7 @@ class AgentService(Service):
                             content=task.user_message.content,
                         ),
                     )
-                    
+
                 inserted_message = self.database_manager.insert(
                     Tables.MESSAGES,
                     Message(
@@ -85,7 +86,6 @@ class AgentService(Service):
                         content=task.user_message.content,
                     ),
                 )
-        
 
                 el.log(
                     f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}"
@@ -102,7 +102,13 @@ class AgentService(Service):
             )
             el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
-            system_prompt = self._construct_system_prompt(task.instructions)
+            relevant_memories = self.memory.get_relevant_memories(all_recent_messages)
+            relevant_memories = "\n\n".join(relevant_memories)
+            el.log(f"RELEVANT MEMORIES FOR CONVERSATION: {relevant_memories}")
+
+            system_prompt = self._construct_system_prompt(
+                task.instructions, relevant_memories=relevant_memories
+            )
             el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
 
             response_text = self.action.generate_message(
@@ -120,11 +126,33 @@ class AgentService(Service):
             if success:
                 inserted_message = self._insert_agent_message(task, final_message)
 
+            count_messages = self.database_manager.count_rows(
+                table_name=Tables.MESSAGES
+            )
+            save_intervals = [30, 31]
+            remaining_messages_until_save = [
+                count_messages % interval for interval in save_intervals
+            ]
+
+            el.log(
+                f"There have been {count_messages} messages total. "
+                f"Next save will occur in {remaining_messages_until_save} messages."
+            )
+
+            if 0 in remaining_messages_until_save:
+                messages_for_memory = self.memory.get_recent_messages(
+                    count=max(save_intervals) + 2
+                )
+                self.memory.save_relevant_memories(messages=messages_for_memory)
+                el.log(f"Saved {len(messages_for_memory)} messages for memory.")
+
         except Exception as e:
             el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")
             return False
 
-    def _construct_system_prompt(self, instructions: str) -> str:
+    def _construct_system_prompt(
+        self, instructions: str, relevant_memories: str
+    ) -> str:
         return f"""
         {self.agent.prompt}
 
@@ -134,7 +162,12 @@ class AgentService(Service):
         a) Avoid repeating information already provided.
         b) Identify opportunities to drive the conversation forward, keeping it fresh and lively.
 
-        It is now {get_current_time_readable()}
+        Context:
+        - time
+        {self.memory.memory_manager.time_manager.current_readable_time()}
+
+        - here are relevant memories:
+        {relevant_memories}
         """
 
     def _insert_agent_message(

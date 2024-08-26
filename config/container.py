@@ -4,12 +4,14 @@ from config.config import config
 from zootopia.core.rate_limiter import RateLimiter
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.llm import LLMManager
+from zootopia.manager.memory import MemoryManager
 from zootopia.manager.messaging import MessagingManagerFactory
 from zootopia.manager.payment import (
     CheckoutManager,
     CustomerManager,
     SubscriptionManager,
 )
+from zootopia.manager.time import TimeManager
 from zootopia.server.redis import RedisManager
 from zootopia.service.context_factory import ContextFactory
 from zootopia.service.user_service import UserService
@@ -18,6 +20,10 @@ from zootopia.service.user_service import UserService
 class Container:
     def __init__(self):
         self.database_manager = DatabaseManager()
+        self.time_manager: TimeManager = TimeManager(
+            # TODO: Save user's timezone on signup
+            user_timezone=config.TIME_API.default_timezone
+        )
         self.messaging_manager_factory: Optional[MessagingManagerFactory] = None
         self.checkout_manager = CheckoutManager()
         self.customer_manager = CustomerManager.from_config(config)
@@ -26,6 +32,7 @@ class Container:
         self._context_factory: Optional[ContextFactory] = None
         self.redis_manager: Optional[RedisManager] = None
         self.rate_limiter: Optional[RateLimiter] = None
+        self.memory_manager: Optional[MemoryManager] = None
 
     def get_rate_limiter(self):
         if self.rate_limiter is None:
@@ -71,6 +78,25 @@ class Container:
                 user_service=self.get_user_service(),
             )
         return self._context_factory
+
+    def get_memory_manager(self):
+        if self.memory_manager is None:
+
+            def lazy_init_llm():
+                return LLMManager(
+                    llm_name=config.MEMORY_GENERAL_LLM,
+                    llm_provider=config.MEMORY_GENERAL_LLM_PROVIDER,
+                )
+
+            self.memory_manager = MemoryManager(
+                user_id=None,
+                agent_id=None,
+                time_manager=self.time_manager,
+                llm_manager=lazy_init_llm(),
+                memory_save_delay=5,
+            )
+
+        return self.memory_manager
 
     def get_cron_service(self):
         from zootopia.service.cron_service import CronService
@@ -142,7 +168,14 @@ class Container:
                 llm_provider=config.ACTION_MANAGER_LLM_PROVIDER,
             )
         )
-        memory_module = MemoryModule(database_manager=self.database_manager)
+
+        memory_manager = self.get_memory_manager()
+        memory_llm_manager = memory_manager.llm_manager
+        memory_module = MemoryModule(
+            database_manager=self.database_manager,
+            memory_manager=memory_manager,
+            llm_manager=memory_llm_manager,
+        )
         subscribe_module = SubscribeModule(
             database_manager=self.database_manager,
             action_module=action_module,

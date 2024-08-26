@@ -1,17 +1,86 @@
-from zootopia.core.logger import logger
-from zootopia.core.schema.tables import (
-    Tables,
-    Message,
-)
-from typing import List, Dict
-from zootopia.manager.database import DatabaseManager
-from zootopia.core.error import error_handler
+from typing import Dict, List
+
 from zootopia.controller.agent.modules.base import AgentModule
+from zootopia.core.error import error_handler
+from zootopia.core.logger import logger
+from zootopia.core.schema.memory import MemoryRecordSchema
+from zootopia.core.schema.tables import Message, Tables
+from zootopia.manager.database import DatabaseManager
+from zootopia.manager.llm import LLMManager
+from zootopia.manager.memory import MemoryManager
 
 
 class MemoryModule(AgentModule):
-    def __init__(self, database_manager: DatabaseManager):
+    def __init__(
+        self,
+        database_manager: DatabaseManager,
+        memory_manager: MemoryManager,
+        llm_manager: LLMManager,
+    ):
         super().__init__(database_manager)
+        self.memory_manager = memory_manager
+        self.llm_manager = llm_manager
+
+    def _set_user_and_agent_id(
+        self, user_id: str | None = None, agent_id: str | None = None
+    ):
+        if user_id is None:
+            user_id = self.user.phone_number
+        if agent_id is None:
+            agent_id = self.agent.id
+
+        logger.info(
+            "Setting user_id (%s) and agent_id (%s) for memory manager",
+            user_id,
+            agent_id,
+        )
+
+        self.memory_manager.set_user_id(user_id)
+        self.memory_manager.set_agent_id(agent_id)
+
+    def _prepare_recent_messages(self, recent_messages: List[Dict[str, str]]) -> str:
+        formatted_messages = [
+            f"{msg['role']}: {msg['content']}" for msg in recent_messages
+        ]
+        return "\n".join(formatted_messages)
+
+    def get_relevant_memories(self, recent_messages: List[Dict[str, str]]) -> List[str]:
+        self._set_user_and_agent_id()
+        prepared_recent_messages = self._prepare_recent_messages(recent_messages)
+        memories: List[MemoryRecordSchema] = self.memory_manager.get_memory(
+            prepared_recent_messages
+        )
+
+        cleaned = []
+        for memory in memories:
+            created_at_str = (
+                memory.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if memory.created_at
+                else "N/A"
+            )
+            updated_at_str = (
+                memory.updated_at.strftime("%Y-%m-%d %H:%M:%S")
+                if memory.updated_at
+                else "N/A"
+            )
+
+            cleaned_memory = (
+                f"Memory: {memory.memory}\n"
+                f"Metadata: {memory.metadata}\n"
+                f"Created At: {created_at_str}\n"
+                f"Memory Last Updated At: {updated_at_str}"
+            )
+
+            cleaned.append(cleaned_memory)
+
+        logger.info("Memories: %s", cleaned)
+
+        return cleaned
+
+    def save_relevant_memories(self, messages: List[Dict[str, str]]) -> str:
+        self._set_user_and_agent_id()
+        prepared_messages = self._prepare_recent_messages(messages)
+        self.memory_manager.add_memory(data=prepared_messages)
 
     @error_handler("MemoryModule")
     def get_recent_messages(self, count: int = 10) -> List[Dict[str, str]]:
@@ -34,7 +103,7 @@ class MemoryModule(AgentModule):
 
         if not messages or not isinstance(messages, list):
             logger.warning(
-                f"Invalid or empty data fetched for room {self.room.id}: {messages}"
+                "Invalid or empty data fetched for room %s: %s", self.room.id, messages
             )
             return []
 
