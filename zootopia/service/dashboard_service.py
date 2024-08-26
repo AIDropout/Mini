@@ -5,27 +5,10 @@ from zootopia.service.context_factory import ContextFactory
 from zootopia.core.logger import get_logger
 from zootopia.service.base import Service
 from pydantic import BaseModel, Field
+from fastapi import Body
 
 
 logger = get_logger(__name__)
-
-
-class AdminMessageRequest(BaseModel):
-    room_id: str = Field(
-        ..., description="The ID of the room to send the admin message to"
-    )
-    message: str = Field(..., description="The content of the admin message to be sent")
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "room_id": "room_123456",
-                    "message": "This is an important announcement from the admin.",
-                }
-            ]
-        }
-    }
 
 
 class DashboardService(Service):
@@ -39,9 +22,7 @@ class DashboardService(Service):
         self.messaging_manager_factory = messaging_manager_factory
         self.context_factory = context_factory
 
-    async def send_admin_message(self, request: AdminMessageRequest):
-        room_id = request.room_id
-        message = request.message
+    async def send_admin_message(self, room_id: str, message: str):
 
         context = self.context_factory.create_cron_context(room_id)
 
