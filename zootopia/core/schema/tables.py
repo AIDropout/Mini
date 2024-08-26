@@ -28,6 +28,7 @@ class Tables(str, Enum):
     USERS__telegram_uid = "telegram_uid"
     USERS__birthday = "birthday"
     USERS__customer_id = "customer_id"
+    USERS__is_subscribed = "is_subscribed"
 
     ROOMS = "rooms"
     ROOMS__id = "id"

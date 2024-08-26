@@ -5,7 +5,6 @@ from zootopia.core.schema.tables import User, Room
 from config.container import container
 from zootopia.service.user_service import UserService
 from config.config import config
-from uuid import UUID
 from typing import List
 
 
@@ -27,7 +26,7 @@ def get_user_rooms(
     user_id: str = Path(..., title="The ID of the user to get"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
-) -> List[Room]:
+) -> List[Room] | None:
     """Get all rooms that a user is in"""
     return user_service.get_user_rooms(user_id)
 

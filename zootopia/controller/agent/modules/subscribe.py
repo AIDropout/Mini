@@ -143,7 +143,7 @@ class SubscribeModule(AgentModule):
         self.room.subscribe_msg_sent = True
         self.database_manager.update(
             Tables.ROOMS,
-            Room(subscribe_msg_sent=True),
+            {Tables.ROOMS__subscribe_msg_sent: True},
             condition_key=Tables.ROOMS__id,
             condition_value=self.room.id,
         )

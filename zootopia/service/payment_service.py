@@ -100,6 +100,7 @@ class PaymentService(Service):
             subscription = self._subscription_manager.retrieve_subscription(
                 subscription_id
             )
+            logger.info("____")
 
             self.database_manager.insert(
                 table_name=Tables.SUBSCRIPTIONS,
@@ -110,12 +111,16 @@ class PaymentService(Service):
                 ),
             )
 
+            logger.info("____")
+
             self.database_manager.update(
                 Tables.USERS,
-                User(is_subscribed=True),
+                {Tables.USERS__is_subscribed: True},
                 condition_key=Tables.USERS__id,
                 condition_value=user_id,
             )
+
+            logger.info("___")
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")
             raise e
@@ -129,16 +134,14 @@ class PaymentService(Service):
             # user_id = subscription.metadata.get("user_id", None)
             updated_subscription = self.database_manager.update(
                 table_name=Tables.SUBSCRIPTIONS,
-                item=Subscription(
-                    subscription_status=subscription.status,
-                ),
+                update_data={Tables.SUBSCRIPTIONS__status: subscription.status},
                 condition_key=Tables.SUBSCRIPTIONS__id,
                 condition_value=subscription.id,
             )
 
             self.database_manager.update(
-                Tables.USERS,
-                User(is_subscribed=False),
+                table_name=Tables.USERS,
+                update_data={Tables.USERS__is_subscribed: False},
                 condition_key=Tables.USERS__id,
                 condition_value=updated_subscription.user_id,
             )

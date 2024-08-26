@@ -31,12 +31,12 @@ class DatabaseManager:
     def update(
         self,
         table_name: str,
-        item: BaseModel,
+        update_data: Dict[str, Any],
         condition_key: str,
         condition_value: Any,
     ) -> TableModel:
-        # Only include fields that are set (not None)
-        update_data = {k: v for k, v in item.model_dump().items() if v is not None}
+        # Remove any None values from the update_data
+        update_data = {k: v for k, v in update_data.items() if v is not None}
 
         query = self.supabase.table(table_name).update(update_data)
 

@@ -48,7 +48,7 @@ class UserService(Service):
 
         updated_user = self.database_manager.update(
             table_name=Tables.USERS,
-            item=user_params,
+            update_data=user_params,
             condition_key=Tables.USERS__id,
             condition_value=id,
         )
@@ -77,10 +77,5 @@ class UserService(Service):
             table_name=Tables.ROOMS,
             conditions={Tables.ROOMS__user_id: user_id},
         )
-
-        if not rooms:
-            raise HTTPException(
-                status_code=404, detail="User does not have any rooms with any agents"
-            )
 
         return rooms
