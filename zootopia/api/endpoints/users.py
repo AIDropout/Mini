@@ -39,32 +39,32 @@ async def get_user(
     api_key: str = Security(verify_api_key),
 ) -> User:
     """Get a user by ID. Returns the retrieved User object"""
-    return user_service.get_user(id)
+    return user_service.get_user(user_id)
 
 
-@router.patch("/users/{id}", response_model=User)
+@router.patch("/users/{user_id}", response_model=User)
 async def update_user(
-    id: int = Path(..., title="The ID of the user to update"),
+    user_id: str = Path(..., title="The ID of the user to update"),
     user: User = Body(..., title="The updated user fields"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> User:
     """Update a user. Returns updated User object"""
-    return user_service.update_user(user_id=id, user_params=user)
+    return user_service.update_user(user_id=user_id, user_params=user)
 
 
 @router.delete("/users/{user_id}")
 async def delete_user(
-    id: int = Path(..., title="The ID of the user to delete"),
+    user_id: str = Path(..., title="The ID of the user to delete"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> None:
     """Delete a user. Returns the id of the deleted user."""
-    return user_service.delete_user(id)
+    return user_service.delete_user(user_id)
 
 
 async def test_user_endpoints():
-    TEST_ID = 115  # Change as needed
+    TEST_ID = "946f4f9d-1111-495e-b59d-5f3704deb11b"  # Change as needed
 
     async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
         # Test create_user
