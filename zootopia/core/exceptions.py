@@ -8,6 +8,18 @@ class MemoryAdditionError(Exception):
     pass
 
 
+class MissingAgentIdError(Exception):
+    """Exception raised when an agent id is required but not provided."""
+
+    pass
+
+
+class MissingUserIdError(Exception):
+    """ "Exception raised when a user id is required but not provided."""
+
+    pass
+
+
 class TimeManagerError(Exception):
     """Base class for exceptions raised by TimeManager."""
 
