@@ -42,6 +42,9 @@ STRIPE_PRODUCT_PRICE_ID: key
 PHONE_OTP_CHANNEL_ID: key
 FRONTEND_URL: http://localhost:3000/
 
+MEMORY_GENERAL_LLM: gemini/gemini-1.5-flash
+MEMORY_GENERAL_LLM_PROVIDER: GEMINI_API_KEY
+
 MEMORY_VECTOR_STORE_PROVIDER: qdrant
 MEMORY_QDRANT_CONFIG:
   url: url
@@ -54,6 +57,7 @@ MEMORY_LITELLM_CONFIG:
   model: gemini/gemini-pro
   temperature: 0.2
   max_tokens: 1000
+  api_key: str
 
 MEMORY_EMBEDDINGS_PROVIDER: huggingface
 

@@ -4,6 +4,11 @@ from pydantic_settings import BaseSettings
 from zootopia.core.schema.llm import LLMProviders
 
 
+def get_api_key(provider: LLMProviders) -> str:
+    """Fetches the API key from the config based on the provider."""
+    return getattr(config, provider.value)
+
+
 class MemoryQdrantConfig(BaseSettings):
     url: str
     api_key: str
@@ -15,6 +20,7 @@ class MemoryLiteLLMConfig(BaseSettings):
     model: str
     temperature: float
     max_tokens: int
+    api_key: str
 
 
 class TimeApiConfig(BaseSettings):
@@ -65,6 +71,8 @@ class Config(BaseSettings):
     PHONE_OTP_CHANNEL_ID: str
     FRONTEND_URL: str
     TIME_API: TimeApiConfig = TimeApiConfig()
+    MEMORY_GENERAL_LLM: str
+    MEMORY_GENERAL_LLM_PROVIDER: LLMProviders
     MEMORY_VECTOR_STORE_PROVIDER: str
     MEMORY_QDRANT_CONFIG: MemoryQdrantConfig
     MEMORY_LLM_PROVIDER: str

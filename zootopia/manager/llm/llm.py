@@ -16,7 +16,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from config.config import config
+from config.config import get_api_key
 from zootopia.core.error import error_handler
 from zootopia.core.exceptions import MessageParsingError
 from zootopia.core.logger import logger
@@ -28,14 +28,10 @@ class LLMManager:
 
     def __init__(self, llm_name: str, llm_provider: LLMProviders):
         self.llm_name: str = llm_name
-        self.api_key: str = self._get_api_key(llm_provider)
+        self.api_key: str = get_api_key(llm_provider)
         litellm.modify_params = True
         self.supports_json_mode = self._check_json_mode_support()
         self.supports_vision = self._check_vision_support()
-
-    def _get_api_key(self, provider: LLMProviders) -> str:
-        """Fetches the API key from the config based on the provider."""
-        return getattr(config, provider.value)
 
     @error_handler("LLM")
     def _check_json_mode_support(self) -> bool:

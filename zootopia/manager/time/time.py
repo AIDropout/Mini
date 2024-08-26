@@ -34,9 +34,6 @@ class TimeManager:
     def __init__(
         self, user_ip: str | None = None, user_timezone: str | None = None
     ) -> None:
-        if user_timezone is not None and not self._is_available_timezone(user_timezone):
-            raise InvalidTimezoneError(timezone=user_timezone)
-
         self.timeout = 10
         self.default_timezone = config.TIME_API.default_timezone
         self.api_url_timezone = config.TIME_API.url_from_timezone
@@ -47,6 +44,9 @@ class TimeManager:
 
         self.user_ip = user_ip
         self.user_timezone = user_timezone
+
+        if user_timezone is not None and not self._is_available_timezone(user_timezone):
+            raise InvalidTimezoneError(timezone=user_timezone)
 
     @property
     def ip(self):
@@ -129,3 +129,18 @@ class TimeManager:
             microsecond=time_data.milliSeconds
             * 1000,  # Convert milliseconds to microseconds
         )
+
+    def current_readable_time(self) -> str:
+        """Returns the current date and time as a readable string."""
+        current_time_data = self.fetch_current_time_data()
+        current_date = current_time_data.date
+        current_time = current_time_data.time
+        current_day_of_week = current_time_data.dayOfWeek
+        timezone = current_time_data.timeZone
+
+        readable_time = (
+            f"Today is {current_day_of_week}, {current_date}. "
+            f"The current time is {current_time} in {timezone}."
+        )
+
+        return readable_time
