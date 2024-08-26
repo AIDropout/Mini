@@ -77,10 +77,25 @@ class MemoryModule(AgentModule):
 
         return cleaned
 
-    def save_relevant_memories(self, messages: List[Dict[str, str]]) -> str:
+    def save_relevant_memories(self, save_interval: List[str] = [10, 11]) -> str:
         self._set_user_and_agent_id()
-        prepared_messages = self._prepare_recent_messages(messages)
-        self.memory_manager.add_memory(data=prepared_messages)
+
+        count_messages = self.database_manager.count_rows(table_name=Tables.MESSAGES)
+        remaining_messages_until_save = [
+            count_messages % interval for interval in save_interval
+        ]
+
+        logger.info(
+            "There have been %s messages total. Next save will occur in %s messages.",
+            count_messages,
+            remaining_messages_until_save,
+        )
+
+        if 0 in remaining_messages_until_save:
+            messages_for_memory = self.get_recent_messages(count=max(save_interval) + 2)
+            prepared_messages = self._prepare_recent_messages(messages_for_memory)
+            self.memory_manager.add_memory(data=prepared_messages)
+            logger.info("Saved %s messages for memory.", len(messages_for_memory))
 
     @error_handler("MemoryModule")
     def get_recent_messages(self, count: int = 10) -> List[Dict[str, str]]:

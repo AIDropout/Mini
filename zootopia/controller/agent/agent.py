@@ -8,11 +8,10 @@ from zootopia.controller.agent.modules.vision import VisionModule
 from zootopia.controller.task.task_types import RemindTask, RespondTask, ReviveTask
 from zootopia.core.event_logger import event_logger as el
 from zootopia.core.logger import get_logger
-from zootopia.core.schema.tables import Agent, Message, Room, Schedule, Tables, User
+from zootopia.core.schema.tables import Agent, Message, Room, Tables, User
 from zootopia.manager.database import DatabaseManager
 from zootopia.manager.messaging import MessagingManager
 from zootopia.service.base import Service
-from zootopia.utils.time import get_current_time_readable
 
 
 class AgentService(Service):
@@ -126,25 +125,12 @@ class AgentService(Service):
             if success:
                 inserted_message = self._insert_agent_message(task, final_message)
 
-            count_messages = self.database_manager.count_rows(
-                table_name=Tables.MESSAGES
-            )
-            save_intervals = [30, 31]
-            remaining_messages_until_save = [
-                count_messages % interval for interval in save_intervals
-            ]
-
-            el.log(
-                f"There have been {count_messages} messages total. "
-                f"Next save will occur in {remaining_messages_until_save} messages."
-            )
-
-            if 0 in remaining_messages_until_save:
-                messages_for_memory = self.memory.get_recent_messages(
-                    count=max(save_intervals) + 2
-                )
-                self.memory.save_relevant_memories(messages=messages_for_memory)
-                el.log(f"Saved {len(messages_for_memory)} messages for memory.")
+            doubled_recent_message_count = task.recent_message_count * 2
+            save_interval = [
+                doubled_recent_message_count,
+                doubled_recent_message_count + 1,
+            ]  # this means every X'th message, memory saving will be triggered
+            self.memory.save_relevant_memories(save_interval=save_interval)
 
         except Exception as e:
             el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")
