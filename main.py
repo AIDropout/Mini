@@ -1,5 +1,4 @@
 import asyncio
-import os
 import subprocess
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -9,6 +8,7 @@ from zootopia.core.logger import logger
 from zootopia.manager.messaging import TelegramManager, BirdManager
 from zootopia.server.redis import RedisManager
 from config.config import config
+from fastapi.middleware.cors import CORSMiddleware
 
 
 LOCAL_URL = "127.0.0.1"
@@ -78,6 +78,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(api_router)
 
 

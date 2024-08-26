@@ -79,7 +79,8 @@ async def revive_webhook(
 
 @router.post("/rooms/admin-message")
 async def send_admin_message(
-    request: Request,
+    room_id: str = Body(..., title="Room ID of the page the user signed up to"),
+    message: str = Body(..., title="Message to send to user"),
     dashboard_service: DashboardService = Depends(
         lambda: container.get_dashboard_service()
     ),
@@ -87,8 +88,7 @@ async def send_admin_message(
 ):
     """Endpoint for sending messages from the admin dashboard."""
     try:
-        payload = await request.json()
-        await dashboard_service.send_admin_message(payload)
+        await dashboard_service.send_admin_message(room_id, message)
         return {"status": "Admin message sent successfully"}
     except Exception as e:
         logger.exception("Error in send_admin_message")
