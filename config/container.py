@@ -194,12 +194,15 @@ class Container:
             ),
         )
 
+        # TODO: temp using openai creds in a weird way, much change!!
+        vision_llm_man = LLMManager(
+            llm_name=config.VISION_MANAGER_LLM,
+            llm_provider=config.VISION_MANAGER_LLM_PROVIDER,
+        )
+        vision_llm_man.api_key = config.MEMORY_EMBEDDINGS_CONFIG.api_key
         vision_module = VisionModule(
             database_manager=self.database_manager,
-            llm_manager=LLMManager(
-                llm_name=config.VISION_MANAGER_LLM,
-                llm_provider=config.VISION_MANAGER_LLM_PROVIDER,
-            ),
+            llm_manager=vision_llm_man,
         )
 
         return AgentService(

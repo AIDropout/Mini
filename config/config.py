@@ -36,6 +36,12 @@ class AWSS3Config(BaseSettings):
     bucket: str
 
 
+class MemoryOpenAIConfig(BaseSettings):
+    model: str
+    embedding_dims: int
+    api_key: str
+
+
 class Config(BaseSettings):
     ENVIRONMENT: str
     ZOOTOPIA_API_KEY: str
@@ -78,6 +84,7 @@ class Config(BaseSettings):
     MEMORY_LLM_PROVIDER: str
     MEMORY_LITELLM_CONFIG: MemoryLiteLLMConfig
     MEMORY_EMBEDDINGS_PROVIDER: str
+    MEMORY_EMBEDDINGS_CONFIG: MemoryOpenAIConfig
     ENABLE_RESPONSE_DELAY: bool
     AWS_S3_CONFIG: AWSS3Config
 

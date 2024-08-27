@@ -50,7 +50,7 @@ MEMORY_QDRANT_CONFIG:
   url: url
   api_key: key
   collection_name: testing # or 'prod' for production
-  embedding_model_dims: 768
+  embedding_model_dims: 1536
 
 MEMORY_LLM_PROVIDER: litellm
 MEMORY_LITELLM_CONFIG:
@@ -59,7 +59,11 @@ MEMORY_LITELLM_CONFIG:
   max_tokens: 1000
   api_key: str
 
-MEMORY_EMBEDDINGS_PROVIDER: huggingface
+MEMORY_EMBEDDINGS_PROVIDER: openai
+MEMORY_EMBEDDINGS_CONFIG:
+  model: text-embedding-3-small
+  embedding_dims: 1536
+  api_key: str
 
 ENABLE_RESPONSE_DELAY: true
 

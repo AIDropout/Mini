@@ -48,6 +48,7 @@ class MemoryManager:
             },
             "embedder": {
                 "provider": config.MEMORY_EMBEDDINGS_PROVIDER,
+                "config": config.MEMORY_EMBEDDINGS_CONFIG.model_dump(),
             },
         }
 
