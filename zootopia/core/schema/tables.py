@@ -12,6 +12,9 @@ class Tables(str, Enum):
 
     AGENTS = "agents"
     AGENTS__id = "id"
+    AGENTS__name = "name"
+    AGENTS__role = "role"
+    AGENTS__description = "description"
     AGENTS__first_message = "first_message"
     AGENTS__bird_channel_id = "bird_channel_id"
     AGENTS__telegram_chat_id = "telegram_chat_id"
@@ -79,6 +82,18 @@ def generate_uuid():
 
 class Agent(BaseModel):
     id: str = Field(default_factory=generate_uuid)
+    name: Optional[str] = Field(
+        default=None,
+        description="ex. Sam (for UI)",
+    )
+    role: Optional[str] = Field(
+        default=None,
+        description="ex. Boyfriend (for UI)",
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Mysterious, cunning, jealous (for UI)",
+    )
     first_message: str = Field(default="Hey there!")
     telegram_chat_id: Optional[str] = Field(default=None)
     bird_channel_id: Optional[str] = Field(default=None)
