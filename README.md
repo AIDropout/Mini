@@ -6,17 +6,17 @@
  <br />
 </h1>
 <p align="center">
-Zootopians are the First Open-Source Digital Humans 👩🏽‍🤝‍👩🏼🧍
+Minis are the First Open-Source Digital Humans 👩🏽‍🤝‍👩🏼🧍
 </p>
 <p align="center">
-  <a href="https://discord.gg/w7p3U9wn"><img src="https://img.shields.io/discord/1217283257469501450?logo=discord&label=discord"/></a>
-  <a href="https://github.com/AIDropout/ZOOTOPIA"><img src="https://img.shields.io/github/stars/AIDropout/ZOOTOPIA" /></a>
-  <a href="https://github.com/AIDropout/ZOOTOPIA/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AIDropout/ZOOTOPIA"/></a>
+  <a href="https://discord.com/invite/k2taFvaJGr"><img src="https://img.shields.io/discord/1217283257469501450?logo=discord&label=discord"/></a>
+  <a href="https://github.com/AIDropout/Mini"><img src="https://img.shields.io/github/stars/AIDropout/Mini" /></a>
+  <a href="https://github.com/AIDropout/Mini/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AIDropout/Mini"/></a>
 </p>
 
 Help us build characters that are highly convincing, customizable, and dynamic — from boyfriend to personal secretary.
 
-Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` & `Stripe Payment` in minutes, not weeks ⚡
+Make your own `Twilio SMS` Mini powered by `Gemini LLM` with `Web Browsing` & `Quality Filter` in minutes, not weeks ⚡
 
 #### Zootopia character demos:
 - [Boyfriend](https://boyfriend.so)
@@ -52,10 +52,10 @@ Make your own `Twilio SMS` Zootopian powered by `Gemini LLM` with `Bing Search` 
 
 
 ## 🛠️ Environment Setup
-Make sure Python, [ngrok](https://ngrok.com/), and [uv]() are installed.
+Ensure that Python, [ngrok](https://ngrok.com/), and [uv](https://github.com/astral-sh/uv) are installed.
 
    ```bash
-   # 1 Navigate to the repository. Install [uv](https://github.com/astral-sh/uv):
+   # 1 Navigate to the repository.
    pip install uv 
 
    # 2. Create a virtual environment at .venv
@@ -103,4 +103,4 @@ uv pip freeze > requirements.txt
 
 ## Contributors
 
-[![Contributors](https://contrib.rocks/image?repo=AIDropout/ZOOTOPIA)](https://github.com/AIDropout/ZOOTOPIA/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=AIDropout/Mini)](https://github.com/AIDropout/Mini/graphs/contributors)
