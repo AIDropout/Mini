@@ -6,7 +6,7 @@ from zootopia.core.schema.subscription import SubscriptionStatus
 from zootopia.service.base import Service
 from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
-from typing import List
+from typing import List, Dict, Any
 
 
 class UserService(Service):
@@ -39,18 +39,21 @@ class UserService(Service):
             raise HTTPException(status_code=404, detail="User not found")
         return user
 
-    def update_user(self, id: str, user_params) -> User:
+    def update_user(self, user_id: str, user_params: Dict[str, Any]) -> User:
         existing_user = self.database_manager.get_row(
-            Tables.USERS, {Tables.USERS__id: id}
+            Tables.USERS, {Tables.USERS__id: user_id}
         )
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
 
+        # Only update fields that are provided and not None
+        update_data = {k: v for k, v in user_params.items() if v is not None}
+
         updated_user = self.database_manager.update(
             table_name=Tables.USERS,
-            update_data=user_params,
+            update_data=update_data,
             condition_key=Tables.USERS__id,
-            condition_value=id,
+            condition_value=user_id,
         )
         if not updated_user:
             raise HTTPException(status_code=400, detail="Failed to update user")

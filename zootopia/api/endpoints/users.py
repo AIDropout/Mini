@@ -5,7 +5,7 @@ from zootopia.core.schema.tables import User, Room
 from config.container import container
 from zootopia.service.user_service import UserService
 from config.config import config
-from typing import List
+from typing import List, Dict, Any
 
 
 router = APIRouter()
@@ -44,12 +44,12 @@ async def get_user(
 @router.patch("/users/{user_id}", response_model=User)
 async def update_user(
     user_id: str = Path(..., title="The ID of the user to update"),
-    user: User = Body(..., title="The updated user fields"),
+    user_update: Dict[str, Any] = Body(..., title="The fields to update"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> User:
     """Update a user. Returns updated User object"""
-    return user_service.update_user(user_id=user_id, user_params=user)
+    return user_service.update_user(user_id=user_id, user_params=user_update)
 
 
 @router.delete("/users/{user_id}")
