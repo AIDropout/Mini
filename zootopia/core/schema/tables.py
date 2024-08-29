@@ -24,6 +24,7 @@ class Tables(str, Enum):
     AGENTS__subscribe_msg = "subscribe_msg"
     AGENTS__subscribe_url = "subscribe_url"
     AGENTS__show_on_site = "show_on_site"
+    AGENTS__image_url = "image_url"
 
     USERS = "users"
     USERS__id = "id"
@@ -111,6 +112,9 @@ class Agent(BaseModel):
     subscribe_url: Optional[str] = Field(default=None)
     show_on_site: bool = Field(
         description="Whether to display agent on the site",
+    )
+    image_url: Optional[str] = Field(
+        description="Agent's profile image",
     )
 
 
