@@ -1,13 +1,14 @@
-from typing import List, Dict, Any, Optional, Union
 import json
-from zootopia.core.event_logger import event_logger as el
-from zootopia.core.logger import logger
-from zootopia.core.exceptions import LLMResponseParsingError
+from typing import Any, Dict, List, Optional, Union
+
 from zootopia.controller.agent.modules.intent.intent import (
+    Confidence,
     IntentConfig,
     IntentDetector,
-    Confidence,
 )
+from zootopia.core.event_logger import event_logger as el
+from zootopia.core.exceptions import LLMResponseParsingError
+from zootopia.core.logger import logger
 from zootopia.manager.llm import LLMManager
 
 # TODO: use this to slice the messages
@@ -37,6 +38,9 @@ class FilterModule(IntentDetector):
 
     Respond in JSON:
     {output_format}
+
+    Another output example:
+    {secondary_output_format}
 
     Provide a proposed message if low or medium confidence about message.
     """
@@ -81,11 +85,17 @@ class FilterModule(IntentDetector):
             {"confidence": "HIGH", "proposed_message": ""}, indent=2
         )
 
+        secondary_output_format = json.dumps(
+            {"confidence": "LOW", "proposed_message": "id rather not talk about that"},
+            indent=2,
+        )
+
         system_prompt = self.TEMPLATE.format(
             agent_prompt=self.agent.prompt,
             new_message=input_text,
             messages=all_recent_messages,
             output_format=output_format,
+            secondary_output_format=secondary_output_format,
         )
 
         response = self.llm_manager.generate_response(

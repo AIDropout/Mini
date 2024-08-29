@@ -1,10 +1,10 @@
-from enum import Enum
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Dict, List, Optional, Type, Union, Any, Literal
-from pydantic import BaseModel, Field, field_validator
 import json
 import uuid
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class Tables(str, Enum):
