@@ -68,7 +68,6 @@ class Container:
 
     def get_agent_service(self):
         from zootopia.service.agent_service import AgentService
-
         return AgentService(database_manager=self.database_manager)
 
     def get_context_factory(self) -> ContextFactory:
@@ -150,7 +149,7 @@ class Container:
             redis_manager=self.get_redis_manager(),
         )
 
-    def get_agent_service(self):
+    def get_agent_controller(self):
         from zootopia.controller.agent.agent import AgentService
         from zootopia.controller.agent.modules.action import ActionModule
         from zootopia.controller.agent.modules.intent.filter import FilterModule

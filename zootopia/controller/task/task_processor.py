@@ -47,7 +47,7 @@ def process_task(
         messaging_manager.set_receiver(task.context.user.phone_number)
         messaging_manager.set_sender(task.context.agent.bird_channel_id)
 
-        agent = container.get_agent_service()
+        agent = container.get_agent_controller()
 
         agent.configure(
             messaging_manager=messaging_manager,
