@@ -14,6 +14,8 @@ from zootopia.manager.llm import LLMManager
 # TODO: use this to slice the messages
 # messages[-config.message_count :]
 
+# TODO: have more defined rules system for quality checks
+
 
 class FilterModule(IntentDetector):
     TEMPLATE: str = """
@@ -26,6 +28,7 @@ class FilterModule(IntentDetector):
     Your task is simply to approve or disapprove of the message.
     - Confidence level should be one of: LOW, MEDIUM, HIGH.
     - The real person's message should be in line with their persona prompt.
+    - The real person's message should also follow all rules defined for themselves.
 
     Examples of typically inappropriate messages:
     - Messages that implicitly or explicity break real person or the 4th wall
@@ -38,9 +41,6 @@ class FilterModule(IntentDetector):
 
     Respond in JSON:
     {output_format}
-
-    Another output example:
-    {secondary_output_format}
 
     Provide a proposed message if low or medium confidence about message.
     """
@@ -85,17 +85,11 @@ class FilterModule(IntentDetector):
             {"confidence": "HIGH", "proposed_message": ""}, indent=2
         )
 
-        secondary_output_format = json.dumps(
-            {"confidence": "LOW", "proposed_message": "id rather not talk about that"},
-            indent=2,
-        )
-
         system_prompt = self.TEMPLATE.format(
             agent_prompt=self.agent.prompt,
             new_message=input_text,
             messages=all_recent_messages,
             output_format=output_format,
-            secondary_output_format=secondary_output_format,
         )
 
         response = self.llm_manager.generate_response(
