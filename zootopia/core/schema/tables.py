@@ -15,6 +15,7 @@ class Tables(str, Enum):
     AGENTS__name = "name"
     AGENTS__description = "description"
     AGENTS__first_message = "first_message"
+    AGENTS_example_conversation = "example_conversation"
     AGENTS__bird_channel_id = "bird_channel_id"
     AGENTS__telegram_chat_id = "telegram_chat_id"
     AGENTS__default_proactivity = "default_proactivity"
@@ -94,6 +95,10 @@ class Agent(BaseModel):
     telegram_chat_id: Optional[str] = Field(default=None)
     bird_channel_id: Optional[str] = Field(default=None)
     prompt: str = Field(default="You are Chris, a really cool person")
+    example_conversation: Optional[str] = Field(
+        default=None,
+        description="An example conversation between the Agent and the User. Meant to serve as a guide for the LLM. (unused rn)",
+    )
     default_proactivity: float = Field(
         default=0.5,
         ge=0.0,
