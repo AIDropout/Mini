@@ -77,13 +77,11 @@ class MemoryModule(AgentModule):
 
         return cleaned
 
-    def save_relevant_memories(self, save_interval: List[str] = [10, 11]) -> str:
+    def save_relevant_memories(self, save_interval: int = 10) -> str:
         self._set_user_and_agent_id()
 
         count_messages = self.database_manager.count_rows(table_name=Tables.MESSAGES)
-        remaining_messages_until_save = [
-            count_messages % interval for interval in save_interval
-        ]
+        remaining_messages_until_save = count_messages % save_interval
 
         logger.info(
             "There have been %s messages total. Next save will occur in %s messages.",
@@ -91,14 +89,16 @@ class MemoryModule(AgentModule):
             remaining_messages_until_save,
         )
 
-        if 0 in remaining_messages_until_save:
+        if remaining_messages_until_save in [0, 1]:
             messages_for_memory = self.get_recent_messages(count=max(save_interval) + 2)
             prepared_messages = self._prepare_recent_messages(messages_for_memory)
             self.memory_manager.add_memory(data=prepared_messages)
-            logger.info("Saved %s messages for memory.", len(messages_for_memory))
+            logger.info(
+                "Saved data from %s messages for memory.", len(messages_for_memory)
+            )
 
     @error_handler("MemoryModule")
-    def get_recent_messages(self, count: int = 10) -> List[Dict[str, str]]:
+    def get_recent_messages(self, count: int = 20) -> List[Dict[str, str]]:
         """
         Get the most recent messages for a given room ID.
 

@@ -125,11 +125,8 @@ class AgentService(Service):
             if success:
                 inserted_message = self._insert_agent_message(task, final_message)
 
-            doubled_recent_message_count = task.recent_message_count * 2
-            save_interval = [
-                doubled_recent_message_count,
-                doubled_recent_message_count + 1,
-            ]  # this means every X'th message, memory saving will be triggered
+            recent_message_count = task.recent_message_count * 2
+            save_interval = recent_message_count  # this means every X'th message, memory saving will be triggered
             self.memory.save_relevant_memories(save_interval=save_interval)
 
         except Exception as e:
