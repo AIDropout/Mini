@@ -36,7 +36,7 @@ class CheckoutManager(StripeBaseClient):
             "subscription_data": {},
             "mode": "subscription",
             "metadata": {"user_id": user_id },
-            "success_url": f"{config.FRONTEND_URL}/profile",
+            "success_url": f"{config.FRONTEND_URL}/subscription-success",
         }
 
         session_params["customer"] = customer_id
