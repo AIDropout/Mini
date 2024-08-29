@@ -1,10 +1,7 @@
 from fastapi import HTTPException
 from zootopia.manager.database import DatabaseManager
-from zootopia.manager.payment.customer import CustomerManager
 from zootopia.core.schema.tables import Tables, Agent
 from zootopia.service.base import Service
-from fastapi.responses import JSONResponse
-from postgrest.exceptions import APIError
 from typing import List
 
 
@@ -15,8 +12,9 @@ class AgentService(Service):
     def get_agents(self) -> List[Agent]:
         agents = self.database_manager.get_multiple_rows(
             Tables.AGENTS,
-            order_by="id", 
-            max_rows=100 
+            order_by="id",
+            max_rows=100,
+            conditions={Tables.AGENTS__show_on_site: True},
         )
         if not agents:
             raise HTTPException(status_code=404, detail="Agents not found")

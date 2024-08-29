@@ -13,7 +13,6 @@ class Tables(str, Enum):
     AGENTS = "agents"
     AGENTS__id = "id"
     AGENTS__name = "name"
-    AGENTS__role = "role"
     AGENTS__description = "description"
     AGENTS__first_message = "first_message"
     AGENTS__bird_channel_id = "bird_channel_id"
@@ -23,6 +22,7 @@ class Tables(str, Enum):
     AGENTS__free_msg_limit = "free_msg_limit"
     AGENTS__subscribe_msg = "subscribe_msg"
     AGENTS__subscribe_url = "subscribe_url"
+    AGENTS__show_on_site = "show_on_site"
 
     USERS = "users"
     USERS__id = "id"
@@ -86,10 +86,6 @@ class Agent(BaseModel):
         default=None,
         description="ex. Sam (for UI)",
     )
-    role: Optional[str] = Field(
-        default=None,
-        description="ex. Boyfriend (for UI)",
-    )
     description: Optional[str] = Field(
         default=None,
         description="Mysterious, cunning, jealous (for UI)",
@@ -108,6 +104,9 @@ class Agent(BaseModel):
     free_msg_limit: Optional[int] = Field(default=15)
     subscribe_msg: Optional[str] = Field(default=None)
     subscribe_url: Optional[str] = Field(default=None)
+    show_on_site: bool = Field(
+        description="Whether to display agent on the site",
+    )
 
 
 class User(BaseModel):
