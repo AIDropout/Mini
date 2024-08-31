@@ -42,6 +42,10 @@ class MemoryOpenAIConfig(BaseSettings):
     api_key: str
 
 
+class SecretPhrases(BaseSettings):
+    reset_user: str
+
+
 class Config(BaseSettings):
     ENVIRONMENT: str
     ZOOTOPIA_API_KEY: str
@@ -87,6 +91,7 @@ class Config(BaseSettings):
     MEMORY_EMBEDDINGS_CONFIG: MemoryOpenAIConfig
     ENABLE_RESPONSE_DELAY: bool
     AWS_S3_CONFIG: AWSS3Config
+    SECRET_PHRASES: SecretPhrases
 
     @classmethod
     def from_yaml(cls, file_path: str):

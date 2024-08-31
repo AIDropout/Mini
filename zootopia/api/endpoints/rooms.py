@@ -52,7 +52,7 @@ async def respond_webhook(
     """Endpoint hit by incoming user messages."""
     try:
         request_body = await request.json()
-        reply_service.handle_respond(request_body)
+        await reply_service.handle_respond(request_body)
         return {"status": "Message received and processing scheduled"}
     except Exception as e:
         logger.exception("Error in respond_webhook")

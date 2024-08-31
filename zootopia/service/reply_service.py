@@ -11,8 +11,6 @@ from zootopia.core.logger import get_logger
 from zootopia.service.base import Service
 from zootopia.service.context_factory import ContextFactory
 from config.config import config
-import os
-from urllib.parse import urlparse
 
 logger = get_logger(__name__)
 
@@ -31,7 +29,7 @@ class ReplyService(Service):
         self.scheduler_service = scheduler_service
 
     @error_handler("ReplyService")
-    def handle_respond(self, request_body: dict):
+    async def handle_respond(self, request_body: dict) -> None:
         print(request_body)
         messaging_manager = self.messaging_manager_factory.get_manager_from_request(
             request_body
@@ -39,6 +37,17 @@ class ReplyService(Service):
         message = messaging_manager.receive_message(request_body)
 
         context = self.context_factory.create_message_context(message)
+
+        # Reset admin user with secret passphrase
+        if message.content == config.SECRET_PHRASES.reset_user:
+            self.database_manager.supabase.auth.admin.delete_user(context.user.id)
+            self.database_manager.delete(
+                Tables.USERS, {Tables.USERS__id: context.user.id}
+            )
+            await messaging_manager.send_message(
+                "Successfully deleted your user from Auth tables and Users table"
+            )
+            return
 
         recent_messages = self.database_manager.get_multiple_rows(
             Tables.MESSAGES,
