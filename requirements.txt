@@ -8,7 +8,7 @@ argon2-cffi==23.1.0
 argon2-cffi-bindings==21.2.0
 attrs==24.2.0
 backoff==2.2.1
-baml-py==0.54.0
+# baml-py==0.54.0 # uncomment when locally compiling baml
 billiard==4.2.0
 black==24.8.0
 celery==5.4.0
