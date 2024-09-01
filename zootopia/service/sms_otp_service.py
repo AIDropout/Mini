@@ -13,7 +13,6 @@ from zootopia.core.schema.request import (
     VerifyCodeResponse,
 )
 
-
 class SMSOTPService:
     def __init__(self, bird_manager: BirdManager):
         self.bird_sms = bird_manager

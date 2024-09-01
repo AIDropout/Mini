@@ -123,7 +123,7 @@ class SubscribeModule(AgentModule):
         """
         subscribe_message = (
             f"{self.agent.subscribe_msg}\n\n"
-            f"Subscribe here: {self.agent.subscribe_url}"
+            f"Use this link: {self.agent.subscribe_url}"
         )
 
         # Send the subscription message

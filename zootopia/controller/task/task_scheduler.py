@@ -1,7 +1,7 @@
 from zootopia.core.logger import logger
 from zootopia.controller.task.task_processor import process_task
 from zootopia.controller.task.task_types import RespondTask, TaskType
-from zootopia.server.cancel import cancel_existing_task
+from zootopia.server.cancel import CancelManager
 from zootopia.manager.database import DatabaseManager
 from datetime import datetime, timedelta
 from typing import Optional
@@ -13,9 +13,15 @@ from uuid import uuid4
 
 
 class SchedulerService(Service):
-    def __init__(self, database_manager: DatabaseManager, redis_manager: RedisManager):
+    def __init__(
+        self,
+        database_manager: DatabaseManager,
+        redis_manager: RedisManager,
+        cancel_manager: CancelManager,
+    ):
         super().__init__(database_manager)
         self.redis_manager = redis_manager
+        self.cancel_manager = cancel_manager
 
     def schedule_respond(self, delay: int, message: ZootopiaMessage, context: Context):
         """Constructs task object, stores it in Redis, and schedules a Celery short-term task"""
@@ -31,7 +37,8 @@ class SchedulerService(Service):
         )
 
         if delay <= 3600:
-            cancel_existing_task(room_id)
+
+            self.cancel_manager.cancel_existing_task(room_id)
 
             new_task = process_task.apply_async(
                 args=[room_id, task.id, TaskType.RESPOND], countdown=delay

@@ -1,6 +1,5 @@
 from celery import shared_task
 from config.container import container
-from zootopia.server.cancel import cancel_existing_task
 from zootopia.core.schema.task import TaskType
 from zootopia.controller.task.task_types import RemindTask, ReviveTask, RespondTask
 from zootopia.core.logger import get_logger
@@ -48,6 +47,8 @@ def process_task(
         messaging_manager.set_sender(task.context.agent.bird_channel_id)
 
         agent = container.get_agent_controller()
+        cancel_manager = container.get_cancel_manager()
+        cancel_manager.cancel_existing_task(room_id)
 
         agent.configure(
             messaging_manager=messaging_manager,
@@ -59,7 +60,7 @@ def process_task(
         success = asyncio.run(agent.handle_chat_task(task))
 
         if success:
-            cancel_existing_task(room_id)
+            cancel_manager.cancel_existing_task(room_id)
 
         redis_manager.delete(f"task:{task_id}")
 

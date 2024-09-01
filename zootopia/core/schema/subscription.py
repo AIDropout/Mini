@@ -16,9 +16,9 @@ class SubscriptionStatus(Enum):
     @classmethod
     def from_string(cls, status: str):
         try:
-            return cls(status.lower())
-        except ValueError:
+            return cls[status.upper()]  # Use upper case to match enum names
+        except KeyError:
             raise ValueError(f"'{status}' is not a valid SubscriptionStatus")
 
     def __str__(self):
-        return self
+        return self.value

@@ -15,6 +15,7 @@ from zootopia.manager.time import TimeManager
 from zootopia.server.redis import RedisManager
 from zootopia.service.context_factory import ContextFactory
 from zootopia.service.user_service import UserService
+from zootopia.server.cancel import CancelManager
 
 
 class Container:
@@ -33,6 +34,12 @@ class Container:
         self.redis_manager: Optional[RedisManager] = None
         self.rate_limiter: Optional[RateLimiter] = None
         self.memory_manager: Optional[MemoryManager] = None
+        self.cancel_manager: Optional[CancelManager] = None
+
+    def get_cancel_manager(self):
+        if self.cancel_manager is None:
+            self.cancel_manager = CancelManager(redis_manager=self.get_redis_manager())
+        return self.cancel_manager
 
     def get_rate_limiter(self):
         if self.rate_limiter is None:
@@ -68,6 +75,7 @@ class Container:
 
     def get_agent_service(self):
         from zootopia.service.agent_service import AgentService
+
         return AgentService(database_manager=self.database_manager)
 
     def get_context_factory(self) -> ContextFactory:
@@ -147,6 +155,7 @@ class Container:
         return SchedulerService(
             database_manager=self.database_manager,
             redis_manager=self.get_redis_manager(),
+            cancel_manager=self.get_cancel_manager(),
         )
 
     def get_agent_controller(self):
