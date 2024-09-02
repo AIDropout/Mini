@@ -1,15 +1,16 @@
 import asyncio
 import subprocess
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from pyngrok import ngrok
-from zootopia.api import router as api_router
-from zootopia.core.logger import logger
-from zootopia.manager.messaging import TelegramManager, BirdManager
-from zootopia.server.redis import RedisManager
-from config.config import config
-from fastapi.middleware.cors import CORSMiddleware
 
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pyngrok import ngrok
+
+from config.config import config
+from mini.api import router as api_router
+from mini.core.logger import logger
+from mini.manager.messaging import BirdManager, TelegramManager
+from mini.server.redis import RedisManager
 
 LOCAL_URL = "127.0.0.1"
 PORT = 8000
@@ -62,7 +63,7 @@ async def lifespan(app: FastAPI):
             [
                 "celery",
                 "-A",
-                "zootopia.server.celery.celery",
+                "mini.server.celery.celery",
                 "worker",
                 "-n",
                 "worker1@%h",
@@ -122,9 +123,9 @@ Helpful commands:
 - To kill gunicorn run: pkill -f gunicorn
 Flower (Flower hosts a localhost dashboard to view status of Celery tasks):
 - export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/Untitled
-- View celery tasks via Flower: celery -A zootopia.server.celery.celery flower
+- View celery tasks via Flower: celery -A mini.server.celery.celery flower
 
-- To manually start Celery, open a new terminal: celery -A zootopia.server.celery.celery worker -n worker1@%h
+- To manually start Celery, open a new terminal: celery -A mini.server.celery.celery worker -n worker1@%h
 
 """
 if __name__ == "__main__":

@@ -1,21 +1,18 @@
 from typing import Optional
 
 from config.config import config
-from zootopia.core.rate_limiter import RateLimiter
-from zootopia.manager.database import DatabaseManager
-from zootopia.manager.llm import LLMManager
-from zootopia.manager.memory import MemoryManager
-from zootopia.manager.messaging import MessagingManagerFactory
-from zootopia.manager.payment import (
-    CheckoutManager,
-    CustomerManager,
-    SubscriptionManager,
-)
-from zootopia.manager.time import TimeManager
-from zootopia.server.redis import RedisManager
-from zootopia.service.context_factory import ContextFactory
-from zootopia.service.user_service import UserService
-from zootopia.server.cancel import CancelManager
+from mini.core.rate_limiter import RateLimiter
+from mini.manager.database import DatabaseManager
+from mini.manager.llm import LLMManager
+from mini.manager.memory import MemoryManager
+from mini.manager.messaging import MessagingManagerFactory
+from mini.manager.payment import (CheckoutManager, CustomerManager,
+                                  SubscriptionManager)
+from mini.manager.time import TimeManager
+from mini.server.cancel import CancelManager
+from mini.server.redis import RedisManager
+from mini.service.context_factory import ContextFactory
+from mini.service.user_service import UserService
 
 
 class Container:
@@ -56,7 +53,7 @@ class Container:
         return self.redis_manager
 
     def get_messaging_manager_factory(self):
-        from zootopia.manager.messaging import MessagingManagerFactory
+        from mini.manager.messaging import MessagingManagerFactory
 
         if self.messaging_manager_factory is None:
             self.messaging_manager_factory = MessagingManagerFactory()
@@ -64,7 +61,7 @@ class Container:
         return self.messaging_manager_factory
 
     def get_user_service(self):
-        from zootopia.service.user_service import UserService
+        from mini.service.user_service import UserService
 
         if self.user_service is None:
             self.user_service = UserService(
@@ -74,7 +71,7 @@ class Container:
         return self.user_service
 
     def get_agent_service(self):
-        from zootopia.service.agent_service import AgentService
+        from mini.service.agent_service import AgentService
 
         return AgentService(database_manager=self.database_manager)
 
@@ -106,7 +103,7 @@ class Container:
         return self.memory_manager
 
     def get_cron_service(self):
-        from zootopia.service.cron_service import CronService
+        from mini.service.cron_service import CronService
 
         return CronService(
             database_manager=self.database_manager,
@@ -114,14 +111,14 @@ class Container:
         )
 
     def get_sms_otp_service(self):
-        from zootopia.service.sms_otp_service import SMSOTPService
+        from mini.service.sms_otp_service import SMSOTPService
 
         return SMSOTPService(
             bird_manager=self.get_messaging_manager_factory().bird_manager
         )
 
     def get_room_service(self):
-        from zootopia.service.room_service import RoomService
+        from mini.service.room_service import RoomService
 
         return RoomService(
             database_manager=self.database_manager,
@@ -131,7 +128,7 @@ class Container:
         )
 
     def get_payment_service(self):
-        from zootopia.service.payment_service import PaymentService
+        from mini.service.payment_service import PaymentService
 
         return PaymentService(
             database_manager=self.database_manager,
@@ -141,7 +138,7 @@ class Container:
         )
 
     def get_dashboard_service(self):
-        from zootopia.service.dashboard_service import DashboardService
+        from mini.service.dashboard_service import DashboardService
 
         return DashboardService(
             database_manager=self.database_manager,
@@ -150,7 +147,7 @@ class Container:
         )
 
     def get_scheduler_service(self):
-        from zootopia.controller.task.task_scheduler import SchedulerService
+        from mini.controller.task.task_scheduler import SchedulerService
 
         return SchedulerService(
             database_manager=self.database_manager,
@@ -159,16 +156,14 @@ class Container:
         )
 
     def get_agent_controller(self):
-        from zootopia.controller.agent.agent import AgentService
-        from zootopia.controller.agent.modules.action import ActionModule
-        from zootopia.controller.agent.modules.intent.filter import FilterModule
-        from zootopia.controller.agent.modules.intent.intent import (
-            Confidence,
-            IntentConfig,
-        )
-        from zootopia.controller.agent.modules.memory import MemoryModule
-        from zootopia.controller.agent.modules.subscribe import SubscribeModule
-        from zootopia.controller.agent.modules.vision import VisionModule
+        from mini.controller.agent.agent import AgentService
+        from mini.controller.agent.modules.action import ActionModule
+        from mini.controller.agent.modules.intent.filter import FilterModule
+        from mini.controller.agent.modules.intent.intent import (Confidence,
+                                                                 IntentConfig)
+        from mini.controller.agent.modules.memory import MemoryModule
+        from mini.controller.agent.modules.subscribe import SubscribeModule
+        from mini.controller.agent.modules.vision import VisionModule
 
         action_module = ActionModule(
             llm_manager=LLMManager(
@@ -223,7 +218,7 @@ class Container:
         )
 
     def get_reply_service(self):
-        from zootopia.service.reply_service import ReplyService
+        from mini.service.reply_service import ReplyService
 
         return ReplyService(
             database_manager=self.database_manager,

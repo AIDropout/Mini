@@ -4,10 +4,10 @@ services:
     region: ohio
     runtime: python
     buildCommand: "pip install uv && uv pip install -r requirements.txt"
-    startCommand: "celery -A zootopia.server.celery.celery worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-2} -n worker@%h"
+    startCommand: "celery -A mini.server.celery.celery worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-2} -n worker@%h"
     autoDeploy: false
   - type: web
-    name: zootopia
+    name: mini
     region: ohio
     runtime: python
     buildCommand: "pip install uv && uv pip install -r requirements.txt"

@@ -1,7 +1,7 @@
 import yaml
 from pydantic_settings import BaseSettings
 
-from zootopia.core.schema.llm import LLMProviders
+from mini.core.schema.llm import LLMProviders
 
 
 def get_api_key(provider: LLMProviders) -> str:
@@ -48,7 +48,7 @@ class SecretPhrases(BaseSettings):
 
 class Config(BaseSettings):
     ENVIRONMENT: str
-    ZOOTOPIA_API_KEY: str
+    BACKEND_API_KEY: str
     OPENAI_API_KEY: str
     ANTHROPIC_API_KEY: str
     GROQ_API_KEY: str

@@ -6,7 +6,7 @@
  <br />
 </h1>
 <p align="center">
-Minis are the First Open-Source Digital Humans 👩🏽‍🤝‍👩🏼🧍
+minis are the first open-source digital humans 👩🏽‍🤝‍👩🏼🧍
 </p>
 <p align="center">
   <a href="https://discord.com/invite/k2taFvaJGr"><img src="https://img.shields.io/discord/1217283257469501450?logo=discord&label=discord"/></a>
@@ -14,11 +14,11 @@ Minis are the First Open-Source Digital Humans 👩🏽‍🤝‍👩🏼🧍
   <a href="https://github.com/AIDropout/Mini/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AIDropout/Mini"/></a>
 </p>
 
-Help us build characters that are highly convincing, customizable, and dynamic — from boyfriend to personal secretary.
+Help us build characters that are highly convincing, powerful, and dynamic — from a boyfriend that remembers everything about you to a personal secretary that can manage your calendar and email.
 
-Make your own `Twilio SMS` Mini powered by `Gemini LLM` with `Web Browsing` & `Quality Filter` in minutes, not weeks ⚡
+Use our lego blocks to create and deploy your own talk & text agent. That means your own `Twilio SMS`  mini powered by `Llama 3` with `Web Browsing` & `Proactive Messaging` in minutes, not weeks ⚡
 
-#### Zootopia character demos:
+#### mini demos:
 
 - [Boyfriend](https://boyfriend.so)
 - [David Goggins](https://textmini.com/goggins)
