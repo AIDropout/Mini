@@ -45,7 +45,6 @@ class PaymentService(Service):
             user_id,
             phone_number,
             customer_id,
-            allow_promotion_codes=True,
         )
 
         return {"url": response.url}
