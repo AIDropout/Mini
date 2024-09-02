@@ -7,8 +7,7 @@ from config.config import config
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Subscription, Tables, User
 from mini.manager.database import DatabaseManager
-from mini.manager.payment import (CheckoutManager, CustomerManager,
-                                  SubscriptionManager)
+from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
 
 from .base import Service
 
@@ -43,7 +42,10 @@ class PaymentService(Service):
         customer_id = user.customer_id
 
         response = self._checkout_manager.create_checkout_session(
-            user_id, phone_number, customer_id
+            user_id,
+            phone_number,
+            customer_id,
+            allow_promotion_codes=True,
         )
 
         return {"url": response.url}
@@ -100,7 +102,6 @@ class PaymentService(Service):
             subscription = self._subscription_manager.retrieve_subscription(
                 subscription_id
             )
-            logger.info("____")
 
             self.database_manager.insert(
                 table_name=Tables.SUBSCRIPTIONS,
@@ -111,16 +112,12 @@ class PaymentService(Service):
                 ),
             )
 
-            logger.info("____")
-
             self.database_manager.update(
                 Tables.USERS,
                 {Tables.USERS__is_subscribed: True},
                 condition_key=Tables.USERS__id,
                 condition_value=user_id,
             )
-
-            logger.info("___")
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")
             raise e
