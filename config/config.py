@@ -9,6 +9,16 @@ def get_api_key(provider: LLMProviders) -> str:
     return getattr(config, provider.value)
 
 
+class UserRateLimits(BaseSettings):
+    # TODO: implement
+    # IDEA: when max images are sent, sam's phone 'stops reciving images'
+    # IDEA: wehn max texts are sent, we can tune down sam's responses, or change his
+    # schedule so that he's now 'busy' -- doesn't have to be complex
+    # can also just stop messaging for the day, and apologize with proactive
+    max_texts_per_day: int
+    max_images_per_day: int
+
+
 class MemoryQdrantConfig(BaseSettings):
     url: str
     api_key: str
