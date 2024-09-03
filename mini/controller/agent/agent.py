@@ -7,6 +7,7 @@ from mini.controller.agent.modules.subscribe import SubscribeModule
 from mini.controller.agent.modules.vision import VisionModule
 from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
 from mini.core.event_logger import event_logger as el
+from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
@@ -59,25 +60,10 @@ class AgentService(Service):
 
         try:
             if isinstance(task, RespondTask):
-
                 if len(task.user_message.media_urls) > 0:
-                    description = self.vision.handle_images(
-                        task.user_message.media_urls
-                    )
-                    task.user_message.content += (
-                        f"\n\nUser sent an image: {description}"
-                    )
+                    task = self._handle_image(task)
 
-                    inserted_message = self.database_manager.insert(
-                        Tables.MESSAGES,
-                        Message(
-                            room_id=self.room.id,
-                            sender_id=self.user.id,
-                            content=task.user_message.content,
-                        ),
-                    )
-
-                inserted_message = self.database_manager.insert(
+                self.database_manager.insert(
                     Tables.MESSAGES,
                     Message(
                         room_id=self.room.id,
@@ -123,7 +109,7 @@ class AgentService(Service):
             el.log(f"BIRD SMS SENT: {success}")
 
             if success:
-                inserted_message = self._insert_agent_message(task, final_message)
+                self._insert_agent_message(task, final_message)
 
             recent_message_count = task.recent_message_count * 2
             save_interval = recent_message_count  # this means every X'th message, memory saving will be triggered
@@ -131,7 +117,58 @@ class AgentService(Service):
 
         except Exception as e:
             el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")
+            res = await self.backup_handle_chat_task(task)
+            return res
+
+    async def backup_handle_chat_task(
+        self, task: Union[RespondTask, RemindTask, ReviveTask]
+    ) -> bool:
+        """A watered-down verison of regular handle_chat_task, less error prone"""
+        # TODO: after better exception handeling, tackle each exception differently
+        # currently assuming user message has been saved to db
+        el.log(f"TASK: {task}")
+        el.log("🚨 WARNING: USING BACKUP METHOD, MEANS SOMETHING HAS FAILED 🚨")
+        el.log(f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}")
+        try:
+            all_recent_messages = self.memory.get_recent_messages(
+                count=task.recent_message_count
+            )
+            el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
+
+            system_prompt = self._construct_system_prompt(
+                task.instructions, relevant_memories=""
+            )
+            el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
+
+            response_text = self.action.generate_message(
+                all_recent_messages, system_prompt
+            )
+            el.log(f"MAIN LLM RESPONSE: {response_text}")
+
+            final_message = self.filter.process_message(
+                all_recent_messages, response_text
+            )
+
+            success = await self.action.handle_message_send(final_message)
+            el.log(f"BIRD SMS SENT: {success}")
+
+            if success:
+                self._insert_agent_message(task, final_message)
+        except Exception as e:
+            el.log(f"[BACKUP_FAILURE] Unexpected error in processing chat: {str(e)}")
             return False
+
+    def _handle_image(self, task: RespondTask) -> RespondTask:
+        try:
+            description = self.vision.handle_images(task.user_message.media_urls)
+            task.user_message.content += f"\n\nUser sent an image: {description}"
+        except VisionError:
+            task.user_message.content += (
+                "\n\nUser sent an image, but due to some error your phone "
+                "is not recieving images currently."
+            )
+
+        return task
 
     def _construct_system_prompt(
         self, instructions: str, relevant_memories: str
