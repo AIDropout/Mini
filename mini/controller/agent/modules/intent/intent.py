@@ -27,8 +27,8 @@ class IntentDetector(AgentModule):
         self,
         llm_manager: LLMManager,
         enabled: bool,
-        confidence_threshold: Confidence,
         message_input_count: int,
+        confidence_threshold: Confidence = Confidence.MEDIUM,
     ):
         self.llm_manager = llm_manager
         self.enabled = enabled

@@ -1,9 +1,11 @@
 import json
 from typing import Any, Dict, List, Optional, Union
 
-from mini.controller.agent.modules.intent.intent import (Confidence,
-                                                         IntentConfig,
-                                                         IntentDetector)
+from mini.controller.agent.modules.intent.intent import (
+    Confidence,
+    IntentConfig,
+    IntentDetector,
+)
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import LLMResponseParsingError
 from mini.core.logger import logger
@@ -98,7 +100,7 @@ class FilterModule(IntentDetector):
         try:
             confidence = response["confidence"].upper()
             proposed_message = response["proposed_message"]
-            approved = confidence >= (self.confidence_threshold or "LOW")
+            approved = Confidence(confidence) >= self.confidence_threshold
 
             if approved:
                 el.log(f"🟢 FILTER RESULT: Approved (Confidence: {confidence})")
