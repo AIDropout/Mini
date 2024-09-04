@@ -13,6 +13,7 @@ from mini.core.schema.tables import Agent, Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.messaging import MessagingManager
 from mini.service.base import Service
+from mini.utils.time import utc_now
 
 
 class AgentService(Service):
@@ -154,6 +155,7 @@ class AgentService(Service):
 
             if success:
                 self._insert_agent_message(task, final_message)
+                self._update_agent_last_sent_at()
         except Exception as e:
             el.log(f"[BACKUP_FAILURE] Unexpected error in processing chat: {str(e)}")
             return False
@@ -203,4 +205,13 @@ class AgentService(Service):
                 type=task.type,
                 log=el.get_logs(),
             ),
+        )
+
+    def _update_agent_last_sent_at(self) -> None:
+        """Updates agent last sent at column of room"""
+        self.database_manager.update(
+            Tables.ROOMS,
+            {Tables.ROOMS__agent_last_msg_sent_at: utc_now()},
+            condition_key=Tables.ROOMS__id,
+            condition_value=self.room.id,
         )

@@ -55,6 +55,9 @@ class MemoryOpenAIConfig(BaseSettings):
 class SecretPhrases(BaseSettings):
     reset_user: str
 
+class DiscordConfig(BaseSettings):
+    webhook_url: str
+
 
 class Config(BaseSettings):
     ENVIRONMENT: str
@@ -102,6 +105,7 @@ class Config(BaseSettings):
     ENABLE_RESPONSE_DELAY: bool
     AWS_S3_CONFIG: AWSS3Config
     SECRET_PHRASES: SecretPhrases
+    DISCORD_CONFIG: DiscordConfig
 
     @classmethod
     def from_yaml(cls, file_path: str):

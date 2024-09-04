@@ -41,7 +41,7 @@ class Container:
     def get_rate_limiter(self):
         if self.rate_limiter is None:
             self.rate_limiter = RateLimiter(
-                redis_manager=self.get_redis_manager(), max_calls=5, period=300
+                redis_manager=self.get_redis_manager(), max_calls=20, period=300
             )
 
         return self.rate_limiter

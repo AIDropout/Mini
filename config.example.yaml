@@ -74,3 +74,6 @@ AWS_S3_CONFIG:
   access_key: key
   secret_access_key: key
   bucket: bucket
+
+DISCORD_CONFIG:
+  webhook_url: str

@@ -1,10 +1,10 @@
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
-
 from pydantic import BaseModel, Field, field_validator
+from mini.utils.time import utc_now
 
 
 class Tables(str, Enum):
@@ -43,6 +43,7 @@ class Tables(str, Enum):
     ROOMS__subscribe_msg_sent = "subscribe_msg_sent"
     ROOMS__disabled_by_admin = "disabled_by_admin"
     ROOMS__last_msg_sent_at = "last_msg_sent_at"
+    ROOMS__agent_last_msg_sent_at = "agent_last_msg_sent_at"
 
     MESSAGES = "messages"
     MESSAGES__id = "id"
@@ -71,10 +72,6 @@ class Tables(str, Enum):
 
     def __str__(self) -> str:
         return self.value
-
-
-def utc_now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
 def generate_uuid():
@@ -140,6 +137,10 @@ class Room(BaseModel):
     last_msg_sent_at: datetime = Field(
         default_factory=utc_now,
         description="Time of last message sent by either agent or user",
+    )
+    agent_last_msg_sent_at: datetime = Field(
+        default_factory=utc_now,
+        description="Time of last message sent by agent",
     )
 
 

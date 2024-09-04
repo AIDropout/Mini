@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytz
 
@@ -12,3 +12,6 @@ def get_current_time_cst_iso8601() -> str:
 def get_current_time_readable() -> str:
     current_time = datetime.now()
     return current_time.strftime("%-I:%M%p %A, %b %-d, %Y")
+
+def utc_now():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"

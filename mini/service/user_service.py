@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 
+from config.config import config
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
@@ -9,6 +10,8 @@ from mini.core.schema.tables import Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.payment.customer import CustomerManager
 from mini.service.base import Service
+
+import requests
 
 
 class UserService(Service):
@@ -27,13 +30,26 @@ class UserService(Service):
             )
             if new_user is None:
                 raise HTTPException(status_code=500, detail="Failed to create user")
+
+            try:
+                response = requests.post(
+                    config.DISCORD_CONFIG.webhook_url,
+                    json={"content": f"New user signed up: {phone_number}"},
+                )
+                response.raise_for_status()
+            except requests.RequestException as e:
+                print(f"Failed to notify Discord: {e}")
+
             return new_user
         except APIError as e:
             if "users_phone_number_key" in str(e):
                 raise HTTPException(
                     status_code=409, detail="User with this phone number already exists"
                 )
-            raise HTTPException(status_code=500, detail="Error creating user")
+
+            raise HTTPException(
+                status_code=500, detail=f"Error creating user: {str(e)}"
+            )
 
     def get_user(self, id: str) -> User:
         user = self.database_manager.get_row(Tables.USERS, {Tables.USERS__id: id})

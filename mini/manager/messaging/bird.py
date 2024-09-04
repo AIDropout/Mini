@@ -333,6 +333,10 @@ class BirdManager(MessagingBase):
             error_code = error_data.get("code")
             error_message = error_data.get("message", "Unknown error")
 
+            if error_message == "Unexpected Verification Status: verification already verified":
+                logger.info(error_message)
+                logger.warning(f"Unexpected verification status {verification_id}. ")
+                return True, False
             if error_code == ErrorCode.MAX_ATTEMPTS_REACHED.value:
                 logger.warning(f"Maxed attempts reached for ID {verification_id}. ")
                 return False, False
