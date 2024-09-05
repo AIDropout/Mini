@@ -15,7 +15,7 @@ def get_logger(name: Optional[str] = None, log_level: int = logging.INFO) -> log
         logging.Logger: Configured logger instance.
     """
     logger = logging.getLogger(name)
-    logger.propagate = False
+    # logger.propagate = False
     logger.setLevel(log_level)
 
 

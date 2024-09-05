@@ -60,25 +60,6 @@ async def respond_webhook(
         logger.exception("Error in respond_webhook")
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/rooms/revive")
-async def revive_webhook(
-    request: Request,
-    background_tasks: BackgroundTasks,
-    cron_service: CronService = Depends(lambda: container.get_cron_service()),
-    api_key: str = Security(verify_api_key),
-):
-    """Endpoint hit by Supabase cron job every x minutes."""
-    try:
-        await cron_service.refresh_rooms(
-            background_tasks, dev_mode=is_ngrok_url(str(request.base_url))
-        )
-        return {"status": "Revive process initiated"}
-    except Exception as e:
-        logger.exception(f"Error in revive webhook: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.post("/rooms/admin-message")
 async def send_admin_message(
     room_id: str = Body(..., title="Room ID of the page the user signed up to"),

@@ -2,16 +2,18 @@
 import random
 from datetime import datetime, timedelta, timezone
 
-from fastapi import BackgroundTasks
-
+from config.config import config
 from mini.controller.task.task_scheduler import SchedulerService
 from mini.controller.task.task_types import ReviveTask
 from mini.core.error import error_handler
+from mini.core.logger import get_logger
 from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.messaging import MessagingManager
 from mini.service.base import Service
+
+logger = get_logger(__name__)
 
 
 class CronService(Service):
@@ -22,34 +24,38 @@ class CronService(Service):
         self.messaging_manager = messaging_manager
 
     @error_handler("CronService")
-    async def refresh_rooms(
-        self, background_tasks: BackgroundTasks, dev_mode: bool = False
-    ):
-        agents = self.database_manager.query(
-            Tables.AGENTS, ("id", "=", 1) if dev_mode else None
+    def refresh_rooms(self, dev_mode: bool = False):
+        logger.info(config.DEV_AGENT_ID)
+        agents = self.database_manager.get_multiple_rows(
+            table_name=Tables.AGENTS,
+            max_rows=100,  # Adjust this number as needed
+            order_by="id",  # Use 'id' or another column that exists in the agents table
+            order_desc=False,  # Set to False if you want ascending order
+            conditions={Tables.AGENTS__id: config.DEV_AGENT_ID} if dev_mode else None,
         )
 
         for agent in agents:
-            proactive_rooms = self.database_manager.query(
-                Tables.ROOMS,
-                (Tables.ROOMS__agent_id, agent.id),
-                (Tables.ROOMS__agent_proactivity, ">", 0),
-            )
+            logger.info(agent)
+        #     proactive_rooms = self.database_manager.query(
+        #         Tables.ROOMS,
+        #         (Tables.ROOMS__agent_id, agent.id),
+        #         (Tables.ROOMS__agent_proactivity, ">", 0),
+        #     )
 
-            for room in proactive_rooms:
-                if self._is_room_eligible_for_revival(room, room.user_id):
-                    last_message = self.database_manager.get_row(
-                        Tables.MESSAGES,
-                        {Tables.MESSAGES__room_id: room.id},
-                        order_by=Tables.MESSAGES__created_at,
-                        order_desc=True,
-                    )
+        #     for room in proactive_rooms:
+        #         if self._is_room_eligible_for_revival(room, room.user_id):
+        #             last_message = self.database_manager.get_row(
+        #                 Tables.MESSAGES,
+        #                 {Tables.MESSAGES__room_id: room.id},
+        #                 order_by=Tables.MESSAGES__created_at,
+        #                 order_desc=True,
+        #             )
 
-                    if last_message and self._should_send_proactive_message(
-                        agent_proactivity=room.agent_proactivity,
-                        last_message_time=last_message.created_at,
-                    ):
-                        revive_task = ReviveTask(room_id=room.id)
+        #             if last_message and self._should_send_proactive_message(
+        #                 agent_proactivity=room.agent_proactivity,
+        #                 last_message_time=last_message.created_at,
+        #             ):
+        #                 revive_task = ReviveTask(room_id=room.id)
                         # TODO:
                         #
                         # scheduled_task_info = ScheduledTaskInfo(

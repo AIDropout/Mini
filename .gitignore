@@ -25,3 +25,4 @@ celery@*
 
 celerybeat-schedule.db
 dump.rdb
+celerybeat-schedule.db

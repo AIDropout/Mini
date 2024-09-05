@@ -58,6 +58,9 @@ class SecretPhrases(BaseSettings):
 class DiscordConfig(BaseSettings):
     webhook_url: str
 
+class DevConfig(BaseSettings):
+    agent_id: str
+
 
 class Config(BaseSettings):
     ENVIRONMENT: str
@@ -107,6 +110,7 @@ class Config(BaseSettings):
     AWS_S3_CONFIG: AWSS3Config
     SECRET_PHRASES: SecretPhrases
     DISCORD_CONFIG: DiscordConfig
+    DEV_AGENT_ID: DevConfig
 
     @classmethod
     def from_yaml(cls, file_path: str):
