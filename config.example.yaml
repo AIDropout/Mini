@@ -66,6 +66,7 @@ MEMORY_EMBEDDINGS_CONFIG:
   api_key: str
 
 ENABLE_RESPONSE_DELAY: true
+ENABLE_CELERY_BEAT: false
 
 TIME_API:
   default_timezone: "America/Chicago"

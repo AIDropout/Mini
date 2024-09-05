@@ -103,6 +103,7 @@ class Config(BaseSettings):
     MEMORY_EMBEDDINGS_PROVIDER: str
     MEMORY_EMBEDDINGS_CONFIG: MemoryOpenAIConfig
     ENABLE_RESPONSE_DELAY: bool
+    ENABLE_CELERY_BEAT: bool
     AWS_S3_CONFIG: AWSS3Config
     SECRET_PHRASES: SecretPhrases
     DISCORD_CONFIG: DiscordConfig

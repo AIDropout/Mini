@@ -30,8 +30,8 @@ class CancelManager:
                 # A different task was found, assume it's newer
                 newer_task_found = True
                 
+                logger.info(f"🍊 Removing current task {current_task_id} for room id {room_id} due to newer task {task_id}...")
                 self.remove_task(room_id, current_task_id)
-                logger.info(f"🍊 Canceled current task {current_task_id} for room id {room_id} due to newer task {task_id}.")
                 break  # Exit after finding the first different task
 
         if not newer_task_found:
@@ -50,4 +50,4 @@ class CancelManager:
         key = f"{room_id}:{task_id}"
         celery_app.control.revoke(task_id, terminate=True, signal="SIGKILL")
         self.redis_manager.delete(key)
-        logger.info(f"🍊 Attempted to cancel task {task_id} for room id {room_id}.")
+        logger.info(f"🍊 Removed task {task_id} for room id {room_id}.")

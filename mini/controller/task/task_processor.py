@@ -49,10 +49,6 @@ def process_task(
         messaging_manager.set_sender(task.context.agent.bird_channel_id)
 
         agent = container.get_agent_controller()
-        cancel_manager = container.get_cancel_manager()
-        if cancel_manager.newer_task_found(room_id, task_id):
-            return
-
         agent.configure(
             messaging_manager=messaging_manager,
             agent=task.context.agent,
@@ -60,9 +56,14 @@ def process_task(
             room=task.context.room,
         )
 
+        cancel_manager = container.get_cancel_manager()
+        if cancel_manager.newer_task_found(room_id, task.id):
+            return
+        
         success = asyncio.run(agent.handle_chat_task(task))
 
         if success:
+            logger.log("Agent processing finished successfully.")
             cancel_manager.remove_task(room_id, task_id)
 
         redis_manager.delete(f"task:{task_id}")

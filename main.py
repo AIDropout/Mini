@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import subprocess
 from contextlib import asynccontextmanager
@@ -9,46 +10,8 @@ from pyngrok import ngrok
 from config.config import config
 from mini.api import router as api_router
 from mini.core.logger import logger
-from mini.manager.messaging import BirdManager, TelegramManager
 from mini.server.redis import RedisManager
-
-LOCAL_URL = "127.0.0.1"
-PORT = 8000
-USE_GUNICORN = False
-
-
-def stop_existing_processes():
-    """Stops all local server processes for main.py"""
-
-    try:
-        pids = subprocess.check_output(["lsof", "-t", f"-i:{PORT}"]).split()
-        for pid in pids:
-            logger.info(f"Killing process {pid.decode()} using port {PORT}")
-            subprocess.run(["kill", "-9", pid.decode()])
-        logger.info("Stopped all server processes")
-    except subprocess.CalledProcessError:
-        logger.info(f"No processes found using port {PORT}")
-
-
-async def configure_local_webhooks() -> None:
-    """Sets up an Ngrok public URL, and directs received Bird/Telegram messages to the URL"""
-
-    ngrok_connection = ngrok.connect(addr=f"{LOCAL_URL}:{PORT}", proto="http")
-    logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
-
-    webhook = f"{ngrok_connection.public_url}/rooms/respond"
-    _telegram = TelegramManager()
-    _bird = BirdManager()
-
-    _bird.set_sender(config.BIRD_DEV_CHANNEL_ID)
-
-    await asyncio.gather(
-        _telegram.register_webhook(webhook),
-        _bird.register_webhook(event="sms.inbound", webhook_url=webhook),
-    )
-
-    logger.info("Ngrok and webhooks successfully set up!")
-
+from mini.utils.utils import configure_local_webhooks, stop_existing_processes
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,12 +31,27 @@ async def lifespan(app: FastAPI):
                 "-n",
                 "worker1@%h",
                 "--loglevel=ERROR",
+                "--beat",
             ],
         )
 
+        # Start Celery beat
+        if config.ENABLE_CELERY_BEAT:
+            celery_beat_process = subprocess.Popen(
+                [
+                    "celery",
+                    "-A",
+                    "mini.server.celery.celery",
+                    "beat",
+                    "--loglevel=INFO",
+                ],
+            )
+
     yield
-    # After end
-    celery_worker_process.terminate()
+    if celery_worker_process:
+        celery_worker_process.terminate()
+    if celery_beat_process:
+        celery_beat_process.terminate()
     ngrok.kill()
     redis_manager.close()
 
@@ -128,16 +106,20 @@ Flower (Flower hosts a localhost dashboard to view status of Celery tasks):
 - To manually start Celery, open a new terminal: celery -A mini.server.celery.celery worker -n worker1@%h
 
 """
+
 if __name__ == "__main__":
     """This main function is ONLY called when developing and running python main.py. 
-    
     (Prod has a separate run command on Render)"""
 
+    LOCAL_URL = "127.0.0.1"
+    PORT = 8000
+    USE_GUNICORN = False
+
     # Set up a local server with a public url via ngrok
-    asyncio.run(configure_local_webhooks())
+    asyncio.run(configure_local_webhooks(f"{LOCAL_URL}:{PORT}"))
 
     # Stops all existing servers
-    stop_existing_processes()
+    stop_existing_processes(PORT)
 
     if USE_GUNICORN:
         # Start Gunicorn server
