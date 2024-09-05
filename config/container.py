@@ -6,8 +6,7 @@ from mini.manager.database import DatabaseManager
 from mini.manager.llm import LLMManager
 from mini.manager.memory import MemoryManager
 from mini.manager.messaging import MessagingManagerFactory
-from mini.manager.payment import (CheckoutManager, CustomerManager,
-                                  SubscriptionManager)
+from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.manager.time import TimeManager
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
@@ -159,8 +158,7 @@ class Container:
         from mini.controller.agent.agent import AgentService
         from mini.controller.agent.modules.action import ActionModule
         from mini.controller.agent.modules.intent.filter import FilterModule
-        from mini.controller.agent.modules.intent.intent import (Confidence,
-                                                                 IntentConfig)
+        from mini.controller.agent.modules.intent.intent import Confidence, IntentConfig
         from mini.controller.agent.modules.memory import MemoryModule
         from mini.controller.agent.modules.subscribe import SubscribeModule
         from mini.controller.agent.modules.vision import VisionModule
@@ -210,6 +208,7 @@ class Container:
 
         return AgentService(
             database_manager=self.database_manager,
+            cancel_manager=self.get_cancel_manager(),
             action_module=action_module,
             memory_module=memory_module,
             subscribe_module=subscribe_module,

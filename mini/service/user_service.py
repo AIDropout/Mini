@@ -34,7 +34,7 @@ class UserService(Service):
             try:
                 response = requests.post(
                     config.DISCORD_CONFIG.webhook_url,
-                    json={"content": f"New user signed up: {phone_number}"},
+                    json={"content": f"New signup: {phone_number}"},
                 )
                 response.raise_for_status()
             except requests.RequestException as e:

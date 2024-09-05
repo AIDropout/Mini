@@ -39,16 +39,11 @@ class SchedulerService(Service):
 
         if delay <= 3600:
 
-            self.cancel_manager.cancel_existing_task(room_id)
+            if self.cancel_manager.newer_task_found(room_id, task.id):
+                return
 
             new_task = process_task.apply_async(
                 args=[room_id, task.id, TaskType.RESPOND], countdown=delay
-            )
-            logger.info(
-                f"🟢 Scheduled short-term task in {delay} seconds\n"
-                f"🟢 Current time: {datetime.now().isoformat()}\n"
-                f"🟢 Scheduled response time: {task.scheduled_for.isoformat()}"
-                f"🟢 Test: {new_task}"
             )
 
             if new_task:
@@ -59,5 +54,10 @@ class SchedulerService(Service):
                     expiry=delay + 120,
                 )
 
+                logger.info(
+                    f"🟢 Scheduled short-term task in {delay} seconds\n"
+                    f"🟢 Current time: {datetime.now().isoformat()}\n"
+                    f"🟢 Scheduled response time: {task.scheduled_for.isoformat()}"
+                )
         else:
             pass  # Handle long term tasks

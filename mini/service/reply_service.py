@@ -50,6 +50,15 @@ class ReplyService(Service):
             )
             return
 
+        self.database_manager.insert(
+            Tables.MESSAGES,
+            Message(
+                room_id=context.room.id,
+                sender_id=context.user.id,
+                content=message.content,
+            ),
+        )
+
         recent_messages = self.database_manager.get_multiple_rows(
             Tables.MESSAGES,
             max_rows=5,

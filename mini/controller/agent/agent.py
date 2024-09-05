@@ -12,6 +12,7 @@ from mini.core.logger import get_logger
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.messaging import MessagingManager
+from mini.server.cancel import CancelManager
 from mini.service.base import Service
 from mini.utils.time import utc_now
 
@@ -20,6 +21,7 @@ class AgentService(Service):
     def __init__(
         self,
         database_manager: DatabaseManager,
+        cancel_manager: CancelManager,
         action_module: ActionModule,
         memory_module: MemoryModule,
         subscribe_module: SubscribeModule,
@@ -27,6 +29,7 @@ class AgentService(Service):
         vision_module: VisionModule,
     ) -> None:
         super().__init__(database_manager)
+        self.cancel_manager = cancel_manager
         self.logger = get_logger(__name__)
         self.agent: Agent = None
         self.user: User = None
@@ -61,17 +64,9 @@ class AgentService(Service):
 
         try:
             if isinstance(task, RespondTask):
+                # (The user's message has already been stored to db.)
                 if len(task.user_message.media_urls) > 0:
                     task = self._handle_image(task)
-
-                self.database_manager.insert(
-                    Tables.MESSAGES,
-                    Message(
-                        room_id=self.room.id,
-                        sender_id=self.user.id,
-                        content=task.user_message.content,
-                    ),
-                )
 
                 el.log(
                     f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}"
@@ -97,20 +92,32 @@ class AgentService(Service):
             )
             el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
 
+            if self.cancel_manager.newer_task_found(
+                room_id=self.room.id, task_id=task.id
+            ):
+                return False
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
             )
             el.log(f"MAIN LLM RESPONSE: {response_text}")
 
+            if self.cancel_manager.newer_task_found(
+                room_id=self.room.id, task_id=task.id
+            ):
+                return False
             final_message = self.filter.process_message(
                 all_recent_messages, response_text
             )
 
+            if self.cancel_manager.newer_task_found(
+                room_id=self.room.id, task_id=task.id
+            ):
+                return False
             success = await self.action.handle_message_send(final_message)
             el.log(f"BIRD SMS SENT: {success}")
 
             if success:
-                self._insert_agent_message(task, final_message)
+                self._handle_successful_send(task.type, final_message)
 
             recent_message_count = task.recent_message_count * 2
             save_interval = recent_message_count  # this means every X'th message, memory saving will be triggered
@@ -118,17 +125,18 @@ class AgentService(Service):
 
         except Exception as e:
             el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")
-            res = await self.backup_handle_chat_task(task)
+            res = await self.backup_handle_chat_task(task, str(e))
             return res
 
     async def backup_handle_chat_task(
-        self, task: Union[RespondTask, RemindTask, ReviveTask]
+        self, task: Union[RespondTask, RemindTask, ReviveTask], error_message
     ) -> bool:
         """A watered-down verison of regular handle_chat_task, less error prone"""
         # TODO: after better exception handeling, tackle each exception differently
         # currently assuming user message has been saved to db
         el.log(f"TASK: {task}")
         el.log("🚨 WARNING: USING BACKUP METHOD, MEANS SOMETHING HAS FAILED 🚨")
+        el.log(f"🚨 ERROR: {error_message}")
         el.log(f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}")
         try:
             all_recent_messages = self.memory.get_recent_messages(
@@ -154,8 +162,7 @@ class AgentService(Service):
             el.log(f"BIRD SMS SENT: {success}")
 
             if success:
-                self._insert_agent_message(task, final_message)
-                self._update_agent_last_sent_at()
+                self._handle_successful_send(task.type, final_message)
         except Exception as e:
             el.log(f"[BACKUP_FAILURE] Unexpected error in processing chat: {str(e)}")
             return False
@@ -192,23 +199,19 @@ class AgentService(Service):
         {relevant_memories}
         """
 
-    def _insert_agent_message(
-        self, task: Union[RespondTask, RemindTask, ReviveTask], content: str
-    ) -> Message:
-
-        return self.database_manager.insert(
+    def _handle_successful_send(self, task_type: str, final_message: str):
+        """Adds agent message to DB & updates Rooms table"""
+        self.database_manager.insert(
             Tables.MESSAGES,
             Message(
                 room_id=self.room.id,
                 sender_id=self.agent.id,
-                content=content,
-                type=task.type,
+                content=final_message,
+                type=task_type,
                 log=el.get_logs(),
             ),
         )
 
-    def _update_agent_last_sent_at(self) -> None:
-        """Updates agent last sent at column of room"""
         self.database_manager.update(
             Tables.ROOMS,
             {Tables.ROOMS__agent_last_msg_sent_at: utc_now()},

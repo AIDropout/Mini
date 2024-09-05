@@ -50,7 +50,8 @@ def process_task(
 
         agent = container.get_agent_controller()
         cancel_manager = container.get_cancel_manager()
-        cancel_manager.cancel_existing_task(room_id)
+        if cancel_manager.newer_task_found(room_id, task_id):
+            return
 
         agent.configure(
             messaging_manager=messaging_manager,
@@ -62,7 +63,7 @@ def process_task(
         success = asyncio.run(agent.handle_chat_task(task))
 
         if success:
-            cancel_manager.cancel_existing_task(room_id)
+            cancel_manager.remove_task(room_id, task_id)
 
         redis_manager.delete(f"task:{task_id}")
 
