@@ -18,13 +18,9 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Life cycle of FastAPI server"""
-    celery_worker_process = None
-    # Before Start
-    redis_manager = RedisManager()
-    redis_manager.initialize()
+    redis_manager = RedisManager().initialize()
     if config.ENVIRONMENT == "local":
-        # Start Celery worker
-        celery_worker_process = subprocess.Popen(
+        subprocess.Popen(
             [
                 "celery",
                 "-A",
@@ -33,27 +29,11 @@ async def lifespan(app: FastAPI):
                 "-n",
                 "worker1@%h",
                 "--loglevel=ERROR",
-                "--beat",
-            ],
+            ] + (["--beat"] if config.ENABLE_CELERY_BEAT else [])
         )
 
-        # Start Celery beat
-        if config.ENABLE_CELERY_BEAT:
-            celery_beat_process = subprocess.Popen(
-                [
-                    "celery",
-                    "-A",
-                    "mini.server.celery.celery",
-                    "beat",
-                    "--loglevel=INFO",
-                ],
-            )
-
     yield
-    if celery_worker_process:
-        celery_worker_process.terminate()
-    if celery_beat_process:
-        celery_beat_process.terminate()
+    subprocess.run(["pkill", "-f", "celery"])
     ngrok.kill()
     redis_manager.close()
 

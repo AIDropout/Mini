@@ -23,5 +23,5 @@ temp.py
 # Ignore Celery-related files
 celery@*
 
-# Ignore Redis dump file
+celerybeat-schedule.db
 dump.rdb
