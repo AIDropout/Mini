@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Security
 
 from config.container import container
 from mini.api.security import verify_api_key
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.core.schema.tables import Agent
 from mini.service.agent_service import AgentService
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 
 @router.get("/agents", response_model=List[Agent])

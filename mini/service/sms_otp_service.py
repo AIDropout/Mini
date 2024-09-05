@@ -4,13 +4,18 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 
 from config.config import config
-from mini.core.logger import logger
-from mini.core.schema.request import (ResendVerificationRequest,
-                                      ResendVerificationResponse,
-                                      SendVerificationRequest,
-                                      SendVerificationResponse,
-                                      VerifyCodeRequest, VerifyCodeResponse)
+from mini.core.logger import get_logger
+from mini.core.schema.request import (
+    ResendVerificationRequest,
+    ResendVerificationResponse,
+    SendVerificationRequest,
+    SendVerificationResponse,
+    VerifyCodeRequest,
+    VerifyCodeResponse,
+)
 from mini.manager.messaging import BirdManager
+
+logger = get_logger(__name__)
 
 
 class SMSOTPService:

@@ -9,13 +9,21 @@ import telegram
 
 from config.config import config
 from mini.core.error import error_handler
-from mini.core.logger import logger
-from mini.core.schema.message import (MessageProvider, MessageType,
-                                      TelegramMetadata, MiniMessage)
-from mini.core.schema.telegram import (TelegramMessage,
-                                       _TelegramMessageDocument,
-                                       _TelegramMessagePhoto)
+from mini.core.logger import get_logger
+from mini.core.schema.message import (
+    MessageProvider,
+    MessageType,
+    TelegramMetadata,
+    MiniMessage,
+)
+from mini.core.schema.telegram import (
+    TelegramMessage,
+    _TelegramMessageDocument,
+    _TelegramMessagePhoto,
+)
 from mini.manager.messaging.base import MessagingBase
+
+logger = get_logger(__name__)
 
 
 class TelegramManager(MessagingBase):

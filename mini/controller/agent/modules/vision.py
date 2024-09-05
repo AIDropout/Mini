@@ -3,9 +3,11 @@ from typing import List
 from mini.controller.agent.modules.base import AgentModule
 from mini.core.error import error_handler
 from mini.core.exceptions import VisionError
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.manager.database import DatabaseManager
 from mini.manager.llm import LLMManager
+
+logger = get_logger(__name__)
 
 
 class VisionModule(AgentModule):

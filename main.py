@@ -9,9 +9,11 @@ from pyngrok import ngrok
 
 from config.config import config
 from mini.api import router as api_router
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.server.redis import RedisManager
 from mini.utils.utils import configure_local_webhooks, stop_existing_processes
+
+logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

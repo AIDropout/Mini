@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Any, Dict, List
 
-from mini.core.logger import logger as core_logger
+from mini.core.logger import get_logger
+
+core_logger = get_logger(__name__)
 
 
 class EventLogger:

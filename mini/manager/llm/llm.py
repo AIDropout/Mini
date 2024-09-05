@@ -3,16 +3,26 @@ import re
 from typing import Dict, List, Optional, Union
 
 import litellm
-from litellm import (ModelResponse, RateLimitError, completion,
-                     get_supported_openai_params)
-from tenacity import (retry, retry_if_exception_type, stop_after_attempt,
-                      wait_exponential)
+from litellm import (
+    ModelResponse,
+    RateLimitError,
+    completion,
+    get_supported_openai_params,
+)
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from config.config import get_api_key
 from mini.core.error import error_handler
 from mini.core.exceptions import MessageParsingError
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.core.schema.llm import LLMProviders
+
+logger = get_logger(__name__)
 
 
 class LLMManager:

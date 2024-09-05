@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from config.container import container
 from mini.api.security import verify_api_key
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.core.schema.tables import Room
 from mini.service.cron_service import CronService
 from mini.service.dashboard_service import DashboardService
@@ -23,7 +23,7 @@ from mini.service.room_service import RoomService
 from mini.utils.utils import is_ngrok_url
 
 router = APIRouter()
-
+logger = get_logger(__name__)
 
 @router.get("/rooms/{user_id}")
 async def get_rooms(

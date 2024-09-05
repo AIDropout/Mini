@@ -4,10 +4,12 @@ from mini.controller.agent.modules.action import ActionModule
 from mini.controller.agent.modules.base import AgentModule
 from mini.controller.agent.modules.memory import MemoryModule
 from mini.core.error import error_handler
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -117,8 +119,7 @@ class SubscribeModule(AgentModule):
         Send a subscription message, store it, and update the room's status.
         """
         subscribe_message = (
-            f"{self.agent.subscribe_msg}\n\n"
-            f"{self.agent.subscribe_url}"
+            f"{self.agent.subscribe_msg}\n\n" f"{self.agent.subscribe_url}"
         )
 
         # Send the subscription message

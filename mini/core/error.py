@@ -7,7 +7,9 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 from mini.core.exceptions import MessageParsingError, ServiceError
-from mini.core.logger import logger
+from mini.core.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def error_handler(service_name):

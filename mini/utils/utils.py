@@ -4,8 +4,10 @@ import subprocess
 from pyngrok import ngrok
 
 from config.config import config
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.manager.messaging import BirdManager, TelegramManager
+
+logger = get_logger(__name__)
 
 
 def is_ngrok_url(url: str) -> bool:

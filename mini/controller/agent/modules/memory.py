@@ -2,12 +2,14 @@ from typing import Dict, List
 
 from mini.controller.agent.modules.base import AgentModule
 from mini.core.error import error_handler
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.core.schema.memory import MemoryRecordSchema
 from mini.core.schema.tables import Message, Tables
 from mini.manager.database import DatabaseManager
 from mini.manager.llm import LLMManager
 from mini.manager.memory import MemoryManager
+
+logger = get_logger(__name__)
 
 
 class MemoryModule(AgentModule):

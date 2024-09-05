@@ -8,9 +8,10 @@ from supabase import create_client
 
 from config.config import config
 from mini.core.error import error_handler
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.core.schema.tables import TABLE_MODEL_MAP, TableModel
 
+logger = get_logger(__name__)
 T = TypeVar("T", bound=TableModel)
 
 

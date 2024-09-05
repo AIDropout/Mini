@@ -4,13 +4,15 @@ from uuid import uuid4
 
 from mini.controller.task.task_processor import process_task
 from mini.controller.task.task_types import RespondTask, TaskType
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.core.schema.message import MiniMessage
 from mini.manager.database import DatabaseManager
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
 from mini.service.base import Service
 from mini.service.context_factory import Context
+
+logger = get_logger(__name__)
 
 
 class SchedulerService(Service):

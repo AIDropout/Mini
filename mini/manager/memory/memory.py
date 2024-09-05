@@ -8,16 +8,24 @@ from mem0 import Memory
 from pydantic import ValidationError
 
 from config.config import config
-from mini.core.exceptions import (MemoryAdditionError, MissingAgentIdError,
-                                  MissingUserIdError)
-from mini.core.logger import logger
-from mini.core.schema.memory import (MemoryMetadataSchema, MemoryRecordSchema,
-                                     RetrievedMemoryMetadataSchema,
-                                     SavedMemoryMetadataSchema)
+from mini.core.exceptions import (
+    MemoryAdditionError,
+    MissingAgentIdError,
+    MissingUserIdError,
+)
+from mini.core.logger import get_logger
+from mini.core.schema.memory import (
+    MemoryMetadataSchema,
+    MemoryRecordSchema,
+    RetrievedMemoryMetadataSchema,
+    SavedMemoryMetadataSchema,
+)
 from mini.manager.llm import LLMManager
 from mini.manager.time import TimeManager
 
 from .prompts import GENERATE_QUERY_PROMPT, METADATA_PROMPT
+
+logger = get_logger(__name__)
 
 
 class MemoryManager:

@@ -1,5 +1,7 @@
 from mini.server.celery.celery import app
-from mini.utils.utils import logger
+from mini.core.logger import get_logger
+
+logger = get_logger(__name__)
 
 @app.task
 def send_proactive_messages():

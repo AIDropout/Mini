@@ -5,9 +5,11 @@ from typing import Dict, List, Optional
 from mini.controller.agent.modules.base import AgentModule
 from mini.core.error import error_handler
 from mini.core.event_logger import event_logger as el
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.manager.llm import LLMManager
 from mini.manager.messaging import MessagingManager
+
+logger = get_logger(__name__)
 
 
 class ActionModule(AgentModule):

@@ -8,8 +8,11 @@ from mini.controller.agent.modules.intent.intent import (
 )
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import LLMResponseParsingError
-from mini.core.logger import logger
+from mini.core.logger import get_logger
 from mini.manager.llm import LLMManager
+
+logger = get_logger(__name__)
+
 
 # TODO: use this to slice the messages
 # messages[-config.message_count :]
