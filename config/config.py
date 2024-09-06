@@ -123,7 +123,7 @@ class Config(BaseSettings):
     BIRD_SIGNING_KEY: str
     SUPABASE_URL: str
     SUPABASE_KEY: str
-    SUPABASE_PROMPTS_BUCKET: str
+    SUPABASE_PROMPTS_BUCKET_NAME: str
     SUPABASE_AGENT_PROMPT_PATH: str
     GOOGLE_API_KEY: str
     GEMINI_API_KEY: str
