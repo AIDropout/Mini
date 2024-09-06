@@ -1,9 +1,8 @@
 import uuid
 from datetime import datetime
-from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
-from pydantic import BaseModel
+import yaml
 from supabase import create_client
 
 from config.config import config
@@ -170,3 +169,23 @@ class DatabaseManager:
 
         result = query.execute()
         return result.count
+
+    def load_yaml_from_bucket(self, bucket_name: str, file_path: str) -> dict:
+        """Load a YAML file from Supabase storage bucket and return as a dictionary."""
+        response = self.supabase.storage.from_(bucket_name).download(file_path)
+        file_content = response.decode("utf-8")
+        return yaml.safe_load(file_content)
+
+    def load_bucket(self, bucket_name: str) -> Dict[str, dict]:
+        """Load all YAML files from a Supabase bucket."""
+        files = self.supabase.storage.from_(bucket_name).list()
+
+        yaml_data = {}
+        for file_info in files:
+            file_path = file_info["name"]
+            if file_path.endswith(".yaml"):
+                yaml_data[file_path] = self.load_yaml_from_bucket(
+                    bucket_name, file_path
+                )
+
+        return yaml_data
