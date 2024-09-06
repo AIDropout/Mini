@@ -117,6 +117,7 @@ class PaymentService(Service):
                 condition_key=Tables.USERS__id,
                 condition_value=user_id,
             )
+
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")
             raise e

@@ -25,6 +25,7 @@ from mini.utils.utils import is_ngrok_url
 router = APIRouter()
 logger = get_logger(__name__)
 
+
 @router.get("/rooms/{user_id}")
 async def get_rooms(
     user_id: str = Path(..., title="The user's ID"),
@@ -59,6 +60,7 @@ async def respond_webhook(
     except Exception as e:
         logger.exception("Error in respond_webhook")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/rooms/admin-message")
 async def send_admin_message(

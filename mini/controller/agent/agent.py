@@ -1,5 +1,6 @@
 from typing import Union
 
+from config.config import config
 from mini.controller.agent.modules.action import ActionModule
 from mini.controller.agent.modules.intent.filter import FilterModule
 from mini.controller.agent.modules.memory import MemoryModule
@@ -10,8 +11,10 @@ from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
+from mini.core.schema.llm import LLMProviders
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
+from mini.manager.llm import LLMManager
 from mini.manager.messaging import MessagingManager
 from mini.server.cancel import CancelManager
 from mini.service.base import Service
@@ -98,28 +101,34 @@ class AgentService(Service):
             )
             el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
 
-            if self.cancel_manager.newer_task_found(
-                room_id=self.room.id, current_task_id=task.id
-            ):
+            if self.cancel_manager.newer_task_found(self.room.id, task.id):
                 return False
             response_text = self.action.generate_message(
                 all_recent_messages, system_prompt
             )
             el.log(f"MAIN LLM RESPONSE: {response_text}")
 
-            if self.cancel_manager.newer_task_found(
-                room_id=self.room.id, current_task_id=task.id
-            ):
+            if self.cancel_manager.newer_task_found(self.room.id, task.id):
                 return False
+
             final_message = self.filter.process_message(
                 all_recent_messages, response_text
             )
 
-            if self.cancel_manager.newer_task_found(
-                room_id=self.room.id, current_task_id=task.id
-            ):
+            # TODO: fetch agent data and pass in this module before this function is run (would require a large-ish refactor)
+            self.tts_llm = LLMManager(
+                llm_name="openai/tts-1-hd", llm_provider=LLMProviders.OPENAI
+            )
+            url, content_type = self.tts_llm.generate_and_upload_speech(
+                text=final_message, voice="onyx"
+            )
+
+            if self.cancel_manager.newer_task_found(self.room.id, task.id):
                 return False
-            success = await self.action.handle_message_send(final_message)
+
+            success = self.action.send_message(
+                text=final_message, files=[(url, content_type)] if url else None
+            )
             el.log(f"BIRD SMS SENT: {success}")
 
             if success:
@@ -132,7 +141,7 @@ class AgentService(Service):
         except Exception as e:
             el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")
             res = await self.backup_handle_chat_task(task, str(e))
-            return res
+            return False
 
     async def backup_handle_chat_task(
         self, task: Union[RespondTask, RemindTask, ReviveTask], error_message
@@ -164,7 +173,7 @@ class AgentService(Service):
                 all_recent_messages, response_text
             )
 
-            success = await self.action.handle_message_send(final_message)
+            success = await self.action.send_message(final_message)
             el.log(f"BIRD SMS SENT: {success}")
 
             if success:

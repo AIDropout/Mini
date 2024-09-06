@@ -4,8 +4,12 @@ import requests
 from pydantic import BaseModel
 
 from config.config import config
-from mini.core.exceptions import (InvalidTimezoneError, TimeFetchError,
-                                  TimeManagerError, TimezoneFetchError)
+from mini.core.exceptions import (
+    InvalidTimezoneError,
+    TimeFetchError,
+    TimeManagerError,
+    TimezoneFetchError,
+)
 
 
 class TimeData(BaseModel):

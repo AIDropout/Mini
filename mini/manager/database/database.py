@@ -91,7 +91,7 @@ class DatabaseManager:
         order_desc: bool = True,
         conditions: Optional[Dict] = None,
         **kwargs,
-    ) -> List[Dict]:
+    ) -> List[TableModel]:
         query = self.supabase.table(table_name).select("*")
 
         if conditions:
@@ -114,7 +114,8 @@ class DatabaseManager:
             logger.error(f"Unexpected response format from Supabase: {response}")
             return []
 
-        return data
+        model_class = TABLE_MODEL_MAP[table_name]
+        return [model_class(**item) for item in data]
 
     @error_handler("Supabase")
     def delete(self, table_name: str, conditions: Dict[str, Any]) -> bool:

@@ -4,7 +4,7 @@ from .bird import BirdManager
 from .factory import MessagingManagerFactory
 from .telegram import TelegramManager
 
-MessagingManager = Union[BirdManager, TelegramManager]
+MessagingManager = Union[BirdManager]
 
 __all__ = [
     "BirdManager",

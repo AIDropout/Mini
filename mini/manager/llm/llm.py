@@ -1,6 +1,8 @@
 import json
 import re
 from typing import Dict, List, Optional, Union
+from uuid import uuid4
+from pydub import AudioSegment
 
 import litellm
 from litellm import (
@@ -8,6 +10,7 @@ from litellm import (
     RateLimitError,
     completion,
     get_supported_openai_params,
+    speech,
 )
 from tenacity import (
     retry,
@@ -16,11 +19,12 @@ from tenacity import (
     wait_exponential,
 )
 
-from config.config import get_api_key
+from config.config import config, get_api_key
 from mini.core.error import error_handler
 from mini.core.exceptions import MessageParsingError
 from mini.core.logger import get_logger
 from mini.core.schema.llm import LLMProviders
+from mini.storage.s3 import S3FileStore
 
 logger = get_logger(__name__)
 
@@ -31,6 +35,7 @@ class LLMManager:
     def __init__(self, llm_name: str, llm_provider: LLMProviders):
         self.llm_name: str = llm_name
         self.api_key: str = get_api_key(llm_provider)
+        litellm.api_key = self.api_key
         litellm.modify_params = True
         self.supports_json_mode = self._check_json_mode_support()
         self.supports_vision = self._check_vision_support()
@@ -106,6 +111,26 @@ class LLMManager:
                 f"An unexpected error occurred after multiple retries: {str(e)}"
             )
             raise
+
+    def generate_and_upload_speech(self, text: str, voice: str) -> str:
+        """Creates speech mp3 and uploads it to filestore. Returns uploaded URL."""
+        # try:
+        response = speech(
+            model=self.llm_name,
+            voice=voice,
+            input=text,
+        )
+        audio_content = response.content
+        fs = S3FileStore()
+        key = f"{config.ENVIRONMENT}/{uuid4()}.wav"
+        content_type = "audio/mpeg"
+
+        fs.write(key, audio_content, content_type)
+        presigned_url = fs.generate_presigned_url(key, content_type)
+        return presigned_url, content_type
+        # except Exception as e:
+        #     logger.error(f"Error in generate_and_upload_speech: {str(e)}")
+        #     raise
 
     @error_handler("LLM")
     def _prepare_messages(self, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:

@@ -45,7 +45,7 @@ class RoomService(Service):
             # Send the first message
             self.messaging_manager.set_receiver(user.phone_number)
             self.messaging_manager.set_sender(agent.bird_channel_id)
-            await self.messaging_manager.send_message(agent.first_message)
+            self.messaging_manager.send_message(text=agent.first_message)
 
             # Create a new room
             new_room = self.database_manager.insert(

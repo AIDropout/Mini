@@ -13,8 +13,12 @@ from config.config import config
 from mini.core.error import error_handler
 from mini.core.logger import get_logger, logger
 from mini.core.schema.bird import BirdRequest
-from mini.core.schema.message import (BirdMetadata, MessageProvider,
-                                      MessageType, MiniMessage)
+from mini.core.schema.message import (
+    BirdMetadata,
+    MessageProvider,
+    MessageType,
+    MiniMessage,
+)
 from mini.core.schema.sms_otp import ErrorCode, VerificationStatus
 from mini.manager.messaging.base import MessagingBase
 from mini.storage import get_file_store
@@ -97,33 +101,114 @@ class BirdManager(MessagingBase):
             media_urls=aws_media_urls,
         )
 
-    @error_handler("Bird SMS")
-    async def send_message(self, message: str) -> Tuple[bool, Dict[str, Any]]:
-        """Send a Bird SMS message to the recipient."""
+    def send_message(
+        self,
+        text: Optional[str] = None,
+        images: Optional[List[str]] = None,
+        files: Optional[List[Tuple[str, str]]] = None,
+        subject: Optional[str] = None,
+    ) -> Tuple[bool, Dict[str, Any]]:
+        """
+        Send a Bird SMS message to the recipient, with optional text, images, files, and subject.
 
+        :param text: Optional text message
+        :param images: Optional list of image URLs
+        :param files: Optional list of tuples (file_url, content_type)
+        :param subject: Optional subject for the message
+        :return: Tuple of success status and details
+        """
         url = f"{self._api_url}/workspaces/{self._workspace_id}/channels/{self._channel_id}/messages"
+
+        if images and files:
+            raise ValueError("Cannot send both images and files in the same message")
+
+        if images:
+            payload = self._create_image_payload(text, images, subject)
+        elif files:
+            payload = self._create_file_payload(text, files, subject)
+        elif text:
+            payload = self._create_text_payload(text)
+        else:
+            raise ValueError(
+                "At least one of message, images, or files must be provided"
+            )
+
+        return self._send_request(url, payload)
+
+    def _create_text_payload(self, text: str) -> Dict:
+        return {
+            "receiver": {"contacts": [{"identifierValue": self._user_phone}]},
+            "body": {"type": "text", "text": {"text": text}},
+        }
+
+    def _create_image_payload(
+        self, text: Optional[str], images: List[str], subject: Optional[str]
+    ) -> Dict:
         payload = {
             "receiver": {"contacts": [{"identifierValue": self._user_phone}]},
-            "body": {"type": "text", "text": {"text": message}},
+            "body": {
+                "type": "image",
+                "image": {
+                    "images": [{"mediaUrl": url} for url in images],
+                },
+            },
         }
-        response = requests.post(url, headers=self._api_header, json=payload)
-        response_data = response.json()
-        response.raise_for_status()  # This will raise an HTTPError for bad responses
+        if text:
+            payload["body"]["image"]["text"] = text
+        if subject:
+            payload["body"]["image"]["metadata"] = {"subject": subject}
+        return payload
 
-        details = {
-            "channel_id": self._channel_id,
-            "phone_number": self._user_phone,
-            "message_length": len(message),
-            "status_code": response.status_code,
-            "response_data": response_data,
+    def _create_file_payload(
+        self,
+        text: Optional[str],
+        files: List[Tuple[str, str]],
+        subject: Optional[str],
+    ) -> Dict:
+        payload = {
+            "receiver": {"contacts": [{"identifierValue": self._user_phone}]},
+            "body": {
+                "type": "file",
+                "file": {
+                    "files": [
+                        {"mediaUrl": url, "contentType": content_type}
+                        for url, content_type in files
+                    ],
+                },
+            },
         }
+        if text:
+            payload["body"]["file"]["text"] = text
+        if subject:
+            payload["body"]["file"]["metadata"] = {"subject": subject}
+        return payload
 
-        logger.info(response_data)  # Why can't i see this
+    def _send_request(self, url: str, payload: Dict) -> Tuple[bool, Dict[str, Any]]:
+        """Send a request to Bird API and handle the response."""
+        try:
+            response = requests.post(url, headers=self._api_header, json=payload)
+            response_data = response.json()
+            logger.info(f"Bird API response: {response_data}")
+            response.raise_for_status()
 
-        if response.status_code == 202 and response_data.get("status") == "accepted":
-            return True, details
-        else:
-            return False, details
+            details = {
+                "channel_id": self._channel_id,
+                "phone_number": self._user_phone,
+                "message_type": payload["body"]["type"],
+                "status_code": response.status_code,
+                "response_data": response_data,
+            }
+
+            if (
+                response.status_code == 202
+                and response_data.get("status") == "accepted"
+            ):
+                return True, details
+            else:
+                return False, details
+        except requests.RequestException as e:
+            logger.error(f"Error sending message: {str(e)}")
+            return False, {"error": str(e)}
 
     @error_handler("Bird SMS")
     async def register_webhook(
@@ -333,7 +418,10 @@ class BirdManager(MessagingBase):
             error_code = error_data.get("code")
             error_message = error_data.get("message", "Unknown error")
 
-            if error_message == "Unexpected Verification Status: verification already verified":
+            if (
+                error_message
+                == "Unexpected Verification Status: verification already verified"
+            ):
                 logger.info(error_message)
                 logger.warning(f"Unexpected verification status {verification_id}. ")
                 return True, False
@@ -368,7 +456,7 @@ async def main():
     bird_sms.set_sender("4e127266-e6de-4081-a6f6-702015f48e6d")
     try:
         # Send message
-        result = await bird_sms.send_message("hi")
+        result = bird_sms.send_message("hi")
         print(result)
 
         # Send verification

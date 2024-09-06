@@ -29,7 +29,7 @@ class DashboardService(Service):
         bird_manager = self.messaging_manager_factory.bird_manager
         bird_manager.set_receiver(context.user.phone_number)
         bird_manager.set_sender(context.agent.bird_channel_id)
-        success = await bird_manager.send_message(message)
+        success = await bird_manager.send_message(text=message)
 
         if success:
             new_message = Message(

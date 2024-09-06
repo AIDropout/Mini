@@ -123,7 +123,7 @@ class SubscribeModule(AgentModule):
         )
 
         # Send the subscription message
-        await self.action_module.handle_message_send(subscribe_message)
+        await self.action_module.send_message(text=subscribe_message)
 
         # Store the subscription message
         self.database_manager.insert(
@@ -139,7 +139,9 @@ class SubscribeModule(AgentModule):
         self.room.subscribe_msg_sent = True
         self.database_manager.update(
             Tables.ROOMS,
-            {Tables.ROOMS__subscribe_msg_sent: True},
+            {
+                Tables.ROOMS__subscribe_msg_sent: True,
+            },
             condition_key=Tables.ROOMS__id,
             condition_value=self.room.id,
         )

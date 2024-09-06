@@ -31,17 +31,17 @@ Use our lego blocks to create and deploy your own talk & text agent. That means 
 - [x] Task scheduling (Celery & Redis)
 - [x] Local, memory, cloud storage (AWS S3)
 
-### Behaviors
+### Modules
 
 - [x] Proactive messages
-- [x] Filtering messages
-- [x] Reading multiple rapid messages before responding
-- [x] Human-like responsiveness (& unresponsiveness... 😜)
-- [x] Quality check filter to re-generate a message
-- [x] Scheduled messages
+- [x] Quality check filter to re-generate a message to meet standard
+- [x] Schedule tasks
 - [x] Human-like memory
-- [x] Receive images
-- [x] Send a Stripe checkout link after x messages
+- [x] Processes images using vision
+- [x] Use TTS to send audio recordings
+- [x] System prompt building (for dynamic personality and mood)
+- [x] Read multiple rapid messages before responding
+- [x] Human-like responsiveness (& unresponsiveness... 😜)
 - [ ] Send images
 - [ ] User preference tracking
 - [ ] Phone calls
@@ -55,7 +55,9 @@ Use our lego blocks to create and deploy your own talk & text agent. That means 
 
 ## 🛠️ Environment Setup
 
-Ensure that Python, [ngrok](https://ngrok.com/), and [uv](https://github.com/astral-sh/uv) are installed.
+Ensure that [ngrok](https://ngrok.com/), and [uv](https://github.com/astral-sh/uv) are installed.
+
+Grab your ngrok auth token here (https://dashboard.ngrok.com/get-started/your-authtoken)
 
 ```bash
 # 1 Navigate to the repository.

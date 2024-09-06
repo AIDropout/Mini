@@ -3,11 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Security
 from config.container import container
 from mini.api.security import verify_api_key
 from mini.core.rate_limiter import RateLimiter
-from mini.core.schema.request import (ResendVerificationRequest,
-                                      ResendVerificationResponse,
-                                      SendVerificationRequest,
-                                      SendVerificationResponse,
-                                      VerifyCodeRequest, VerifyCodeResponse)
+from mini.core.schema.request import (
+    ResendVerificationRequest,
+    ResendVerificationResponse,
+    SendVerificationRequest,
+    SendVerificationResponse,
+    VerifyCodeRequest,
+    VerifyCodeResponse,
+)
 from mini.service.sms_otp_service import SMSOTPService
 
 router = APIRouter(prefix="/sms-otp", tags=["sms-otp"])

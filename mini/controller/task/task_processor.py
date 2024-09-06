@@ -59,14 +59,13 @@ def process_task(
         cancel_manager = container.get_cancel_manager()
         if cancel_manager.newer_task_found(room_id, task.id):
             return
-        
+
         success = asyncio.run(agent.handle_chat_task(task))
 
         if success:
             logger.log("Agent processing finished successfully.")
-            cancel_manager.remove_task(room_id, task_id)
 
-        redis_manager.delete(f"task:{task_id}")
+        cancel_manager.remove_task(room_id, task_id)
 
     except Exception as e:
         logger.exception(f"Error processing task {task_id}: {str(e)}")

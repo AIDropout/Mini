@@ -8,17 +8,17 @@ from mini.core.schema.message import MiniMessage
 
 class MessagingBase(ABC):
     @abstractmethod
-    async def receive_message(cls, request: Request) -> MiniMessage:
+    def receive_message(cls, request: Request) -> MiniMessage:
         """Handle an incoming message from a sender."""
         pass
 
     @abstractmethod
-    async def set_receiver(self) -> Optional[str]:
+    def set_receiver(self) -> Optional[str]:
         """Set the user identifier."""
         pass
 
     @abstractmethod
-    async def set_sender(self) -> Optional[str]:
+    def set_sender(self) -> Optional[str]:
         """Set the agent identifier."""
         pass
 

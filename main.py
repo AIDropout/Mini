@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import subprocess
 from contextlib import asynccontextmanager
@@ -18,7 +17,8 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Life cycle of FastAPI server"""
-    redis_manager = RedisManager().initialize()
+    redis_manager = RedisManager()
+    redis_manager.initialize()
     if config.ENVIRONMENT == "local":
         subprocess.Popen(
             [

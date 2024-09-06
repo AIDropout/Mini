@@ -17,9 +17,11 @@ class S3FileStore(FileStore):
         self.bucket = config.AWS_S3_CONFIG.bucket
         self.client = Minio(endpoint, access_key, secret_key)
 
-    def write(self, path: str, contents: bytes) -> None:
+    def write(self, path: str, contents: bytes, content_type: str) -> None:
         length = len(contents)
-        self.client.put_object(self.bucket, path, io.BytesIO(contents), length)
+        self.client.put_object(
+            self.bucket, path, io.BytesIO(contents), length, content_type=content_type
+        )
 
     def read(self, path: str) -> bytes:
         return self.client.get_object(self.bucket, path).data
@@ -30,7 +32,9 @@ class S3FileStore(FileStore):
     def delete(self, path: str) -> None:
         self.client.remove_object(self.bucket, path)
 
-    def generate_presigned_url(self, path: str, expiration: int = 3600) -> str:
+    def generate_presigned_url(
+        self, path: str, content_type: str, expiration: int = 3600
+    ) -> str:
         """
         Generate a pre-signed URL for an S3 object.
         :param path: The S3 object key (file path in the bucket).
@@ -38,5 +42,8 @@ class S3FileStore(FileStore):
         :return: The pre-signed URL as a string.
         """
         return self.client.presigned_get_object(
-            self.bucket, path, expires=timedelta(seconds=expiration)
+            self.bucket,
+            path,
+            expires=timedelta(seconds=expiration),
+            response_headers={"response-content-type": content_type},
         )

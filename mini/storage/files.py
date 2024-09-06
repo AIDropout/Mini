@@ -3,7 +3,7 @@ from abc import abstractmethod
 
 class FileStore:
     @abstractmethod
-    def write(self, path: str, contents: str) -> None:
+    def write(self, path: str, contents: str, content_type: str) -> None:
         pass
 
     @abstractmethod

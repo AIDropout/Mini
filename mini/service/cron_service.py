@@ -28,19 +28,21 @@ class CronService(Service):
         logger.info(config.DEV_AGENT_ID)
         agents = self.database_manager.get_multiple_rows(
             table_name=Tables.AGENTS,
-            max_rows=100,  # Adjust this number as needed
-            order_by="id",  # Use 'id' or another column that exists in the agents table
-            order_desc=False,  # Set to False if you want ascending order
+            max_rows=100,
+            order_by="id",
+            order_desc=False,
             conditions={Tables.AGENTS__id: config.DEV_AGENT_ID} if dev_mode else None,
         )
 
         for agent in agents:
-            logger.info(agent)
-        #     proactive_rooms = self.database_manager.query(
-        #         Tables.ROOMS,
-        #         (Tables.ROOMS__agent_id, agent.id),
-        #         (Tables.ROOMS__agent_proactivity, ">", 0),
-        #     )
+
+            proactive_rooms = self.database_manager.query(
+                Tables.ROOMS,
+                (Tables.ROOMS__agent_id, agent.id),
+                (Tables.ROOMS__agent_proactivity, ">", 0),
+            )
+
+            # logger.info(proactive_rooms)
 
         #     for room in proactive_rooms:
         #         if self._is_room_eligible_for_revival(room, room.user_id):
@@ -56,23 +58,22 @@ class CronService(Service):
         #                 last_message_time=last_message.created_at,
         #             ):
         #                 revive_task = ReviveTask(room_id=room.id)
-                        # TODO:
-                        #
-                        # scheduled_task_info = ScheduledTaskInfo(
-                        #     task=revive_task, delay=0
-                        # )
+        # TODO:
+        #
+        # scheduled_task_info = ScheduledTaskInfo(
+        #     task=revive_task, delay=0
+        # )
 
-                        # await SchedulerService.schedule_task(
-                        #     task_data=scheduled_task_info.to_dict(),
-                        #     delay=0,
-                        #     db=self.database_manager,
-                        # )
+        # await SchedulerService.schedule_task(
+        #     task_data=scheduled_task_info.to_dict(),
+        #     delay=0,
+        #     db=self.database_manager,
+        # )
 
-    def _is_room_eligible_for_revival(self, room: Room, user_id: str):
-        if not room.subscribe_msg_sent:
-            return True
+    def _is_room_eligible_for_revival(self, room: Room, user_id: str) -> bool:
+        if room.subscribe_msg_sent:
+            return False
 
-        # TODO: add current date
         subscription = self.database_manager.get_row(
             Tables.SUBSCRIPTIONS,
             {

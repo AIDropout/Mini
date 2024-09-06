@@ -1,6 +1,5 @@
 import random
 from datetime import datetime, timezone
-from typing import List
 
 from config.config import config
 from mini.controller.task.task_scheduler import SchedulerService
@@ -31,7 +30,7 @@ class ReplyService(Service):
 
     @error_handler("ReplyService")
     async def handle_respond(self, request_body: dict) -> None:
-        print(request_body)
+        # Process request
         messaging_manager = self.messaging_manager_factory.get_manager_from_request(
             request_body
         )
@@ -45,11 +44,12 @@ class ReplyService(Service):
             self.database_manager.delete(
                 Tables.USERS, {Tables.USERS__id: context.user.id}
             )
-            await messaging_manager.send_message(
-                "Successfully deleted your user from Auth tables and Users table"
+            messaging_manager.send_message(
+                text="Successfully deleted your user from Auth tables and Users table"
             )
             return
 
+        # Insert user message
         self.database_manager.insert(
             Tables.MESSAGES,
             Message(
@@ -59,57 +59,37 @@ class ReplyService(Service):
             ),
         )
 
-        recent_messages = self.database_manager.get_multiple_rows(
-            Tables.MESSAGES,
-            max_rows=5,
-            order_by=Tables.MESSAGES__created_at,
-            order_desc=True,
-            conditions={Tables.MESSAGES__room_id: context.room.id},
-        )
-        delay = self._calculate_response_delay(recent_messages)
+        # Calculate delay and schedule response
+        delay = self._calculate_response_delay(room_id=context.room.id)
         self.scheduler_service.schedule_respond(
             delay=delay,
             message=message,
             context=context,
         )
 
-    def _calculate_response_delay(self, messages: List[Message]) -> int:
+    def _calculate_response_delay(self, room_id: int) -> int:
         """
         Calculate a human-like delay in seconds for message responses.
 
         :param messages: List of message objects, sorted by creation time (newest first)
         :return: Delay in seconds
         """
-        if not messages:
+
+        recent_messages = self.database_manager.get_multiple_rows(
+            Tables.MESSAGES,
+            max_rows=5,
+            order_by=Tables.MESSAGES__created_at,
+            order_desc=True,
+            conditions={Tables.MESSAGES__room_id: room_id},
+        )
+
+        if not recent_messages:
             return random.randint(5, 15)  # Default delay if no messages
 
-        try:
-            last_message_time = datetime.fromisoformat(
-                messages[0]["created_at"].replace("Z", "+00:00")
-            ).replace(tzinfo=timezone.utc)
-            time_since_last_message = (
-                datetime.now(timezone.utc) - last_message_time
-            ).total_seconds()
-        except (ValueError, KeyError) as e:
-            logger.error(f"Error parsing message time: {e}")
-            return random.randint(
-                5, 15
-            )  # Default delay if there's an error parsing time
+        return 1  # temp
 
         # for debugging
         logger.info("___")
         logger.info(config.ENABLE_RESPONSE_DELAY)
         if not config.ENABLE_RESPONSE_DELAY:
             return 1
-
-        # Determine delay based on time since last message
-        if time_since_last_message < 60:  # Within a minute
-            return random.randint(5, 30)
-        elif time_since_last_message < 300:  # Within 5 minutes
-            return random.randint(30, 180)
-        elif time_since_last_message < 3600:  # Within an hour
-            return random.randint(3 * 60, 20 * 60)  # 3 to 20 minutes
-        elif time_since_last_message < 86400:  # Within a day
-            return random.randint(30 * 60, 4 * 60 * 60)  # 30 minutes to 4 hours
-        else:  # More than a day
-            return random.randint(4 * 60 * 60, 24 * 60 * 60)  # 4 to 24 hours
