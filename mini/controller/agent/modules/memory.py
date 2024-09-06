@@ -79,7 +79,7 @@ class MemoryModule(AgentModule):
 
         return cleaned
 
-    def save_relevant_memories(self, save_interval: int = 10) -> str:
+    def save_relevant_memories(self, save_interval: int = 10) -> None:
         self._set_user_and_agent_id()
 
         count_messages = self.database_manager.count_rows(table_name=Tables.MESSAGES)
@@ -92,7 +92,7 @@ class MemoryModule(AgentModule):
         )
 
         if remaining_messages_until_save in [0, 1]:
-            messages_for_memory = self.get_recent_messages(count=max(save_interval) + 2)
+            messages_for_memory = self.get_recent_messages(count=save_interval + 2)
             prepared_messages = self._prepare_recent_messages(messages_for_memory)
             self.memory_manager.add_memory(data=prepared_messages)
             logger.info(

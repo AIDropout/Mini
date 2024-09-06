@@ -3,6 +3,7 @@ from typing import Union
 from mini.controller.agent.modules.action import ActionModule
 from mini.controller.agent.modules.intent.filter import FilterModule
 from mini.controller.agent.modules.memory import MemoryModule
+from mini.controller.agent.modules.prompt import PromptModule
 from mini.controller.agent.modules.subscribe import SubscribeModule
 from mini.controller.agent.modules.vision import VisionModule
 from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
@@ -27,6 +28,7 @@ class AgentService(Service):
         subscribe_module: SubscribeModule,
         filter_module: FilterModule,
         vision_module: VisionModule,
+        prompt_module: PromptModule,
     ) -> None:
         super().__init__(database_manager)
         self.cancel_manager = cancel_manager
@@ -39,6 +41,7 @@ class AgentService(Service):
         self.subscribe = subscribe_module
         self.filter = filter_module
         self.vision = vision_module
+        self.prompt = prompt_module
 
     def configure(
         self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room
@@ -90,10 +93,13 @@ class AgentService(Service):
             system_prompt = self._construct_system_prompt(
                 task.instructions, relevant_memories=relevant_memories
             )
+            system_prompt = self.prompt.build_prompt(
+                relevant_memories=relevant_memories
+            )
             el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
 
             if self.cancel_manager.newer_task_found(
-                room_id=self.room.id, task_id=task.id
+                room_id=self.room.id, current_task_id=task.id
             ):
                 return False
             response_text = self.action.generate_message(
@@ -102,7 +108,7 @@ class AgentService(Service):
             el.log(f"MAIN LLM RESPONSE: {response_text}")
 
             if self.cancel_manager.newer_task_found(
-                room_id=self.room.id, task_id=task.id
+                room_id=self.room.id, current_task_id=task.id
             ):
                 return False
             final_message = self.filter.process_message(
@@ -110,7 +116,7 @@ class AgentService(Service):
             )
 
             if self.cancel_manager.newer_task_found(
-                room_id=self.room.id, task_id=task.id
+                room_id=self.room.id, current_task_id=task.id
             ):
                 return False
             success = await self.action.handle_message_send(final_message)
