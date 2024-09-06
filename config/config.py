@@ -1,4 +1,5 @@
 import yaml
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 from mini.core.schema.llm import LLMProviders
@@ -7,6 +8,49 @@ from mini.core.schema.llm import LLMProviders
 def get_api_key(provider: LLMProviders) -> str:
     """Fetches the API key from the config based on the provider."""
     return getattr(config, provider.value)
+
+
+class PromptRulesConfig(BaseSettings):
+    initial_message_count: int
+    initial_message_prompt: str
+
+    last_conversation_days_threshold: int
+    last_conversation_prompt: str
+
+    pre_subscription_prompt: str
+    post_subscription_prompt: str
+
+    style_guidelines: dict
+
+
+class PromptPersonalityConfig(BaseSettings):
+    shy_level: int = Field(0, ge=0, le=100)
+    confidence_level: int = Field(0, ge=0, le=100)
+    assertiveness_level: int = Field(0, ge=0, le=100)
+    friendliness_level: int = Field(0, ge=0, le=100)
+    flirtiness_level: int = Field(0, ge=0, le=100)
+    humor_level: int = Field(0, ge=0, le=100)
+
+
+class PromptAboutConfig(BaseSettings):
+    timezone: str
+    interests: list[str]
+    past_events: list[str]
+
+
+class PromptMetadataConfig(BaseSettings):
+    # requires logic refactor of other files
+    # retrieved_message_count: int
+    # retrieved_memory_count: int
+    display_timestamp: bool
+
+
+class PromptModuleConfig(BaseSettings):
+    base_prompt: str
+    rules: PromptRulesConfig
+    about: PromptAboutConfig
+    personality: PromptPersonalityConfig
+    metadata: PromptMetadataConfig
 
 
 class UserRateLimits(BaseSettings):
@@ -55,8 +99,10 @@ class MemoryOpenAIConfig(BaseSettings):
 class SecretPhrases(BaseSettings):
     reset_user: str
 
+
 class DiscordConfig(BaseSettings):
     webhook_url: str
+
 
 class DevConfig(BaseSettings):
     agent_id: str
@@ -77,6 +123,8 @@ class Config(BaseSettings):
     BIRD_SIGNING_KEY: str
     SUPABASE_URL: str
     SUPABASE_KEY: str
+    SUPABASE_PROMPTS_BUCKET: str
+    SUPABASE_AGENT_PROMPT_PATH: str
     GOOGLE_API_KEY: str
     GEMINI_API_KEY: str
     GOOGLE_CLIENT_ID: str
