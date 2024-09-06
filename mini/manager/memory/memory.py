@@ -67,11 +67,11 @@ class MemoryManager:
         self.user_id = user_id
         self.agent_id = agent_id
 
-    def set_user_id(self, user_id: int) -> None:
+    def set_user_id(self, user_id: str) -> None:
         """Sets the user_id."""
         self.user_id = user_id
 
-    def set_agent_id(self, agent_id: int) -> None:
+    def set_agent_id(self, agent_id: str) -> None:
         """Sets the agent_id."""
         self.agent_id = agent_id
 
@@ -131,8 +131,9 @@ class MemoryManager:
         for i, segment in enumerate(segments):
             logger.info("Saving memory #%s/%s", i + 1, len(segments))
             sleep(self.memory_save_delay)
+            # TODO: test no parse?
             res = self.mem.add(
-                data=segment.text,
+                messages=segment.text,
                 agent_id=self.agent_id,
                 metadata={
                     "user_id": self.user_id,
