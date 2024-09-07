@@ -27,7 +27,7 @@ class PaymentService(Service):
         self._customer_manager = customer_manager
         self._subscription_manager = subscription_manager
 
-    async def create_checkout_session(self, user_id: str):
+    async def create_checkout_session(self, user_id: str, tier: str):
         user = self.database_manager.get_row(
             Tables.USERS,
             {Tables.USERS__id: user_id},
@@ -45,6 +45,7 @@ class PaymentService(Service):
             user_id,
             phone_number,
             customer_id,
+            tier,
         )
 
         return {"url": response.url}
@@ -60,14 +61,14 @@ class PaymentService(Service):
 
     async def process_event(self, event_payload: str, sig_header: str) -> None:
         """Processes the event received from Stripe webhook."""
-        if not config.STRIPE_WEBHOOK_SECRET:
+        if not config.STRIPE_CONFIG.webhook_secret:
             raise ValueError("The Stripe webhook secret must be set.")
 
         try:
             event = stripe.Webhook.construct_event(
                 payload=event_payload,
                 sig_header=sig_header,
-                secret=config.STRIPE_WEBHOOK_SECRET,
+                secret=config.STRIPE_CONFIG.webhook_secret,
             )
             await self._handle_event(event)
 

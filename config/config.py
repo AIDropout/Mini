@@ -9,6 +9,11 @@ def get_api_key(provider: LLMProviders) -> str:
     """Fetches the API key from the config based on the provider."""
     return getattr(config, provider.value)
 
+class StripeConfig(BaseSettings):
+    secret_key: str
+    webhook_secret: str
+    basic_weekly_price_id: str
+    pro_weekly_price_id: str
 
 class PromptRulesConfig(BaseSettings):
     initial_message_count: int
@@ -139,9 +144,7 @@ class Config(BaseSettings):
     MEMORY_MANAGER_LLM: str
     VISION_MANAGER_LLM: str
     VISION_MANAGER_LLM_PROVIDER: LLMProviders
-    STRIPE_SECRET_KEY: str
-    STRIPE_WEBHOOK_SECRET: str
-    STRIPE_PRODUCT_PRICE_ID: str
+    STRIPE_CONFIG: StripeConfig
     PHONE_OTP_CHANNEL_ID: str
     FRONTEND_URL: str
     TIME_API: TimeApiConfig = TimeApiConfig()

@@ -15,18 +15,27 @@ class CheckoutManager(StripeBaseClient):
         """Initializes the client with the Stripe API key."""
         super().__init__()
 
+    @staticmethod
+    def get_price_id(tier: str):
+        if tier == "basic":
+            return config.STRIPE_CONFIG.basic_weekly_price_id
+        elif tier == "pro":
+            return config.STRIPE_CONFIG.pro_weekly_price_id
+        return None
+
     def create_checkout_session(
         self,
         user_id: str,
         phone: str,
         customer_id: str,
+        tier: str
     ) -> stripe.checkout.Session:
         """Creates a checkout session for a given user and price.
 
         Session Object: https://docs.stripe.com/api/checkout/sessions/object
         """
 
-        price_id = config.STRIPE_PRODUCT_PRICE_ID
+        price_id = self.get_price_id(tier)
 
         session_params = {
             "line_items": [
@@ -43,8 +52,6 @@ class CheckoutManager(StripeBaseClient):
         }
 
         session_params["customer"] = customer_id
-
-        # session_params['allow_promotion_codes'] = True
 
         session = stripe.checkout.Session.create(**session_params)
         return session

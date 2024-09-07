@@ -26,12 +26,13 @@ async def stripe_webhook(
 
 @router.post("/checkout")
 async def create_checkout_session(
-    user_id: str = Body(..., embed=True),
+    user_id: str = Body(..., title="User"),
+    tier: str = Body(..., title="Basic, Pro, VIP"),
     payment_service: PaymentService = Depends(lambda: container.get_payment_service()),
     api_key: str = Security(verify_api_key),
 ) -> Dict[str, str]:
     """Returns {"url": "https://example.com/checkout/session123"}"""
-    return await payment_service.create_checkout_session(user_id)
+    return await payment_service.create_checkout_session(user_id, tier)
 
 
 @router.get("/portal/{user_id}")

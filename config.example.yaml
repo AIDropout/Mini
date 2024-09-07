@@ -37,9 +37,11 @@ MEMORY_MANAGER_LLM: "claude-3-5-sonnet-20240620"
 VISION_MANAGER_LLM_PROVIDER: "OPENAI_API_KEY"
 VISION_MANAGER_LLM: "gpt-4o-mini"
 
-STRIPE_SECRET_KEY: key
-STRIPE_WEBHOOK_SECRET: key
-STRIPE_PRODUCT_PRICE_ID: key
+STRIPE_CONFIG:
+  secret_key: key
+  webhook_secret: key
+  basic_weekly_price_id: str
+  pro_weekly_price_id: str
 
 PHONE_OTP_CHANNEL_ID: key
 FRONTEND_URL: http://localhost:3000/
