@@ -20,4 +20,4 @@ class AgentService(Service):
         )
         if not agents:
             raise HTTPException(status_code=404, detail="Agents not found")
-        return [Agent(**agent) for agent in agents]
+        return agents

@@ -117,21 +117,13 @@ class MemoryModule(AgentModule):
             order_desc=True,
             conditions={Tables.MESSAGES__room_id: self.room.id},
         )
-
-        if not messages or not isinstance(messages, list):
-            logger.warning(
-                "Invalid or empty data fetched for room %s: %s", self.room.id, messages
-            )
-            return []
-
-        # Convert database results to Message instances and then to dict format
-        message_models = [Message.model_validate(message) for message in messages]
-        message_models.reverse()
+        
+        messages.reverse()
 
         return [
             {
                 "role": "assistant" if msg.sender_id == self.agent.id else "user",
                 "content": msg.content,
             }
-            for msg in message_models
+            for msg in messages
         ]
