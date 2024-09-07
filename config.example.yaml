@@ -81,4 +81,5 @@ AWS_S3_CONFIG:
   bucket: bucket
 
 DISCORD_CONFIG:
-  webhook_url: str
+  website_activity_webhook_url: str
+  server_status_webhook_url: str

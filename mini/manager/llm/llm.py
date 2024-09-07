@@ -2,7 +2,6 @@ import json
 import re
 from typing import Dict, List, Optional, Union
 from uuid import uuid4
-from pydub import AudioSegment
 
 import litellm
 from litellm import (

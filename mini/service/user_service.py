@@ -9,6 +9,7 @@ from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.payment.customer import CustomerManager
+from mini.manager.messaging.discord import discord_manager
 from mini.service.base import Service
 
 import requests
@@ -31,14 +32,10 @@ class UserService(Service):
             if new_user is None:
                 raise HTTPException(status_code=500, detail="Failed to create user")
 
-            try:
-                response = requests.post(
-                    config.DISCORD_CONFIG.webhook_url,
-                    json={"content": f"New signup: {phone_number}"},
-                )
-                response.raise_for_status()
-            except requests.RequestException as e:
-                print(f"Failed to notify Discord: {e}")
+            discord_manager.send_message_to_channel(
+                message=f"New signup: {phone_number}",
+                channel=config.DISCORD_CONFIG.website_activity_webhook_url,
+            )
 
             return new_user
         except APIError as e:

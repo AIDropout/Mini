@@ -18,6 +18,7 @@ class MemoryModule(AgentModule):
         database_manager: DatabaseManager,
         memory_manager: MemoryManager,
         llm_manager: LLMManager,
+        
     ):
         super().__init__(database_manager)
         self.memory_manager = memory_manager

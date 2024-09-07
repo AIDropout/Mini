@@ -1,13 +1,16 @@
 import asyncio
 from datetime import datetime
+import traceback
 from typing import Literal
 
 from celery import shared_task
 
 from config.container import container
+from config.config import config
 from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
 from mini.core.logger import get_logger
 from mini.core.schema.task import TaskType
+from mini.manager.messaging import discord_manager
 
 logger = get_logger(__name__)
 
@@ -68,5 +71,7 @@ def process_task(
         cancel_manager.remove_task(room_id, task_id)
 
     except Exception as e:
-        logger.exception(f"Error processing task {task_id}: {str(e)}")
+        error_traceback = traceback.format_exc()
+        msg = f"⚠️__**PROCESSING_ERROR**__⚠️[task_id={task.id}]\n{error_traceback}"
+        logger.exception(msg)
         raise self.retry(exc=e)

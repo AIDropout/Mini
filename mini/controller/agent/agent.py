@@ -15,10 +15,11 @@ from mini.core.schema.llm import LLMProviders
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.llm import LLMManager
-from mini.manager.messaging import MessagingManager
+from mini.manager.messaging import MessagingManager, discord_manager
 from mini.server.cancel import CancelManager
 from mini.service.base import Service
 from mini.utils.time import utc_now
+import traceback
 
 
 class AgentService(Service):
@@ -116,12 +117,16 @@ class AgentService(Service):
             )
 
             # TODO: fetch agent data and pass in this module before this function is run (would require a large-ish refactor)
-            self.tts_llm = LLMManager(
-                llm_name="openai/tts-1-hd", llm_provider=LLMProviders.OPENAI
-            )
-            url, content_type = self.tts_llm.generate_and_upload_speech(
-                text=final_message, voice="onyx"
-            )
+            # Disabling this feature for now
+            url = None
+            content_type = None
+            if False:
+                self.tts_llm = LLMManager(
+                    llm_name="openai/tts-1-hd", llm_provider=LLMProviders.OPENAI
+                )
+                url, content_type = self.tts_llm.generate_and_upload_speech(
+                    text=final_message, voice="onyx"
+                )
 
             if self.cancel_manager.newer_task_found(self.room.id, task.id):
                 return False
@@ -139,7 +144,12 @@ class AgentService(Service):
             self.memory.save_relevant_memories(save_interval=save_interval)
 
         except Exception as e:
-            el.log(f"[FAILURE] Unexpected error in processing chat: {str(e)}")
+            error_traceback = traceback.format_exc()
+            msg = f"⚠️__**AGENT_ERROR**__⚠️[task_id={task.id}]\n{error_traceback}"
+            el.log(msg)
+            discord_manager.send_message_to_channel(
+                message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url
+            )
             res = await self.backup_handle_chat_task(task, str(e))
             return False
 
@@ -173,13 +183,18 @@ class AgentService(Service):
                 all_recent_messages, response_text
             )
 
-            success = await self.action.send_message(final_message)
+            success = self.action.send_message(final_message)
             el.log(f"BIRD SMS SENT: {success}")
 
             if success:
                 self._handle_successful_send(task.type, final_message)
         except Exception as e:
-            el.log(f"[BACKUP_FAILURE] Unexpected error in processing chat: {str(e)}")
+            error_traceback = traceback.format_exc()
+            msg = f"⚠️__**BACKUP_ERROR**__⚠️[task_id={task.id}]\n{error_traceback}"
+            el.log(msg)
+            discord_manager.send_message_to_channel(
+                message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url
+            )
             return False
 
     def _handle_image(self, task: RespondTask) -> RespondTask:

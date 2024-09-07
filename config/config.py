@@ -106,7 +106,8 @@ class SecretPhrases(BaseSettings):
 
 
 class DiscordConfig(BaseSettings):
-    webhook_url: str
+    website_activity_webhook_url: str
+    server_status_webhook_url: str
 
 
 class DevConfig(BaseSettings):
