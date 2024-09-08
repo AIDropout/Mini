@@ -67,7 +67,7 @@ class ReplyService(Service):
             self.scheduler_service.schedule_respond(
                 delay=delay,
                 message=message,
-                context=context.l,
+                context=context,
             )
         except Exception as e:
             error_traceback = traceback.format_exc()
