@@ -73,7 +73,7 @@ async def send_admin_message(
 ):
     """Endpoint for sending messages from the admin dashboard."""
     try:
-        await dashboard_service.send_admin_message(room_id, message)
+        dashboard_service.send_admin_message(room_id, message)
         return {"status": "Admin message sent successfully"}
     except Exception as e:
         logger.exception("Error in send_admin_message")

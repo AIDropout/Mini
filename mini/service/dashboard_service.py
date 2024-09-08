@@ -22,14 +22,14 @@ class DashboardService(Service):
         self.messaging_manager_factory = messaging_manager_factory
         self.context_factory = context_factory
 
-    async def send_admin_message(self, room_id: str, message: str):
+    def send_admin_message(self, room_id: str, message: str):
 
         context = self.context_factory.create_cron_context(room_id)
 
         bird_manager = self.messaging_manager_factory.bird_manager
         bird_manager.set_receiver(context.user.phone_number)
         bird_manager.set_sender(context.agent.bird_channel_id)
-        success = await bird_manager.send_message(text=message)
+        success = bird_manager.send_message(text=message)
 
         if success:
             new_message = Message(
