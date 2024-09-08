@@ -30,7 +30,7 @@ async def stripe_webhook(
 @router.post("/checkout")
 def create_checkout_session(
     user_id: Annotated[str, Body(..., title="User")],
-    tier: Annotated[str, Body(..., title="Basic, Pro, VIP")],
+    tier: Annotated[str, Body(..., title="basic, pro")],
     payment_service: PaymentServiceDep,
     api_key: ApiKeyDep,
 ) -> Dict[str, str]:

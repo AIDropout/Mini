@@ -27,7 +27,7 @@ class RoomService(Service):
         self.customer_manager = customer_manager
         self.user_service = user_service
 
-    async def create_room(self, agent_id: str, user_id: str) -> Room:
+    def create_room(self, agent_id: str, user_id: str) -> Room:
         """Creates a new room & sends the first message"""
 
         try:
