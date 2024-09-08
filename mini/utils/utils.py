@@ -8,6 +8,10 @@ from pyngrok import ngrok
 from config.config import config
 from mini.core.logger import get_logger
 from mini.manager.messaging import BirdManager, TelegramManager
+import traceback
+from mini.core.logger import get_logger
+from mini.manager.messaging import discord_manager
+
 
 logger = get_logger(__name__)
 
@@ -58,3 +62,12 @@ def get_infostring() -> str:
     timestamp = f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
 
     return f"ENV={environment.upper()} 🕒 {timestamp}"
+
+
+def log_error_to_discord(identifier_key: str, identifier_value) -> str:
+    error_traceback = traceback.format_exc()
+    msg = f"⚠️__**ERROR**__⚠️\n-# {get_infostring()} 🏷️ {identifier_key}={identifier_value}\n```{error_traceback}```"
+    discord_manager.send_message_to_channel(
+        msg, config.DISCORD_CONFIG.server_status_webhook_url
+    )
+    return msg

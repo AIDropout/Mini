@@ -1,6 +1,5 @@
 from typing import Union
 
-from config.config import config
 from mini.controller.agent.modules.action import ActionModule
 from mini.controller.agent.modules.intent.filter import FilterModule
 from mini.controller.agent.modules.memory import MemoryModule
@@ -15,12 +14,11 @@ from mini.core.schema.llm import LLMProviders
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.llm import LLMManager
-from mini.manager.messaging import MessagingManager, discord_manager
+from mini.manager.messaging import MessagingManager
 from mini.server.cancel import CancelManager
 from mini.service.base import Service
 from mini.utils.time import utc_now
-from mini.utils.utils import get_infostring
-import traceback
+from mini.utils.utils import log_error_to_discord
 
 
 class AgentService(Service):
@@ -145,12 +143,8 @@ class AgentService(Service):
             self.memory.save_relevant_memories(save_interval=save_interval)
 
         except Exception as e:
-            error_traceback = traceback.format_exc()
-            msg = f"⚠️__**AGENT_ERROR**__⚠️\n-# {get_infostring()} 🏷️ room_id={self.room.id}\n```{error_traceback}```"
+            msg = log_error_to_discord("task_id", task.id)
             el.log(msg)
-            discord_manager.send_message_to_channel(
-                message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url
-            )
             res = self.backup_handle_chat_task(task, str(e))
             return False
 
@@ -190,12 +184,8 @@ class AgentService(Service):
             if success:
                 self._handle_successful_send(task.type, final_message)
         except Exception as e:
-            error_traceback = traceback.format_exc()
-            msg = f"⚠️__**BACKUP_ERROR**__⚠️\n-# {get_infostring()} 🏷️ task_id={task.id}\n```{error_traceback}```"
+            msg = log_error_to_discord("task_id", task.id)
             el.log(msg)
-            discord_manager.send_message_to_channel(
-                message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url
-            )
             return False
 
     def _handle_image(self, task: RespondTask) -> RespondTask:

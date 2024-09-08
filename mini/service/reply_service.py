@@ -8,10 +8,10 @@ from mini.controller.task.task_types import RespondTask
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Message, Tables
 from mini.manager.database import DatabaseManager
-from mini.manager.messaging import MessagingManagerFactory, discord_manager
+from mini.manager.messaging import MessagingManagerFactory
 from mini.service.base import Service
 from mini.service.context_factory import ContextFactory
-from mini.utils.utils import get_infostring
+from mini.utils.utils import log_error_to_discord
 
 logger = get_logger(__name__)
 
@@ -73,9 +73,7 @@ class ReplyService(Service):
                 context=context,
             )
         except Exception as e:
-            error_traceback = traceback.format_exc()
-            msg = f"⚠️__**ERROR**__⚠️\n-# {get_infostring()} 🏷️ room_id={context.room.id}\n```{error_traceback}```"
-            discord_manager.send_message_to_channel(msg, config.DISCORD_CONFIG.server_status_webhook_url)
+            msg = log_error_to_discord("room_id", context.room.id)
             logger.exception(msg)
 
     def _calculate_response_delay(self, room_id: int) -> int:

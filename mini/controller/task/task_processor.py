@@ -1,17 +1,13 @@
-import asyncio
 from datetime import datetime
-import traceback
 from typing import Literal
 
 from celery import shared_task
 
 from config.container import container
-from config.config import config
 from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
 from mini.core.logger import get_logger
 from mini.core.schema.task import TaskType
-from mini.manager.messaging import discord_manager
-from mini.utils.utils import get_infostring
+from mini.utils.utils import log_error_to_discord
 
 logger = get_logger(__name__)
 
@@ -50,7 +46,7 @@ def process_task(
                 f"Failed to initialize task or messaging manager for task {task_id}"
             )
             return
-        
+
         messaging_manager.set_receiver(task.context.user.phone_number)
         messaging_manager.set_sender(task.context.agent.bird_channel_id)
 
@@ -74,10 +70,6 @@ def process_task(
         cancel_manager.remove_task(room_id, task_id)
 
     except Exception as e:
-        error_traceback = traceback.format_exc()
-        msg = f"⚠️__**ERROR**__⚠️[task_id={task.id}]\n-# {get_infostring()} 🏷️ room_id={room_id}\n```{error_traceback}```"
+        msg = log_error_to_discord("task_id", task_id)
         logger.exception(msg)
-        discord_manager.send_message_to_channel(
-            msg, config.DISCORD_CONFIG.server_status_webhook_url
-        )
         raise self.retry(exc=e)
