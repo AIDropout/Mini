@@ -1,5 +1,7 @@
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from typing import Annotated
+
 
 from config.config import config
 
@@ -15,3 +17,6 @@ def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security
     if token != config.BACKEND_API_KEY:
         raise HTTPException(status_code=403, detail="Could not validate credentials")
     return token
+
+
+ApiKeyDep = Annotated[str, Security(verify_api_key)]

@@ -11,6 +11,8 @@ from mini.manager.database import DatabaseManager
 from mini.manager.payment.customer import CustomerManager
 from mini.manager.messaging.discord import discord_manager
 from mini.service.base import Service
+from mini.utils.utils import get_infostring
+
 
 class UserService(Service):
     def __init__(
@@ -30,7 +32,7 @@ class UserService(Service):
                 raise HTTPException(status_code=500, detail="Failed to create user")
 
             discord_manager.send_message_to_channel(
-                message=f"New signup: {phone_number}",
+                message=f"New signup: {phone_number} | {get_infostring()}",
                 channel=config.DISCORD_CONFIG.website_activity_webhook_url,
             )
 
@@ -50,14 +52,14 @@ class UserService(Service):
             raise HTTPException(status_code=404, detail="User not found")
         return user
 
-    def update_user(self, user_id: str, user_params: Dict[str, Any]) -> User:
+    def update_user(self, user_id: str, update_data: Dict[str, Any]) -> User:
         existing_user = self.database_manager.get_row(
             Tables.USERS, {Tables.USERS__id: user_id}
         )
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        update_data = {k: v for k, v in user_params.items() if v is not None}
+        update_data = {k: v for k, v in update_data.items() if v is not None}
 
         updated_user = self.database_manager.update(
             table_name=Tables.USERS,
