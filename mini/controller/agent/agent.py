@@ -145,7 +145,7 @@ class AgentService(Service):
 
         except Exception as e:
             error_traceback = traceback.format_exc()
-            msg = f"⚠️__**AGENT_ERROR**__⚠️[task_id={task.id}]\n{error_traceback}"
+            msg = f"⚠️__**AGENT_ERROR**__⚠️[task_id={task.id}]\n```{error_traceback}```"
             el.log(msg)
             discord_manager.send_message_to_channel(
                 message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url
@@ -190,7 +190,7 @@ class AgentService(Service):
                 self._handle_successful_send(task.type, final_message)
         except Exception as e:
             error_traceback = traceback.format_exc()
-            msg = f"⚠️__**BACKUP_ERROR**__⚠️[task_id={task.id}]\n{error_traceback}"
+            msg = f"⚠️__**BACKUP_ERROR**__⚠️[task_id={task.id}]\n```{error_traceback}```"
             el.log(msg)
             discord_manager.send_message_to_channel(
                 message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url

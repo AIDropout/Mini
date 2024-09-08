@@ -66,11 +66,11 @@ class ReplyService(Service):
             self.scheduler_service.schedule_respond(
                 delay=delay,
                 message=message,
-                context=context,
+                context=context.l,
             )
         except Exception as e:
             error_traceback = traceback.format_exc()
-            msg = f"⚠️__**ERROR**__⚠️[room_id={context.room.id}]\n{error_traceback}"
+            msg = f"⚠️__**ERROR**__⚠️[room_id={context.room.id}]\n```{error_traceback}```"
             discord_manager.send_message_to_channel(msg, config.DISCORD_CONFIG.server_status_webhook_url)
             logger.exception(msg)
 

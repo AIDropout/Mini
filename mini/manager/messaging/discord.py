@@ -18,7 +18,7 @@ class DiscordManager:
         hour = pst_time.strftime("%I").lstrip('0')
         timestamp = f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
         
-        full_message = f"---------------------\n[{environment.upper()}][🕒{timestamp}]\n{message}"
+        full_message = f"\n-# {environment.upper()} 🕒 {timestamp}\n{message}"
 
         """Send a message to a webhook url"""
         try:
