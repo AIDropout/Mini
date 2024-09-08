@@ -39,6 +39,10 @@ class ReplyService(Service):
 
             context = self.context_factory.create_message_context(message)
 
+            if context.room.disabled_by_admin:
+                logger.warning(f"Room {context.room.id} disabled. Canceling process.")
+                return
+
             # Reset admin user with secret passphrase
             if message.content == config.SECRET_PHRASES.reset_user:
                 self.database_manager.supabase.auth.admin.delete_user(context.user.id)

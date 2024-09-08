@@ -39,5 +39,4 @@ def get_logger(name: Optional[str] = None, log_level: int = logging.INFO) -> log
 
     return logger
 
-# Usage
 logger = get_logger(__name__)
