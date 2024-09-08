@@ -30,6 +30,7 @@ class ReplyService(Service):
         self.scheduler_service = scheduler_service
 
     def handle_respond(self, request_body: dict) -> None:
+        context = None
         try:
             # Process request
             messaging_manager = self.messaging_manager_factory.get_manager_from_request(
