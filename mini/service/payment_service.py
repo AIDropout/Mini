@@ -1,14 +1,13 @@
-from datetime import datetime
-
 import stripe
 from fastapi import HTTPException
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.core.schema.tables import Subscription, Tables, User
+from mini.core.schema.tables import Subscription, Tables
 from mini.manager.database import DatabaseManager
 from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.manager.messaging import discord_manager
+from mini.utils.utils import get_infostring
 
 from .base import Service
 
@@ -121,7 +120,7 @@ class PaymentService(Service):
             )
 
             discord_manager.send_message_to_channel(
-                message=f"Subscription created by user {user_id}.",
+                message=f"-# **Subscription created** 🎉: user {user_id} | {get_infostring()}",
                 channel=config.DISCORD_CONFIG.website_activity_webhook_url,
             )
 

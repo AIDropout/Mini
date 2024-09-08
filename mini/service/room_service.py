@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import HTTPException
 
 from mini.core.logger import get_logger
-from mini.core.schema.tables import Agent, Message, Room, Tables, User
+from mini.core.schema.tables import Agent, Message, Room, Tables
 from mini.core.schema.task import TaskType
 from mini.manager.database import DatabaseManager
 from mini.manager.messaging import BirdManager

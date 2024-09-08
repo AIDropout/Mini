@@ -5,7 +5,6 @@ from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
 
 from config.config import config
-from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.payment.customer import CustomerManager
@@ -32,7 +31,7 @@ class UserService(Service):
                 raise HTTPException(status_code=500, detail="Failed to create user")
 
             discord_manager.send_message_to_channel(
-                message=f"New signup: {phone_number} | {get_infostring()}",
+                message=f"-# **New signup**: {phone_number} | {get_infostring()}",
                 channel=config.DISCORD_CONFIG.website_activity_webhook_url,
             )
 
