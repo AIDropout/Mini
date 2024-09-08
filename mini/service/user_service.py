@@ -1,19 +1,16 @@
 from typing import Any, Dict, List
 
-from config.config import config
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
 
+from config.config import config
 from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.payment.customer import CustomerManager
 from mini.manager.messaging.discord import discord_manager
 from mini.service.base import Service
-
-import requests
-
 
 class UserService(Service):
     def __init__(
@@ -43,7 +40,6 @@ class UserService(Service):
                 raise HTTPException(
                     status_code=409, detail="User with this phone number already exists"
                 )
-
             raise HTTPException(
                 status_code=500, detail=f"Error creating user: {str(e)}"
             )
@@ -61,7 +57,6 @@ class UserService(Service):
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Only update fields that are provided and not None
         update_data = {k: v for k, v in user_params.items() if v is not None}
 
         updated_user = self.database_manager.update(
@@ -74,8 +69,7 @@ class UserService(Service):
             raise HTTPException(status_code=400, detail="Failed to update user")
         return updated_user
 
-    def delete_user(self, id: str) -> None:
-        """Delete a user. Returns the id of the deleted user."""
+    def delete_user(self, id: str) -> JSONResponse:
         existing_user = self.database_manager.get_row(
             Tables.USERS, {Tables.USERS__id: id}
         )
@@ -87,13 +81,11 @@ class UserService(Service):
         )
         if not deleted_user_id:
             raise HTTPException(status_code=400, detail="Failed to delete user")
-        return JSONResponse(status_code=200, content="Succesfully deleted user")
+        return JSONResponse(status_code=200, content="Successfully deleted user")
 
     def get_user_rooms(self, user_id: str) -> List[Room]:
-        """Get all rooms that a user is in"""
         rooms = self.database_manager.get_multiple_rows(
             table_name=Tables.ROOMS,
             conditions={Tables.ROOMS__user_id: user_id},
         )
-
         return rooms

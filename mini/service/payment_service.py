@@ -8,6 +8,7 @@ from mini.core.logger import get_logger
 from mini.core.schema.tables import Subscription, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
+from mini.manager.messaging import discord_manager
 
 from .base import Service
 
@@ -117,6 +118,11 @@ class PaymentService(Service):
                 {Tables.USERS__is_subscribed: True},
                 condition_key=Tables.USERS__id,
                 condition_value=user_id,
+            )
+
+            discord_manager.send_message_to_channel(
+                message=f"Subscription created by user {user_id}.",
+                channel=config.DISCORD_CONFIG.website_activity_webhook_url,
             )
 
         except Exception as e:

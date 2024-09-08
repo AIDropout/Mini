@@ -1,16 +1,13 @@
-from typing import Any, Dict, List
+from fastapi import APIRouter, Body, Depends, Path, Security
+from fastapi.responses import JSONResponse
+from typing import List
 
-from fastapi import APIRouter, Body, Depends, Path, Request, Security
-from pydantic import BaseModel
-
-from config.config import config
 from config.container import container
 from mini.api.security import verify_api_key
 from mini.core.schema.tables import Room, User
 from mini.service.user_service import UserService
 
 router = APIRouter()
-
 
 @router.post("/users", response_model=User)
 async def create_user(
@@ -21,16 +18,13 @@ async def create_user(
 ) -> User:
     return user_service.create_user(id=id, phone_number=phone_number)
 
-
-@router.get("/users/{user_id}/rooms")
+@router.get("/users/{user_id}/rooms", response_model=List[Room])
 def get_user_rooms(
     user_id: str = Path(..., title="The ID of the user to get"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
-) -> List[Room] | None:
-    """Get all rooms that a user is in"""
+) -> List[Room]:
     return user_service.get_user_rooms(user_id)
-
 
 @router.get("/users/{user_id}", response_model=User)
 async def get_user(
@@ -38,85 +32,21 @@ async def get_user(
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> User:
-    """Get a user by ID. Returns the retrieved User object"""
     return user_service.get_user(user_id)
-
 
 @router.patch("/users/{user_id}", response_model=User)
 async def update_user(
     user_id: str = Path(..., title="The ID of the user to update"),
-    user_update: Dict[str, Any] = Body(..., title="The fields to update"),
+    user_update: dict = Body(..., title="The fields to update"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
 ) -> User:
-    """Update a user. Returns updated User object"""
     return user_service.update_user(user_id=user_id, user_params=user_update)
-
 
 @router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str = Path(..., title="The ID of the user to delete"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
-) -> None:
-    """Delete a user. Returns the id of the deleted user."""
+) -> JSONResponse:
     return user_service.delete_user(user_id)
-
-
-async def test_user_endpoints():
-    TEST_ID = "946f4f9d-1111-495e-b59d-5f3704deb11b"  # Change as needed
-
-    async with httpx.AsyncClient(base_url="http://127.0.0.1:8000") as client:
-        # Test create_user
-        user_data = {
-            "id": "946f4f9d-1111-495e-b59d-5f3704deb11b",
-            "phone_number": "+13143209682",
-        }
-
-        response = await client.post(
-            f"/users",
-            json=user_data,
-            headers={"Authorization": f"Bearer {config.BACKEND_API_KEY}"},
-        )
-        print(
-            f"POST /users - Status: {response.status_code}, Response: {response.json()}"
-        )
-
-        # # Test get_user
-        # response = await client.get(
-        #     f"/users/{TEST_ID}",
-        #     headers={"Authorization": f"Bearer {config.BACKEND_API_KEY}"},
-        # )
-        # print(
-        #     f"GET /users/{TEST_ID} - Status: {response.status_code}, Response: {response.json()}"
-        # )
-
-        # # # Test update_user
-        # user_data = {"subscription_status": "inactive"}
-        # response = await client.patch(
-        #     f"/users/{TEST_ID}",
-        #     json=user_data,
-        #     headers={"Authorization": f"Bearer {config.BACKEND_API_KEY}"},
-        # )
-        # print(
-        #     f"PATCH /users/{TEST_ID} - Status: {response.status_code}, Response: {response.json()}"
-        # )
-
-        # # # Test delete_user
-        # response = await client.delete(
-        #     f"/users/{TEST_ID}",
-        #     headers={"Authorization": f"Bearer {config.BACKEND_API_KEY}"},
-        # )
-        # print(
-        #     f"DELETE /users/{TEST_ID} - Status: {response.status_code}, Response: {response.json()}"
-        # )
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    import httpx
-
-    from config.config import config
-
-    asyncio.run(test_user_endpoints())
