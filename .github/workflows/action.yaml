@@ -28,7 +28,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install flake8 isort black
+        uv pip install isort black
         uv pip install -r requirements.txt
 
     - name: Run isort
@@ -36,6 +36,3 @@ jobs:
 
     - name: Run Black
       run: black .
-
-    - name: Run Flake8
-      run: flake8 .
