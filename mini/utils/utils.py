@@ -1,3 +1,5 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import re
 import asyncio
 import subprocess
@@ -46,3 +48,13 @@ async def configure_local_webhooks(local_url: str) -> None:
     )
 
     logger.info("Ngrok and webhooks successfully set up!")
+
+
+def get_infostring() -> str:
+    environment = config.ENVIRONMENT
+
+    pst_time = datetime.now(ZoneInfo("America/Los_Angeles"))
+    hour = pst_time.strftime("%I").lstrip("0")
+    timestamp = f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
+
+    return f"ENV={environment.upper()} 🕒 {timestamp}"

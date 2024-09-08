@@ -19,6 +19,7 @@ from mini.manager.messaging import MessagingManager, discord_manager
 from mini.server.cancel import CancelManager
 from mini.service.base import Service
 from mini.utils.time import utc_now
+from mini.utils.utils import get_infostring
 import traceback
 
 
@@ -145,7 +146,7 @@ class AgentService(Service):
 
         except Exception as e:
             error_traceback = traceback.format_exc()
-            msg = f"⚠️__**AGENT_ERROR**__⚠️[task_id={task.id}]\n```{error_traceback}```"
+            msg = f"⚠️__**AGENT_ERROR**__⚠️\n-# {get_infostring()} 🏷️ room_id={self.room.id}\n```{error_traceback}```"
             el.log(msg)
             discord_manager.send_message_to_channel(
                 message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url
@@ -190,7 +191,7 @@ class AgentService(Service):
                 self._handle_successful_send(task.type, final_message)
         except Exception as e:
             error_traceback = traceback.format_exc()
-            msg = f"⚠️__**BACKUP_ERROR**__⚠️[task_id={task.id}]\n```{error_traceback}```"
+            msg = f"⚠️__**BACKUP_ERROR**__⚠️\n-# {get_infostring()} 🏷️ task_id={task.id}\n```{error_traceback}```"
             el.log(msg)
             discord_manager.send_message_to_channel(
                 message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url

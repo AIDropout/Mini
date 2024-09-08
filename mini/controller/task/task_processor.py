@@ -11,6 +11,7 @@ from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
 from mini.core.logger import get_logger
 from mini.core.schema.task import TaskType
 from mini.manager.messaging import discord_manager
+from mini.utils.utils import get_infostring
 
 logger = get_logger(__name__)
 
@@ -72,7 +73,9 @@ def process_task(
 
     except Exception as e:
         error_traceback = traceback.format_exc()
-        msg = f"⚠️__**ERROR**__⚠️[task_id={task.id}]\n```{error_traceback}```"
+        msg = f"⚠️__**ERROR**__⚠️[task_id={task.id}]\n-# {get_infostring()} 🏷️ room_id={room_id}\n```{error_traceback}```"
         logger.exception(msg)
-        discord_manager.send_message_to_channel(msg, config.DISCORD_CONFIG.server_status_webhook_url)
+        discord_manager.send_message_to_channel(
+            msg, config.DISCORD_CONFIG.server_status_webhook_url
+        )
         raise self.retry(exc=e)
