@@ -28,6 +28,7 @@ rules:
       - no punctuation
       - no emojis
       - keep texts SHORT
+      - no newlines
     language: >
       - use natural, conversational language
       - occasional typos or autocorrect mistakes for realism

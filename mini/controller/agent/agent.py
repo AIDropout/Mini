@@ -62,7 +62,7 @@ class AgentService(Service):
         self.vision.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
-    async def handle_chat_task(
+    def handle_chat_task(
         self, task: Union[RespondTask, RemindTask, ReviveTask]
     ) -> bool:
         """Core logic for generates and sending message"""
@@ -79,7 +79,7 @@ class AgentService(Service):
                     f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}"
                 )
 
-                result = await self.subscribe.should_continue_conversation()
+                result = self.subscribe.should_continue_conversation()
                 self.logger.info(f"Room subscription status: {repr(result)}")
 
                 if not result.continue_conversation:
@@ -150,10 +150,10 @@ class AgentService(Service):
             discord_manager.send_message_to_channel(
                 message=msg, channel=config.DISCORD_CONFIG.server_status_webhook_url
             )
-            res = await self.backup_handle_chat_task(task, str(e))
+            res = self.backup_handle_chat_task(task, str(e))
             return False
 
-    async def backup_handle_chat_task(
+    def backup_handle_chat_task(
         self, task: Union[RespondTask, RemindTask, ReviveTask], error_message
     ) -> bool:
         """A watered-down verison of regular handle_chat_task, less error prone"""

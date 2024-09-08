@@ -63,15 +63,16 @@ def process_task(
         if cancel_manager.newer_task_found(room_id, task.id):
             return
 
-        success = asyncio.run(agent.handle_chat_task(task))
+        success = agent.handle_chat_task(task)
 
         if success:
-            logger.log("Agent processing finished successfully.")
+            logger.info("Agent processing finished successfully.")
 
         cancel_manager.remove_task(room_id, task_id)
 
     except Exception as e:
         error_traceback = traceback.format_exc()
-        msg = f"⚠️__**PROCESSING_ERROR**__⚠️[task_id={task.id}]\n{error_traceback}"
+        msg = f"⚠️__**ERROR**__⚠️[task_id={task.id}]\n{error_traceback}"
         logger.exception(msg)
+        discord_manager.send_message_to_channel(msg, config.DISCORD_CONFIG.server_status_webhook_url)
         raise self.retry(exc=e)

@@ -1,5 +1,6 @@
 import random
 from datetime import datetime, timezone
+import traceback
 
 from config.config import config
 from mini.controller.task.task_scheduler import SchedulerService
@@ -8,7 +9,7 @@ from mini.core.error import error_handler
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Message, Tables
 from mini.manager.database import DatabaseManager
-from mini.manager.messaging import MessagingManagerFactory
+from mini.manager.messaging import MessagingManagerFactory, discord_manager
 from mini.service.base import Service
 from mini.service.context_factory import ContextFactory
 
@@ -30,42 +31,48 @@ class ReplyService(Service):
 
     @error_handler("ReplyService")
     async def handle_respond(self, request_body: dict) -> None:
-        # Process request
-        messaging_manager = self.messaging_manager_factory.get_manager_from_request(
-            request_body
-        )
-        message = messaging_manager.receive_message(request_body)
-
-        context = self.context_factory.create_message_context(message)
-
-        # Reset admin user with secret passphrase
-        if message.content == config.SECRET_PHRASES.reset_user:
-            self.database_manager.supabase.auth.admin.delete_user(context.user.id)
-            self.database_manager.delete(
-                Tables.USERS, {Tables.USERS__id: context.user.id}
+        try:
+            # Process request
+            messaging_manager = self.messaging_manager_factory.get_manager_from_request(
+                request_body
             )
-            messaging_manager.send_message(
-                text="Successfully deleted your user from Auth tables and Users table"
+            message = messaging_manager.receive_message(request_body)
+
+            context = self.context_factory.create_message_context(message)
+
+            # Reset admin user with secret passphrase
+            if message.content == config.SECRET_PHRASES.reset_user:
+                self.database_manager.supabase.auth.admin.delete_user(context.user.id)
+                self.database_manager.delete(
+                    Tables.USERS, {Tables.USERS__id: context.user.id}
+                )
+                messaging_manager.send_message(
+                    text="Successfully deleted your user from Auth tables and Users table"
+                )
+                return
+
+            # Insert user message
+            self.database_manager.insert(
+                Tables.MESSAGES,
+                Message(
+                    room_id=context.room.id,
+                    sender_id=context.user.id,
+                    content=message.content,
+                ),
             )
-            return
 
-        # Insert user message
-        self.database_manager.insert(
-            Tables.MESSAGES,
-            Message(
-                room_id=context.room.id,
-                sender_id=context.user.id,
-                content=message.content,
-            ),
-        )
-
-        # Calculate delay and schedule response
-        delay = self._calculate_response_delay(room_id=context.room.id)
-        self.scheduler_service.schedule_respond(
-            delay=delay,
-            message=message,
-            context=context,
-        )
+            # Calculate delay and schedule response
+            delay = self._calculate_response_delay(room_id=context.room.id)
+            self.scheduler_service.schedule_respond(
+                delay=delay,
+                message=message,
+                context=context.l,
+            )
+        except Exception as e:
+            error_traceback = traceback.format_exc()
+            msg = f"⚠️__**ERROR**__⚠️[room_id={context.room.id}]\n{error_traceback}"
+            discord_manager.send_message_to_channel(msg, config.DISCORD_CONFIG.server_status_webhook_url)
+            logger.exception(msg)
 
     def _calculate_response_delay(self, room_id: int) -> int:
         """

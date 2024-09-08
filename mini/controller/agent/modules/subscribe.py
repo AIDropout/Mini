@@ -49,7 +49,7 @@ class SubscribeModule(AgentModule):
         self.memory_module = memory_module
 
     @error_handler("SubscribeManager")
-    async def should_continue_conversation(self) -> ConversationStatus:
+    def should_continue_conversation(self) -> ConversationStatus:
         """
         Determine if the conversation should continue based on subscription status,
         message count, and whether subscriptions are enabled.
@@ -57,7 +57,7 @@ class SubscribeModule(AgentModule):
         Returns:
             dict: A dictionary containing relevant information and whether to continue.
         """
-        agent_messages_in_room_count = await self._get_agent_message_count()
+        agent_messages_in_room_count = self._get_agent_message_count()
 
         status = ConversationStatus(
             continue_conversation=True,
@@ -79,7 +79,7 @@ class SubscribeModule(AgentModule):
         ):
             status.continue_conversation = False
             if not status.subscribe_msg_sent:
-                await self._send_subscribe_message()
+                self._send_subscribe_message()
                 status.subscribe_msg_sent = True
 
         return status
@@ -96,7 +96,7 @@ class SubscribeModule(AgentModule):
         return subscription is not None
 
     @error_handler("SubscribeManager")
-    async def _get_agent_message_count(self) -> int:
+    def _get_agent_message_count(self) -> int:
         """
         Get the number of agent messages in the room using a direct count query.
 
@@ -114,7 +114,7 @@ class SubscribeModule(AgentModule):
         return count
 
     @error_handler("SubscribeManager")
-    async def _send_subscribe_message(self):
+    def _send_subscribe_message(self):
         """
         Send a subscription message, store it, and update the room's status.
         """
@@ -123,7 +123,7 @@ class SubscribeModule(AgentModule):
         )
 
         # Send the subscription message
-        await self.action_module.send_message(text=subscribe_message)
+        self.action_module.send_message(text=subscribe_message)
 
         # Store the subscription message
         self.database_manager.insert(
