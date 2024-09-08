@@ -19,7 +19,6 @@ from tenacity import (
 )
 
 from config.config import config, get_api_key
-from mini.core.error import error_handler
 from mini.core.exceptions import MessageParsingError
 from mini.core.logger import get_logger
 from mini.core.schema.llm import LLMProviders
@@ -39,7 +38,6 @@ class LLMManager:
         self.supports_json_mode = self._check_json_mode_support()
         self.supports_vision = self._check_vision_support()
 
-    @error_handler("LLM")
     def _check_json_mode_support(self) -> bool:
         """
         Returns true of LiteLLM provides a json response formatter for the model
@@ -57,7 +55,6 @@ class LLMManager:
     def _attempt_completion(self, **kwargs) -> ModelResponse:
         return completion(api_key=self.api_key, **kwargs)
 
-    @error_handler("LLM")
     def generate_response(
         self,
         messages: List[Dict[str, str]],
@@ -131,7 +128,6 @@ class LLMManager:
         #     logger.error(f"Error in generate_and_upload_speech: {str(e)}")
         #     raise
 
-    @error_handler("LLM")
     def _prepare_messages(self, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
         """
         Prepare messages for LLM input by combining consecutive user messages.
@@ -163,7 +159,6 @@ class LLMManager:
 
         return prepared_messages
 
-    @error_handler("LLM")
     def _clean_and_parse_llm_json_output(self, llm_output: str) -> dict:
         """
         Cleans up the output of an LLM and returns a JSON object.
@@ -221,7 +216,6 @@ class LLMManager:
 
         return response.choices[0].message.content
 
-    @error_handler("LLM")
     def _check_vision_support(self) -> bool:
         """
         Returns true if the model supports vision inputs

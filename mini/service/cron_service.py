@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 from config.config import config
 from mini.controller.task.task_scheduler import SchedulerService
 from mini.controller.task.task_types import ReviveTask
-from mini.core.error import error_handler
 from mini.core.logger import get_logger
 from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Message, Room, Tables, User
@@ -23,7 +22,6 @@ class CronService(Service):
         super().__init__(database_manager)
         self.messaging_manager = messaging_manager
 
-    @error_handler("CronService")
     def refresh_rooms(self, dev_mode: bool = False):
         logger.info(config.DEV_AGENT_ID)
         agents = self.database_manager.get_multiple_rows(

@@ -14,7 +14,7 @@ from mini.service.context_factory import Context
 
 logger = get_logger(__name__)
 
-
+#TODO: We'll add long term scheduling as well (simply handling if delay > 60 seconds, for example)
 class SchedulerService(Service):
     def __init__(
         self,

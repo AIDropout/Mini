@@ -1,10 +1,6 @@
-import asyncio
-import random
 from typing import Dict, List, Optional, Tuple
 
 from mini.controller.agent.modules.base import AgentModule
-from mini.core.error import error_handler
-from mini.core.event_logger import event_logger as el
 from mini.core.logger import get_logger
 from mini.manager.llm import LLMManager
 from mini.manager.messaging import MessagingManager
@@ -20,14 +16,12 @@ class ActionModule(AgentModule):
     def set_messaging_manager(self, messaging_manager: MessagingManager) -> None:
         self.messaging_manager = messaging_manager
 
-    @error_handler("ActionManager")
     def generate_message(
         self,
         messages: List[Dict[str, str]],
         system_prompt: Optional[str],
     ) -> str:
-        msg = self.llm_manager.generate_response(messages, system_prompt)
-        return msg
+        return self.llm_manager.generate_response(messages, system_prompt)
 
     def send_message(
         self,

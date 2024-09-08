@@ -8,7 +8,6 @@ import aiohttp
 import telegram
 
 from config.config import config
-from mini.core.error import error_handler
 from mini.core.logger import get_logger
 from mini.core.schema.message import (
     MessageProvider,
@@ -39,7 +38,6 @@ class TelegramManager(MessagingBase):
         pass
 
     @classmethod
-    @error_handler("Telegram")
     def receive_message(cls, request_body) -> MiniMessage:
         """Handle an incoming message from a Telegram sender."""
         if isinstance(request_body, str):
@@ -79,7 +77,6 @@ class TelegramManager(MessagingBase):
             type=message_type,
         )
 
-    @error_handler("Telegram")
     async def download_file_from_message(
         self,
         message: Union[_TelegramMessagePhoto, _TelegramMessageDocument],
@@ -109,13 +106,11 @@ class TelegramManager(MessagingBase):
                     return io.BytesIO(content)
         return None
 
-    @error_handler("Telegram")
     async def send_message(self, message: str) -> Optional[str]:
         """Send a message to a Telegram recipient."""
         sent_message = await self._bot.send_message(chat_id=self._user_id, text=message)
         return str(sent_message.message_id)
 
-    @error_handler("Telegram")
     async def register_webhook(self, webhook_url: str) -> bool:
         """Register a webhook URL for receiving updates from the Telegram Bot API."""
         webhook_info = cast(telegram.WebhookInfo, await self._bot.get_webhook_info())

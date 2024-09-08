@@ -6,7 +6,6 @@ import yaml
 from supabase import create_client
 
 from config.config import config
-from mini.core.error import error_handler
 from mini.core.logger import get_logger
 from mini.core.schema.tables import TABLE_MODEL_MAP, TableModel
 
@@ -28,7 +27,6 @@ class DatabaseManager:
         data, _ = self.supabase.table(table_name).insert(item_dict).execute()
         return type(item)(**data[1][0]) if data and data[1] else None
 
-    @error_handler("Supabase")
     def update(
         self,
         table_name: str,
@@ -55,7 +53,6 @@ class DatabaseManager:
         model_class = TABLE_MODEL_MAP[table_name]
         return model_class(**data[1][0])
 
-    @error_handler("Supabase")
     def get_row(
         self,
         table_name: str,
@@ -81,7 +78,6 @@ class DatabaseManager:
             return model_class(**data[1][0])
         return None
 
-    @error_handler("Supabase")
     def get_multiple_rows(
         self,
         table_name: str,
@@ -117,7 +113,6 @@ class DatabaseManager:
         model_class = TABLE_MODEL_MAP[table_name]
         return [model_class(**item) for item in data]
 
-    @error_handler("Supabase")
     def delete(self, table_name: str, conditions: Dict[str, Any]) -> bool:
         query = self.supabase.table(table_name).delete()
         for key, value in conditions.items():
@@ -125,7 +120,6 @@ class DatabaseManager:
         result = query.execute()
         return len(result.data) > 0
 
-    @error_handler("Supabase")
     def query(
         self, table_name: str, *conditions: Union[Tuple[str, str], Tuple[str, str, str]]
     ) -> List[TableModel]:
@@ -155,7 +149,6 @@ class DatabaseManager:
         model_class = TABLE_MODEL_MAP[table_name]
         return [model_class(**item) for item in data[1]] if data and data[1] else []
 
-    @error_handler("Supabase")
     def count_rows(
         self, table_name: str, conditions: Optional[Dict[str, Any]] = None
     ) -> int:

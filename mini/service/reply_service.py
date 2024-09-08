@@ -5,7 +5,6 @@ import traceback
 from config.config import config
 from mini.controller.task.task_scheduler import SchedulerService
 from mini.controller.task.task_types import RespondTask
-from mini.core.error import error_handler
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Message, Tables
 from mini.manager.database import DatabaseManager
@@ -30,7 +29,6 @@ class ReplyService(Service):
         self.context_factory = context_factory
         self.scheduler_service = scheduler_service
 
-    @error_handler("ReplyService")
     def handle_respond(self, request_body: dict) -> None:
         try:
             # Process request

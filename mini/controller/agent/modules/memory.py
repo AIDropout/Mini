@@ -1,7 +1,6 @@
 from typing import Dict, List
 
 from mini.controller.agent.modules.base import AgentModule
-from mini.core.error import error_handler
 from mini.core.logger import get_logger
 from mini.core.schema.memory import MemoryRecordSchema
 from mini.core.schema.tables import Message, Tables
@@ -100,7 +99,6 @@ class MemoryModule(AgentModule):
                 "Saved data from %s messages for memory.", len(messages_for_memory)
             )
 
-    @error_handler("MemoryModule")
     def get_recent_messages(self, count: int = 20) -> List[Dict[str, str]]:
         """
         Get the most recent messages for a given room ID.

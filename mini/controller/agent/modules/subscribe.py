@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from mini.controller.agent.modules.action import ActionModule
 from mini.controller.agent.modules.base import AgentModule
 from mini.controller.agent.modules.memory import MemoryModule
-from mini.core.error import error_handler
 from mini.core.logger import get_logger
 from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
@@ -48,7 +47,6 @@ class SubscribeModule(AgentModule):
         self.action_module = action_module
         self.memory_module = memory_module
 
-    @error_handler("SubscribeManager")
     def should_continue_conversation(self) -> ConversationStatus:
         """
         Determine if the conversation should continue based on subscription status,
@@ -95,7 +93,6 @@ class SubscribeModule(AgentModule):
         )
         return subscription is not None
 
-    @error_handler("SubscribeManager")
     def _get_agent_message_count(self) -> int:
         """
         Get the number of agent messages in the room using a direct count query.
@@ -113,7 +110,6 @@ class SubscribeModule(AgentModule):
         logger.info(f"Agent message count in room {self.room.id}: {count} 🟡🟡🟡")
         return count
 
-    @error_handler("SubscribeManager")
     def _send_subscribe_message(self):
         """
         Send a subscription message, store it, and update the room's status.

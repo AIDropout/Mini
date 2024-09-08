@@ -6,7 +6,6 @@ from uuid import uuid4
 import requests
 
 from config.config import config
-from mini.core.error import error_handler
 from mini.core.logger import get_logger, logger
 from mini.core.schema.bird import BirdRequest
 from mini.core.schema.message import (
@@ -44,7 +43,6 @@ class BirdManager(MessagingBase):
         """Sets phone number of sender"""
         self._channel_id = channel_id
 
-    @error_handler("Bird SMS")
     def receive_message(self, request_body: dict) -> MiniMessage:
         """Handle an incoming message from a Bird SMS sender."""
         request_object = BirdRequest.model_validate(request_body)
@@ -206,7 +204,6 @@ class BirdManager(MessagingBase):
             logger.error(f"Error sending message: {str(e)}")
             return False, {"error": str(e)}
 
-    @error_handler("Bird SMS")
     async def register_webhook(
         self, event: str = "sms.inbound", webhook_url: str = None
     ) -> None:
@@ -229,7 +226,6 @@ class BirdManager(MessagingBase):
         response.raise_for_status()
         logger.info(f"Webhook registration response: {response.json()}")
 
-    @error_handler("Bird SMS")
     def _get_existing_webhooks(self) -> Dict:
         """Retrieves the list of subscribed webhooks."""
         url = f"{self._api_url}/organizations/{self._organization_id}/workspaces/{self._workspace_id}/webhook-subscriptions"
@@ -237,14 +233,12 @@ class BirdManager(MessagingBase):
         response.raise_for_status()
         return response.json()
 
-    @error_handler("Bird SMS")
     def _delete_webhook(self, webhook_id: str) -> None:
         """Deletes a Bird webhook given a webhook id."""
         url = f"{self._api_url}/organizations/{self._organization_id}/workspaces/{self._workspace_id}/webhook-subscriptions/{webhook_id}"
         response = requests.delete(url, headers=self._api_header)
         response.raise_for_status()
 
-    @error_handler("Bird SMS")
     def send_verification(
         self,
         locale: str = "en-US",
@@ -298,7 +292,6 @@ class BirdManager(MessagingBase):
 
         return is_sent, expires_at, verification_id
 
-    @error_handler("Bird SMS")
     def resend_verification(
         self, verification_id: str
     ) -> Tuple[bool, bool, Optional[str]]:
@@ -365,7 +358,6 @@ class BirdManager(MessagingBase):
         # This line should never be reached, but added for completeness
         return False, False, None
 
-    @error_handler("Bird SMS")
     def verify_code(self, verification_id: str, code: str) -> Tuple[bool, bool]:
         """
         Verify a code for a given verification ID.

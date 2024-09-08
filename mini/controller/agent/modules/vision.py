@@ -1,7 +1,6 @@
 from typing import List
 
 from mini.controller.agent.modules.base import AgentModule
-from mini.core.error import error_handler
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
 from mini.manager.database import DatabaseManager
@@ -17,7 +16,6 @@ class VisionModule(AgentModule):
         super().__init__(database_manager)
         self.llm_manager = llm_manager
 
-    # @error_handler("VisionModule") # was causing issues when catching raised exceptions
     def handle_images(self, urls: List[str]) -> str:
         """
         Receives a list of urls hosted on AWS.

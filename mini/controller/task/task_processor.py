@@ -29,11 +29,13 @@ def process_task(
         messaging_manager_factory = container.get_messaging_manager_factory()
         messaging_manager = messaging_manager_factory.bird_manager
 
+        # Getting the scheduled task data from Redis (Redis only allows us to store JSON in it)
         task_json = redis_manager.get(f"{room_id}:{task_id}")
         if not task_json:
             logger.error(f"Task {task_id} in room {room_id} not found in Redis")
             return
 
+        # Convert JSON to Task objects
         task: RespondTask = None
 
         if task_type == TaskType.RESPOND:
@@ -48,7 +50,7 @@ def process_task(
                 f"Failed to initialize task or messaging manager for task {task_id}"
             )
             return
-
+        
         messaging_manager.set_receiver(task.context.user.phone_number)
         messaging_manager.set_sender(task.context.agent.bird_channel_id)
 
