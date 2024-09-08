@@ -1,10 +1,6 @@
 """SMS Messaging class utilizing Bird API"""
 
-import asyncio
-import os
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
@@ -249,7 +245,7 @@ class BirdManager(MessagingBase):
         response.raise_for_status()
 
     @error_handler("Bird SMS")
-    async def send_verification(
+    def send_verification(
         self,
         locale: str = "en-US",
         max_attempts: int = 3,
@@ -303,7 +299,7 @@ class BirdManager(MessagingBase):
         return is_sent, expires_at, verification_id
 
     @error_handler("Bird SMS")
-    async def resend_verification(
+    def resend_verification(
         self, verification_id: str
     ) -> Tuple[bool, bool, Optional[str]]:
         """
@@ -370,7 +366,7 @@ class BirdManager(MessagingBase):
         return False, False, None
 
     @error_handler("Bird SMS")
-    async def verify_code(self, verification_id: str, code: str) -> Tuple[bool, bool]:
+    def verify_code(self, verification_id: str, code: str) -> Tuple[bool, bool]:
         """
         Verify a code for a given verification ID.
 
@@ -448,34 +444,3 @@ class BirdManager(MessagingBase):
                 f"Unexpected error during verification for ID {verification_id}: {str(e)}"
             )
             return False, False  # Not verified and not active due to unexpected error
-
-
-async def main():
-    bird_sms = BirdManager()
-    bird_sms.set_receiver("+13142952259")
-    bird_sms.set_sender("4e127266-e6de-4081-a6f6-702015f48e6d")
-    try:
-        # Send message
-        result = bird_sms.send_message("hi")
-        print(result)
-
-        # Send verification
-        # is_sent, expires_at, verification_id = await bird_sms.send_verification()
-        # print(f"Verification sent: {is_sent}, Expires at: {expires_at}, ID: {verification_id}")
-
-        # Verify code (you would get this code from the user in a real scenario)
-        # is_verified, status = await bird_sms.verify_code(
-        #     verification_id="c8d3a75a-a232-4ac8-bb51-1a88fc6a724d", code="876813"
-        # )
-        # print(f"Code verified: {is_verified}, Status: {status}")
-
-        # # Resend verification if needed
-        # is_accepted, new_expires_at, new_status = await bird_sms.resend_verification(verification_id)
-        # print(f"Resend accepted: {is_accepted}, New expiration: {new_expires_at}, New status: {new_status}")
-
-    except Exception as e:
-        print(f"Error: {e}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

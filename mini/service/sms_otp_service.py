@@ -1,7 +1,4 @@
-from typing import Dict
-
 from fastapi import HTTPException
-from pydantic import BaseModel
 
 from config.config import config
 from mini.core.logger import get_logger
@@ -22,14 +19,14 @@ class SMSOTPService:
     def __init__(self, bird_manager: BirdManager):
         self.bird_sms = bird_manager
 
-    async def send_verification(
+    def send_verification(
         self, request: SendVerificationRequest
     ) -> SendVerificationResponse:
         try:
             self.bird_sms.set_receiver(request.phone_number)
             self.bird_sms.set_sender(config.PHONE_OTP_CHANNEL_ID)
             is_sent, expires_at, verification_id = (
-                await self.bird_sms.send_verification(
+                self.bird_sms.send_verification(
                     locale=request.locale,
                     max_attempts=request.max_attempts,
                     timeout=request.timeout,
@@ -49,11 +46,11 @@ class SMSOTPService:
                 status_code=500, detail="Error sending verification code"
             )
 
-    async def resend_verification(
+    def resend_verification(
         self, verification_id: str, request: ResendVerificationRequest
     ) -> ResendVerificationResponse:
         try:
-            is_sent, is_active, expires_at = await self.bird_sms.resend_verification(
+            is_sent, is_active, expires_at = self.bird_sms.resend_verification(
                 verification_id
             )
             return ResendVerificationResponse(
@@ -68,11 +65,11 @@ class SMSOTPService:
                 status_code=500, detail="Error resending verification code"
             )
 
-    async def verify_code(
+    def verify_code(
         self, verification_id: str, request: VerifyCodeRequest
     ) -> VerifyCodeResponse:
         try:
-            is_verified, is_active = await self.bird_sms.verify_code(
+            is_verified, is_active = self.bird_sms.verify_code(
                 verification_id, request.code
             )
             return VerifyCodeResponse(is_verified=is_verified, is_active=is_active)

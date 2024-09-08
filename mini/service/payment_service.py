@@ -28,7 +28,7 @@ class PaymentService(Service):
         self._customer_manager = customer_manager
         self._subscription_manager = subscription_manager
 
-    async def create_checkout_session(self, user_id: str, tier: str):
+    def create_checkout_session(self, user_id: str, tier: str):
         user = self.database_manager.get_row(
             Tables.USERS,
             {Tables.USERS__id: user_id},
@@ -51,7 +51,7 @@ class PaymentService(Service):
 
         return {"url": response.url}
 
-    async def get_portal_link(self, user_id: str):
+    def get_portal_link(self, user_id: str):
         user = self.database_manager.get_row(
             Tables.USERS,
             {Tables.USERS__id: user_id},
@@ -60,7 +60,7 @@ class PaymentService(Service):
         response = self._customer_manager.get_portal_link(customer_id)
         return {"url": response.url}
 
-    async def process_event(self, event_payload: str, sig_header: str) -> None:
+    def process_event(self, event_payload: str, sig_header: str) -> None:
         """Processes the event received from Stripe webhook."""
         if not config.STRIPE_CONFIG.webhook_secret:
             raise ValueError("The Stripe webhook secret must be set.")
@@ -71,7 +71,7 @@ class PaymentService(Service):
                 sig_header=sig_header,
                 secret=config.STRIPE_CONFIG.webhook_secret,
             )
-            await self._handle_event(event)
+            self._handle_event(event)
 
         except ValueError as e:
             logger.error(f"Invalid payload: {e}")
@@ -80,18 +80,18 @@ class PaymentService(Service):
             logger.error(f"An error occurred while processing the webhook event: {e}")
             return event.type, None
 
-    async def _handle_event(self, event: stripe.Event) -> None:
+    def _handle_event(self, event: stripe.Event) -> None:
         """Handles the event with the given Stripe event object."""
         if event.type == "checkout.session.completed":
             logger.info(f"Received event: {event.type}")
-            return await self._handle_checkout_session_completed(event.data.object)
+            return self._handle_checkout_session_completed(event.data.object)
         elif event.type == "customer.subscription.deleted":
             logger.info(f"Received event: {event.type}")
-            return await self._handle_subscription_deleted(event.data.object)
+            return self._handle_subscription_deleted(event.data.object)
         else:
             logger.warning(f"Not handling {event.type}")
 
-    async def _handle_checkout_session_completed(
+    def _handle_checkout_session_completed(
         self, session: stripe.checkout.Session
     ) -> None:
         """Handles the checkout.subscription.completed event."""
@@ -129,7 +129,7 @@ class PaymentService(Service):
             logger.error(f"Error retrieving subscription information: {e}")
             raise e
 
-    async def _handle_subscription_deleted(
+    def _handle_subscription_deleted(
         self, subscription: stripe.Subscription
     ) -> None:
         """Handles the customer.subscription.deleted event."""

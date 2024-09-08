@@ -10,7 +10,7 @@ from mini.service.user_service import UserService
 router = APIRouter()
 
 @router.post("/users", response_model=User)
-async def create_user(
+def create_user(
     id: str = Body(..., title="UUID that Supabase Auth created on the frontend"),
     phone_number: str = Body(..., title="The phone number of the new user"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
@@ -27,7 +27,7 @@ def get_user_rooms(
     return user_service.get_user_rooms(user_id)
 
 @router.get("/users/{user_id}", response_model=User)
-async def get_user(
+def get_user(
     user_id: str = Path(..., title="The ID of the user to get"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
@@ -35,7 +35,7 @@ async def get_user(
     return user_service.get_user(user_id)
 
 @router.patch("/users/{user_id}", response_model=User)
-async def update_user(
+def update_user(
     user_id: str = Path(..., title="The ID of the user to update"),
     user_update: dict = Body(..., title="The fields to update"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
@@ -44,7 +44,7 @@ async def update_user(
     return user_service.update_user(user_id=user_id, user_params=user_update)
 
 @router.delete("/users/{user_id}")
-async def delete_user(
+def delete_user(
     user_id: str = Path(..., title="The ID of the user to delete"),
     user_service: UserService = Depends(lambda: container.get_user_service()),
     api_key: str = Security(verify_api_key),
