@@ -17,13 +17,9 @@ class Tables(str, Enum):
     AGENTS__first_message = "first_message"
     AGENTS_example_conversation = "example_conversation"
     AGENTS__bird_channel_id = "bird_channel_id"
-    AGENTS__telegram_chat_id = "telegram_chat_id"
     AGENTS__default_proactivity = "default_proactivity"
-    AGENTS__subscribe_enabled = "subscribe_enabled"
     AGENTS__free_msg_limit = "free_msg_limit"
     AGENTS__subscribe_msg = "subscribe_msg"
-    AGENTS__subscribe_url = "subscribe_url"
-    AGENTS__show_on_site = "show_on_site"
 
     USERS = "users"
     USERS__id = "id"
@@ -82,34 +78,22 @@ class Agent(BaseModel):
     __tablename__ = Tables.AGENTS
 
     id: str = Field(default_factory=generate_uuid)
-    name: Optional[str] = Field(
-        default=None,
-        description="ex. Sam (for UI)",
-    )
-    description: Optional[str] = Field(
-        default=None,
-        description="Mysterious, cunning, jealous (for UI)",
-    )
-    first_message: str = Field(default="Hey there!")
-    telegram_chat_id: Optional[str] = Field(default=None)
-    bird_channel_id: Optional[str] = Field(default=None)
-    prompt: str = Field(default="You are Chris, a really cool person")
+    name: str
+    description: str
+    first_message: str
+    bird_channel_id: str
+    prompt: str
     example_conversation: Optional[str] = Field(
         default=None,
         description="An example conversation between the Agent and the User. Meant to serve as a guide for the LLM. (unused rn)",
     )
+    free_msg_limit: int
+    subscribe_msg: str
     default_proactivity: float = Field(
         default=0.5,
         ge=0.0,
         le=1.0,
         description="Proactivity scale from 0 (not proactive) to 1 (very proactive)",
-    )
-    subscribe_enabled: bool = Field(default=True)
-    free_msg_limit: Optional[int] = Field(default=15)
-    subscribe_msg: Optional[str] = Field(default=None)
-    subscribe_url: Optional[str] = Field(default=None)
-    show_on_site: bool = Field(
-        description="Whether to display agent on the site",
     )
 
 
@@ -132,13 +116,13 @@ class Room(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
     user_id: str
     agent_id: str
+    subscribe_msg_sent: bool = Field(default=False)
     agent_proactivity: float = Field(
         default=0.5,
         ge=0.0,
         le=1.0,
         description="Agent proactivity for a particular room (0 if a user has texted STOP)",
     )
-    subscribe_msg_sent: bool = Field(default=False)
     disabled_by_admin: bool = Field(default=False)
     last_msg_sent_at: datetime = Field(
         default_factory=utc_now,

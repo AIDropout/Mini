@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from config.config import config
 from mini.controller.agent.modules.action import ActionModule
 from mini.controller.agent.modules.base import AgentModule
 from mini.controller.agent.modules.memory import MemoryModule
@@ -14,7 +15,6 @@ logger = get_logger(__name__)
 @dataclass
 class ConversationStatus:
     continue_conversation: bool
-    subscribe_enabled: bool
     user_is_subscribed: bool
     agent_messages_in_room_count: int
     free_msg_limit: int
@@ -24,7 +24,6 @@ class ConversationStatus:
         return (
             f"ConversationStatus("
             f"continue_conversation={self.continue_conversation}, "
-            f"subscribe_enabled={self.subscribe_enabled}, "
             f"user_is_subscribed={self.user_is_subscribed}, "
             f"agent_messages_in_room_count={self.agent_messages_in_room_count}, "
             f"free_msg_limit={self.free_msg_limit}, "
@@ -59,15 +58,11 @@ class SubscribeModule(AgentModule):
 
         status = ConversationStatus(
             continue_conversation=True,
-            subscribe_enabled=self.agent.subscribe_enabled,
             user_is_subscribed=False,
             agent_messages_in_room_count=agent_messages_in_room_count,
             free_msg_limit=self.agent.free_msg_limit,
             subscribe_msg_sent=self.room.subscribe_msg_sent,
         )
-
-        if not status.subscribe_enabled:
-            return status
 
         status.user_is_subscribed = self._check_user_is_subscribed()
 
@@ -115,7 +110,7 @@ class SubscribeModule(AgentModule):
         Send a subscription message, store it, and update the room's status.
         """
         subscribe_message = (
-            f"{self.agent.subscribe_msg}\n\n" f"{self.agent.subscribe_url}"
+            f"{self.agent.subscribe_msg}\n" f"{config.FRONTEND_URL}/subscribe"
         )
 
         # Send the subscription message

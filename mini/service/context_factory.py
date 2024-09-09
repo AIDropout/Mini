@@ -79,10 +79,10 @@ class ContextFactory(Service):
                 Tables.USERS,
                 conditions={Tables.USERS__telegram_uid: message.metadata.uid},
             )
-            agent = self.database_manager.get_row(
-                Tables.AGENTS,
-                conditions={Tables.AGENTS__telegram_chat_id: message.metadata.chat_id},
-            )
+            # agent = self.database_manager.get_row(
+            #     Tables.AGENTS,
+            #     conditions={Tables.AGENTS__telegram_chat_id: message.metadata.chat_id},
+            # ) # Add telegram_chat_id back to agents table if we end up adding this integration
         elif message.provider == MessageProvider.BIRD:
             user = self.database_manager.get_row(
                 Tables.USERS,

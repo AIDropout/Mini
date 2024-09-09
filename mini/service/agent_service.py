@@ -16,7 +16,6 @@ class AgentService(Service):
             Tables.AGENTS,
             order_by="id",
             max_rows=100,
-            conditions={Tables.AGENTS__show_on_site: True},
         )
         if not agents:
             raise HTTPException(status_code=404, detail="Agents not found")
