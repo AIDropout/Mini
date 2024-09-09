@@ -169,6 +169,8 @@ class LLMManager:
         Returns:
             dict: A dictionary representing the cleaned and parsed JSON object.
         """
+        if llm_output is None or "":
+            return {}
         start_index = llm_output.find("{")
         end_index = llm_output.rfind("}") + 1
         cleaned_output = llm_output[start_index:end_index].strip()
