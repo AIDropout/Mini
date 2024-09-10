@@ -9,11 +9,13 @@ def get_api_key(provider: LLMProviders) -> str:
     """Fetches the API key from the config based on the provider."""
     return getattr(config, provider.value)
 
+
 class StripeConfig(BaseSettings):
     secret_key: str
     webhook_secret: str
     basic_weekly_price_id: str
     pro_weekly_price_id: str
+
 
 class PromptRulesConfig(BaseSettings):
     initial_message_count: int
@@ -110,10 +112,6 @@ class DiscordConfig(BaseSettings):
     server_status_webhook_url: str
 
 
-class DevConfig(BaseSettings):
-    agent_id: str
-
-
 class Config(BaseSettings):
     ENVIRONMENT: str
     BACKEND_API_KEY: str
@@ -162,7 +160,6 @@ class Config(BaseSettings):
     AWS_S3_CONFIG: AWSS3Config
     SECRET_PHRASES: SecretPhrases
     DISCORD_CONFIG: DiscordConfig
-    DEV_AGENT_ID: DevConfig
 
     @classmethod
     def from_yaml(cls, file_path: str):

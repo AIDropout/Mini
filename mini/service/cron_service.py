@@ -23,13 +23,12 @@ class CronService(Service):
         self.messaging_manager = messaging_manager
 
     def refresh_rooms(self, dev_mode: bool = False):
-        logger.info(config.DEV_AGENT_ID)
         agents = self.database_manager.get_multiple_rows(
             table_name=Tables.AGENTS,
             max_rows=100,
             order_by="id",
             order_desc=False,
-            conditions={Tables.AGENTS__id: config.DEV_AGENT_ID} if dev_mode else None,
+            conditions={Tables.AGENTS__bird_channel_id: config.BIRD_DEV_CHANNEL_ID} if dev_mode else None,
         )
 
         for agent in agents:
