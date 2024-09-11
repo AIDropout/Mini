@@ -20,7 +20,7 @@ from mini.core.schema.memory import (
     RetrievedMemoryMetadataSchema,
     SavedMemoryMetadataSchema,
 )
-from mini.manager.llm import LLMManager
+from mini.manager.llm import LLMService
 from mini.manager.time import TimeManager
 
 from .prompts import GENERATE_QUERY_PROMPT, METADATA_PROMPT
@@ -33,7 +33,7 @@ class MemoryManager:
 
     def __init__(
         self,
-        llm_manager: LLMManager,
+        llm_manager: LLMService,
         time_manager: TimeManager,
         memory_save_delay: int = 5,
         user_id: Optional[int] = None,
@@ -94,8 +94,8 @@ class MemoryManager:
         response: dict = self.llm_manager.generate_response(
             messages=[{"role": "user", "content": data}],
             system_prompt=system_prompt,
-            json_mode=False,
-            expect_json=True,
+            json_mode=True,
+            # expect_json=True,
         )
 
         try:
@@ -167,8 +167,8 @@ class MemoryManager:
         response: dict = self.llm_manager.generate_response(
             messages=[{"role": "user", "content": conversation_str}],
             system_prompt=system_prompt,
-            json_mode=False,
-            expect_json=True,
+            json_mode=True,
+            # expect_json=True,
         )
 
         try:

@@ -96,7 +96,7 @@ if __name__ == "__main__":
     LOCAL_URL = "127.0.0.1"
     PORT = 8000
     USE_GUNICORN = False
-
+    
     # Set up a local server with a public url via ngrok
     asyncio.run(configure_local_webhooks(f"{LOCAL_URL}:{PORT}"))
 

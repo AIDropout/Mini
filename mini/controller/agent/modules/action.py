@@ -2,15 +2,17 @@ from typing import Dict, List, Optional, Tuple
 
 from mini.controller.agent.modules.base import AgentModule
 from mini.core.logger import get_logger
-from mini.manager.llm import LLMManager
+from mini.core.schema.tables import Tables
+from mini.manager.llm import LLMService
 from mini.manager.messaging import MessagingManager
 
 logger = get_logger(__name__)
 
 
 class ActionModule(AgentModule):
-    def __init__(self, llm_manager: LLMManager):
+    def __init__(self, llm_manager: LLMService):
         self.llm_manager = llm_manager
+        self.llm_manager.cost_tracking_callback = self._update_user_message_cost
         self.messaging_manager = None
 
     def set_messaging_manager(self, messaging_manager: MessagingManager) -> None:
@@ -93,3 +95,15 @@ class ActionModule(AgentModule):
         except Exception as e:
             logger.error(f"Error sending message: {str(e)}")
             return False
+
+    # @chris why is this not working?
+    def _update_user_message_cost(self, cost: float) -> None:
+        update_data = {
+            Tables.USERS__litellm_cost.value: self.user.litellm_cost + cost,
+        }
+        self.database_manager.update(
+            table_name=Tables.USERS,
+            update_data=update_data,
+            condition_key=Tables.USERS__id,
+            condition_value=self.user.id,
+        )

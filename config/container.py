@@ -3,7 +3,7 @@ from typing import Optional
 from config.config import PromptModuleConfig, config
 from mini.core.rate_limiter import RateLimiter
 from mini.manager.database import DatabaseManager
-from mini.manager.llm import LLMManager
+from mini.manager.llm import LLMManager, LLMService, Model
 from mini.manager.memory import MemoryManager
 from mini.manager.messaging import MessagingManagerFactory
 from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
@@ -86,9 +86,8 @@ class Container:
         if self.memory_manager is None:
 
             def lazy_init_llm():
-                return LLMManager(
-                    llm_name=config.MEMORY_GENERAL_LLM,
-                    llm_provider=config.MEMORY_GENERAL_LLM_PROVIDER,
+                return LLMService(
+                    model=Model.from_model_name(config.MEMORY_GENERAL_LLM),
                 )
 
             self.memory_manager = MemoryManager(
@@ -165,18 +164,15 @@ class Container:
         from mini.controller.agent.modules.vision import VisionModule
 
         action_module = ActionModule(
-            llm_manager=LLMManager(
-                llm_name=config.ACTION_MANAGER_LLM,
-                llm_provider=config.ACTION_MANAGER_LLM_PROVIDER,
+            llm_manager=LLMService(
+                model=Model.from_model_name(config.ACTION_MANAGER_LLM)
             )
         )
 
         memory_manager = self.get_memory_manager()
-        memory_llm_manager = memory_manager.llm_manager
         memory_module = MemoryModule(
             database_manager=self.database_manager,
             memory_manager=memory_manager,
-            llm_manager=memory_llm_manager,
         )
         subscribe_module = SubscribeModule(
             database_manager=self.database_manager,

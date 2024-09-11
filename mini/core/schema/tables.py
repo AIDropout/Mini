@@ -3,7 +3,9 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
+
 from pydantic import BaseModel, Field, field_validator
+
 from mini.utils.time import utc_now
 
 
@@ -30,6 +32,7 @@ class Tables(str, Enum):
     USERS__birthday = "birthday"
     USERS__customer_id = "customer_id"
     USERS__is_subscribed = "is_subscribed"
+    USERS__litellm_cost = "litellm_cost"
 
     ROOMS = "rooms"
     ROOMS__id = "id"
@@ -84,10 +87,6 @@ class Agent(BaseModel):
     first_message: str
     bird_channel_id: str
     prompt: str
-    example_conversation: Optional[str] = Field(
-        default=None,
-        description="An example conversation between the Agent and the User. Meant to serve as a guide for the LLM. (unused rn)",
-    )
     free_msg_limit: int
     subscribe_msg: str
     default_proactivity: float = Field(
@@ -109,6 +108,7 @@ class User(BaseModel):
     telegram_uid: Optional[str] = Field(default=None)
     customer_id: Optional[str] = Field(default=None)
     is_subscribed: bool = Field(default=False)
+    litellm_cost: float = Field(default=0.0)
 
 
 class Room(BaseModel):

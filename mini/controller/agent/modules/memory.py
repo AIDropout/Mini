@@ -3,9 +3,8 @@ from typing import Dict, List
 from mini.controller.agent.modules.base import AgentModule
 from mini.core.logger import get_logger
 from mini.core.schema.memory import MemoryRecordSchema
-from mini.core.schema.tables import Message, Tables
+from mini.core.schema.tables import Tables
 from mini.manager.database import DatabaseManager
-from mini.manager.llm import LLMManager
 from mini.manager.memory import MemoryManager
 
 logger = get_logger(__name__)
@@ -16,12 +15,9 @@ class MemoryModule(AgentModule):
         self,
         database_manager: DatabaseManager,
         memory_manager: MemoryManager,
-        llm_manager: LLMManager,
-        
     ):
         super().__init__(database_manager)
         self.memory_manager = memory_manager
-        self.llm_manager = llm_manager
 
     def _set_user_and_agent_id(
         self, user_id: str | None = None, agent_id: str | None = None
@@ -116,7 +112,7 @@ class MemoryModule(AgentModule):
             order_desc=True,
             conditions={Tables.MESSAGES__room_id: self.room.id},
         )
-        
+
         messages.reverse()
 
         return [
