@@ -19,3 +19,4 @@ pydantic-settings~=2.4.0
 pyngrok~=7.2.0
 mem0ai>=0.1.7,<0.2.dev0
 uvicorn==0.30.6
+weave==0.51.5
