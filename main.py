@@ -14,11 +14,13 @@ from mini.utils.utils import configure_local_webhooks, stop_existing_processes
 
 logger = get_logger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Life cycle of FastAPI server"""
     redis_manager = RedisManager()
     redis_manager.initialize()
+
     if config.ENVIRONMENT == "local":
         subprocess.Popen(
             [
@@ -29,16 +31,19 @@ async def lifespan(app: FastAPI):
                 "-n",
                 "worker1@%h",
                 "--loglevel=ERROR",
-            ] + (["--beat"] if config.ENABLE_CELERY_BEAT else [])
+            ]
+            + (["--beat"] if config.ENABLE_CELERY_BEAT else [])
         )
 
     yield
+
     subprocess.run(["pkill", "-f", "celery"])
     ngrok.kill()
     redis_manager.close()
 
 
 app = FastAPI(lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -46,6 +51,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.include_router(api_router)
 
 
@@ -65,39 +71,14 @@ async def log_requests(request: Request, call_next):
 
     response = await call_next(request)
 
-    # logger.info(f"Response status: {response.status_code}")
     return response
 
 
-"""
-How everything is setup:
-
-In production (Render.com), the start command is starting the celery servers and gunicorn workers
-
-In local, we can either use uvicorn or gunicorn (gunicorn to simulate prod environment) by setting USE_GUNICORN: bool
-
-To start local, run python main.py
-
-Helpful commands:
-- To view gunicorn ports run: ps aux | grep gunicorn
-- To kill gunicorn run: pkill -f gunicorn
-Flower (Flower hosts a localhost dashboard to view status of Celery tasks):
-- export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/Untitled
-- View celery tasks via Flower: celery -A mini.server.celery.celery flower
-
-- To manually start Celery, open a new terminal: celery -A mini.server.celery.celery worker -n worker1@%h
-
-"""
-
-if __name__ == "__main__":
-    """This main function is ONLY called when developing and running python main.py. 
-    (Prod has a separate run command on Render)"""
-
+def run_app():
     LOCAL_URL = "127.0.0.1"
     PORT = 8000
     USE_GUNICORN = False
-    
-    # Set up a local server with a public url via ngrok
+
     asyncio.run(configure_local_webhooks(f"{LOCAL_URL}:{PORT}"))
 
     # Stops all existing servers
@@ -121,3 +102,7 @@ if __name__ == "__main__":
         import uvicorn
 
         uvicorn.run("main:app", host=LOCAL_URL, port=PORT, reload=True)
+
+
+if __name__ == "__main__":
+    run_app()

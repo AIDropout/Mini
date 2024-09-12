@@ -2,7 +2,7 @@ from typing import Callable, Dict, List, Optional, Union
 from uuid import uuid4
 
 import litellm
-import weave
+# import weave
 from litellm import completion, speech
 from litellm.types.utils import ModelResponse
 from litellm.utils import get_supported_openai_params, supports_vision
@@ -39,7 +39,7 @@ class LLMService:
 
         self.cost_tracking_callback = cost_tracking_callback
         litellm.success_callback = [self._success_callback]
-        weave.init("aibf_dev")
+        # weave.init("aibf_dev")
 
     def _success_callback(
         self,
@@ -65,7 +65,7 @@ class LLMService:
         }
         return key_mapping.get(self.provider)
 
-    @weave.op()
+    # @weave.op()
     def generate_response(
         self,
         messages: List[Dict[str, str]],
