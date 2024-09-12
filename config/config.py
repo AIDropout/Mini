@@ -52,14 +52,6 @@ class PromptMetadataConfig(BaseSettings):
     display_timestamp: bool
 
 
-class PromptModuleConfig(BaseSettings):
-    base_prompt: str
-    rules: PromptRulesConfig
-    about: PromptAboutConfig
-    personality: PromptPersonalityConfig
-    metadata: PromptMetadataConfig
-
-
 class UserRateLimits(BaseSettings):
     # TODO: implement
     # IDEA: when max images are sent, sam's phone 'stops reciving images'
