@@ -1,3 +1,4 @@
+import json
 from typing import Union
 
 from mini.controller.agent.modules.action import ActionModule
@@ -59,6 +60,7 @@ class AgentService(Service):
         self.subscribe.configure(room, agent, user)
         self.action.configure(room, agent, user)
         self.vision.configure(room, agent, user)
+        self.prompt.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
     def handle_chat_task(
@@ -93,27 +95,22 @@ class AgentService(Service):
             relevant_memories = "\n\n".join(relevant_memories)
             el.log(f"RELEVANT MEMORIES FOR CONVERSATION: {relevant_memories}")
 
-            system_prompt = self._construct_system_prompt(
-                task.instructions, relevant_memories=relevant_memories
-            )
             system_prompt = self.prompt.build_prompt(
-                relevant_memories=relevant_memories
+                relevant_memories=relevant_memories, chat_history=all_recent_messages
             )
             el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
 
             if self.cancel_manager.newer_task_found(self.room.id, task.id):
                 return False
-            response_text = self.action.generate_message(
-                all_recent_messages, system_prompt
-            )
+            response_text = self.action.generate_message([], system_prompt)
             el.log(f"MAIN LLM RESPONSE: {response_text}")
+
+            response = json.loads(response_text).get("best_response")
 
             if self.cancel_manager.newer_task_found(self.room.id, task.id):
                 return False
 
-            final_message = self.filter.process_message(
-                all_recent_messages, response_text
-            )
+            final_message = self.filter.process_message(all_recent_messages, response)
 
             # TODO: fetch agent data and pass in this module before this function is run (would require a large-ish refactor)
             # Disabling this feature for now
@@ -164,19 +161,16 @@ class AgentService(Service):
             )
             el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
-            system_prompt = self._construct_system_prompt(
-                task.instructions, relevant_memories=""
+            system_prompt = self.prompt.build_prompt(
+                relevant_memories="", chat_history=all_recent_messages
             )
             el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
 
-            response_text = self.action.generate_message(
-                all_recent_messages, system_prompt
-            )
+            response_text = self.action.generate_message([], system_prompt)
             el.log(f"MAIN LLM RESPONSE: {response_text}")
+            response = json.loads(response_text).get("best_response")
 
-            final_message = self.filter.process_message(
-                all_recent_messages, response_text
-            )
+            final_message = self.filter.process_message(all_recent_messages, response)
 
             success = self.action.send_message(final_message)
             el.log(f"BIRD SMS SENT: {success}")

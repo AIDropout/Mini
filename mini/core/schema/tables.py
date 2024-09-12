@@ -23,6 +23,9 @@ class Tables(str, Enum):
     AGENTS__free_msg_limit = "free_msg_limit"
     AGENTS__subscribe_msg = "subscribe_msg"
     AGENTS__image_url = "image_url"
+    AGENTS__prompt_role = "prompt_role"
+    AGENTS__prompt_rules = "prompt_rules"
+    AGENTS__prompt_moods = "prompt_moods"
 
     USERS = "users"
     USERS__id = "id"
@@ -96,6 +99,9 @@ class Agent(BaseModel):
         description="Proactivity scale from 0 (not proactive) to 1 (very proactive)",
     )
     image_url: Optional[str]
+    prompt_role: str
+    prompt_rules: List[str]
+    prompt_moods: List[str]
 
 
 class User(BaseModel):

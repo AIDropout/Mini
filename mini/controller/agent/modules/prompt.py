@@ -1,12 +1,8 @@
-from config.config import (
-    PromptAboutConfig,
-    PromptMetadataConfig,
-    PromptModuleConfig,
-    PromptPersonalityConfig,
-    PromptRulesConfig,
-)
+import json
+from typing import Dict, List
+
 from mini.controller.agent.modules.base import AgentModule
-from mini.core.schema.tables import Tables
+from mini.core.schema.tables import Agent, Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.time import TimeManager
 
@@ -14,137 +10,118 @@ from mini.manager.time import TimeManager
 class PromptModule(AgentModule):
     def __init__(
         self,
-        config: PromptModuleConfig,
-        # TODO: need a overall context manager?
         database_manager: DatabaseManager,
         time_manager: TimeManager,
     ) -> None:
         super().__init__(database_manager)
-        self.rules: PromptRulesConfig = config.rules
-        self.about: PromptAboutConfig = config.about
-        self.personality: PromptPersonalityConfig = config.personality
-        self.metadata: PromptMetadataConfig = config.metadata
-
-        self.base_prompt: str = config.base_prompt
-
         self.time_manager = time_manager
-
         self.database_manager = database_manager
 
         self.count_messages = self.database_manager.count_rows(
             table_name=Tables.MESSAGES
         )
-        self.days_since_last_seen = 2
-        self.is_subscribed = False
+        self.days_since_last_seen = 0  # TODO
 
-        # TODO: fix bug in subscription table
-        # (
-        #     self.database_manager.get_row(
-        #         Tables.SUBSCRIPTIONS,
-        #         {
-        #             Tables.SUBSCRIPTIONS__user_id: self.user.id,
-        #             Tables.SUBSCRIPTIONS__status: SubscriptionStatus.ACTIVE,
-        #         },
-        #     )
-        #     is not None
-        # )
+        # set on configure
+        self.is_subscribed = False
+        self.role: str = ""
+        self.rules: list[str] = []
+        self.moods: list[str] = []
+        self.agent_return_hint = None
+
+    def configure(self, room: Room, agent: Agent, user: User):
+        super().configure(room, agent, user)
+        self._load_agent_data()
+
+    def _load_agent_data(self) -> None:
+        self.role = self.agent.prompt_role
+        self.rules = self.agent.prompt_rules
+        self.moods = self.agent.prompt_moods
+
+        self.agent_return_hint = {
+            "responses": self._response_moods(),
+            "best_response": "insert the best response to keep convo flowing, adhearing to user's requests, but keep it unpredictable",
+            "reasoning": "short reasoning for picking the best response",
+        }
+
+        self.is_subscribed = self.user.is_subscribed
+
+    def _response_moods(self) -> list[str]:
+        return [f"insert {mood} message" for mood in self.moods]
+
+    def build_role(self) -> str:
+        return self.role
 
     def build_rules(self) -> str:
-        rules = "**Messaging:**\n"
+        rules = "\n".join([f"- {rule}" for rule in self.rules])
+        return f"""
+        **RULES:**
 
-        if self.count_messages <= self.rules.initial_message_count:
-            rules += f"- {self.rules.initial_message_prompt}\n"
+        Keep the following in mind:
+        {rules}
+        """
 
-        if self.days_since_last_seen >= self.rules.last_conversation_days_threshold:
-            rules += f"- {self.rules.last_conversation_prompt}\n"
+    def build_metadata(self, relevant_memories: str) -> str:
+        return f"""
+        **METADATA:**
 
-        if self.is_subscribed:
-            rules += f"- {self.rules.pre_subscription_prompt}\n"
-        else:
-            rules += f"- {self.rules.post_subscription_prompt}\n"
+        - Days since last interaction: {self.days_since_last_seen}
+        - Time: {self.time_manager.current_readable_time()}
+        - Here are relevant memories:
+        {relevant_memories}
+        """
 
-        if self.rules.style_guidelines:
-            rules += "\n\n**Style Guidelines:**\n"
-            for key, value in self.rules.style_guidelines.items():
-                if isinstance(value, list):
-                    for item in value:
-                        rules += f"- {key}: {item}\n"
-                else:
-                    rules += f"- {key}: {value}\n"
-            rules += "\n"
-        return rules
+    def build_return_hint(self) -> str:
+        return f"""
+        **RETURN HINT:**
 
-    def _get_personality_description(self, level: int) -> str | None:
-        """Convert percentage level to descriptive adjective with more granularity."""
-        if level >= 95:
-            return "exceptionally"
-        elif level >= 85:
-            return "extremely"
-        elif level >= 70:
-            return "very"
-        elif level >= 50:
-            return "moderately"
-        elif level >= 35:
-            return "somewhat"
-        elif level >= 20:
-            return "slightly"
-        else:
-            return None
+        Ensure you only respond with the following schema (keep it exciting):
+        {json.dumps(self.agent_return_hint)}
+        """
 
-    def build_personality(self) -> str:
-        descriptions = {
-            "Shy": self._get_personality_description(self.personality.shy_level),
-            "Confident": self._get_personality_description(
-                self.personality.confidence_level
-            ),
-            "Assertive": self._get_personality_description(
-                self.personality.assertiveness_level
-            ),
-            "Friendly": self._get_personality_description(
-                self.personality.friendliness_level
-            ),
-            "Flirty": self._get_personality_description(
-                self.personality.flirtiness_level
-            ),
-            "Funny": self._get_personality_description(self.personality.humor_level),
-        }
+    def build_chat_history(self, chat_history: List[Dict[str, str]] | None) -> str:
+        if chat_history is None:
+            return ""
 
-        filtered_descriptions = {
-            trait: desc for trait, desc in descriptions.items() if desc is not None
-        }
+        chat_history = self._prepare_messages(chat_history)
+        for chat in chat_history:
+            if chat["role"] == "assistant":
+                chat["role"] = self.agent.name
 
-        overview = "**Personality Overview:**\n"
-        for trait, description in filtered_descriptions.items():
-            overview += f"- {trait}: You are {description} {trait.lower()}.\n"
-
-        return overview
-
-    def build_about(self) -> str:
-        return (
-            f"**About You:**\n"
-            f"- Timezone: {self.about.timezone}\n"
-            f"- Interests: {', '.join(self.about.interests)}\n"
-            f"- Past Events: {', '.join(self.about.past_events)}\n"
+        chat_history_str = "\n".join(
+            [f"{msg['role']}: {msg['content']}" for msg in chat_history]
         )
 
-    def build_metadata(self, relevant_memories: str | None = None) -> str:
-        metadata = "**Metadata Details:**\n"
+        return f"""
+        **CHAT HISTORY:**
+        
+        You must respond to the following chat history:
+        {chat_history_str}
+        """
 
-        if self.metadata.display_timestamp:
-            metadata += f"- Time: {self.time_manager.current_readable_time()}\n"
+    def _prepare_messages(self, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        """Prepare messages by combining consecutive user messages."""
+        prepared = []
+        for msg in messages:
+            if prepared and prepared[-1]["role"] == msg["role"] == "user":
+                prepared[-1]["content"] += f" | {msg['content']}"
+            else:
+                prepared.append(msg)
+        if prepared and prepared[-1]["role"] == "assistant":
+            prepared.append({"role": "user", "content": "[ignore]"})
+        return prepared
 
-        if relevant_memories:
-            metadata += f"- Relevant Memories: {relevant_memories}\n"
+    def build_prompt(
+        self, relevant_memories: str, chat_history: List[Dict[str, str]] | None = None
+    ) -> str:
+        self._load_agent_data()
 
-        return metadata
-
-    def build_prompt(self, relevant_memories: str) -> str:
         prompt = [
-            self.base_prompt,
+            self.build_role(),
             self.build_rules(),
-            self.build_personality(),
-            self.build_about(),
             self.build_metadata(relevant_memories=relevant_memories),
+            self.build_chat_history(chat_history),
+            self.build_return_hint(),
         ]
 
         return "\n\n".join(prompt)

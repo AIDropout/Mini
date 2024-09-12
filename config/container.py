@@ -1,6 +1,6 @@
 from typing import Optional
 
-from config.config import PromptModuleConfig, config
+from config.config import config
 from mini.core.rate_limiter import RateLimiter
 from mini.manager.database import DatabaseManager
 from mini.manager.llm import LLMManager, LLMService, Model
@@ -203,17 +203,7 @@ class Container:
             llm_manager=vision_llm_man,
         )
 
-        prompt_module_yaml = self.database_manager.load_yaml_from_bucket(
-            bucket_name=config.SUPABASE_PROMPTS_BUCKET_NAME,
-            file_path=config.SUPABASE_AGENT_PROMPT_PATH,
-        )
-        # Use this for local...
-        # with open("./config/prompts/sam.yaml", "r") as file:
-        #     prompt_module_yaml = yaml.safe_load(file)
-
-        prompt_module_configs = PromptModuleConfig(**prompt_module_yaml)
         prompt_module = PromptModule(
-            config=prompt_module_configs,
             database_manager=self.database_manager,
             time_manager=self.time_manager,
         )
