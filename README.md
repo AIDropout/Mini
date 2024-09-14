@@ -14,14 +14,13 @@ minis are the first open-source digital humans 👩🏽‍🤝‍👩🏼🧍
   <a href="https://github.com/AIDropout/Mini/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AIDropout/Mini"/></a>
 </p>
 
-Help us build characters that are highly convincing, powerful, and dynamic — from a boyfriend that remembers everything about you to a personal secretary that can manage your calendar and email.
+We're building characters that are highly convincing, powerful, and dynamic — from a boyfriend that remembers everything about you to a personal secretary that can manage your calendar and email.
 
-Use our lego blocks to create and deploy your own talk & text agent. That means your own `Twilio SMS`  mini powered by `Llama 3` with `Web Browsing` & `Proactive Messaging` in minutes, not weeks ⚡
+Use our lego blocks to create and deploy your own talk & text agent. This means your own `Twilio SMS`  mini powered by `Llama 3` with `Web Browsing` & `Proactive Messaging` in minutes, not weeks ⚡
 
-#### mini demos:
+#### Try our characters:
 
-- [Boyfriend](https://boyfriend.so)
-- [David Goggins](https://textmini.com/goggins)
+- [mini](https://textmini.com/discover)
 
 ## 🌆 Features
 
@@ -29,7 +28,7 @@ Use our lego blocks to create and deploy your own talk & text agent. That means 
 - [x] Scalable agent DB architecture (Supabase)
 - [x] Omnichannel messaging (Bird SMS, Telegram)
 - [x] Task scheduling (Celery & Redis)
-- [x] Local, memory, cloud storage (AWS S3)
+- [x] Local, memory, cloud storage (S3)
 
 ### Modules
 
@@ -37,9 +36,9 @@ Use our lego blocks to create and deploy your own talk & text agent. That means 
 - [x] Quality check filter to re-generate a message to meet standard
 - [x] Schedule tasks
 - [x] Human-like memory
+- [x] Dynamic prompt injection (for mood swings and personality)
 - [x] Processes images using vision
 - [x] Use TTS to send audio recordings
-- [x] System prompt building (for dynamic personality and mood)
 - [x] Read multiple rapid messages before responding
 - [x] Human-like responsiveness (& unresponsiveness... 😜)
 - [ ] Send images
