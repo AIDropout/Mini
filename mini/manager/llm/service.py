@@ -30,13 +30,10 @@ class LLMService:
         self.provider = model.provider
         self.model_name = model.model_name
         self.api_key = api_key or self._get_default_api_key()
-
         self.s3_file_prefix = f"{config.ENVIRONMENT}/{uuid4()}.wav"
         self.audio_content_type = "audio/mpeg"
-
         self.supports_json = self._check_json_support()
         self.supports_vision = self._check_vision_support()
-
         self.cost_tracking_callback = cost_tracking_callback
         litellm.success_callback = [self._success_callback]
         # weave.init("aibf_dev")
@@ -81,6 +78,7 @@ class LLMService:
             kwargs["response_format"] = {"type": "json_object"}
 
         completion_kwargs = {
+            "api_key": self.api_key,
             "model": self.model_name,
             "messages": prepared_messages,
             **kwargs,

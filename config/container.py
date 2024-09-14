@@ -1,6 +1,7 @@
 from typing import Optional
 
 from config.config import config
+from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.manager.database import DatabaseManager
 from mini.manager.llm import LLMManager, LLMService, Model
@@ -12,6 +13,8 @@ from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
 from mini.service.context_factory import ContextFactory
 from mini.service.user_service import UserService
+
+logger = get_logger(__name__)
 
 
 class Container:
