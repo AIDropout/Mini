@@ -40,8 +40,8 @@ class PromptModule(AgentModule):
 
         self.agent_return_hint = {
             "responses": self._response_moods(),
-            "best_response": "insert the best response to keep convo flowing, adhearing to user's requests, but keep it unpredictable",
-            "reasoning": "short reasoning for picking the best response",
+            "best_response": "insert the best response here",
+            "reasoning": "adjectives describing reasoning for the best response",
         }
 
         self.is_subscribed = self.user.is_subscribed

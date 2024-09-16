@@ -106,7 +106,7 @@ class AgentService(Service):
             response_text = self.action.generate_message([], system_prompt)
             el.log(f"MAIN LLM RESPONSE: {response_text}")
 
-            response = json.loads(response_text).get("best_response")
+            response = json.loads(response_text).get("best_response", "")
 
             if self.cancel_manager.newer_task_found(self.room.id, task.id):
                 return False
