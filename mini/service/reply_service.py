@@ -65,7 +65,7 @@ class ReplyService(Service):
             # Log user message to discord
             if config.ENVIRONMENT == "production":
                 discord_manager.send_message_to_channel(
-                    message=f"{context.user.phone_number}: {message.content}",
+                    message=f"-# {context.user.phone_number} to {context.agent.name}: {message.content}",
                     channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1",
                 )
 
