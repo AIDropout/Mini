@@ -35,7 +35,7 @@ def execute_with_retry(func, *args, **kwargs):
 
 def parse_content(content: str, response_format: dict | None = None):
     """Parse the content based on the response format."""
-    if response_format and response_format.get("type", "") == "json_object":
+    if content and response_format and response_format.get("type", "") == "json_object":
 
         start_index = content.find("{")
         end_index = content.rfind("}") + 1
