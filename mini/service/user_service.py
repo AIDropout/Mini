@@ -30,10 +30,11 @@ class UserService(Service):
             if new_user is None:
                 raise HTTPException(status_code=500, detail="Failed to create user")
 
-            discord_manager.send_message_to_channel(
-                message=f"-# **New signup**: {phone_number} | {get_infostring()}",
-                channel=config.DISCORD_CONFIG.website_activity_webhook_url,
-            )
+            if config.ENVIRONMENT == "production":
+                discord_manager.send_message_to_channel(
+                    message=f"-# **New signup**: {phone_number} {get_infostring()}",
+                    channel=config.DISCORD_CONFIG.website_activity_webhook_url,
+                )
 
             return new_user
         except APIError as e:

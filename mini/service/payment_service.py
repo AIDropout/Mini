@@ -119,10 +119,11 @@ class PaymentService(Service):
                 condition_value=user_id,
             )
 
-            discord_manager.send_message_to_channel(
-                message=f"-# **Subscription created** 🎉: user {user_id} | {get_infostring()}",
-                channel=config.DISCORD_CONFIG.website_activity_webhook_url,
-            )
+            if config.ENVIRONMENT == "production":
+                discord_manager.send_message_to_channel(
+                    message=f"-# **Subscription created** 🎉: user {user_id} {get_infostring()}",
+                    channel=config.DISCORD_CONFIG.website_activity_webhook_url,
+                )
 
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")

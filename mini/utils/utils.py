@@ -55,13 +55,10 @@ async def configure_local_webhooks(local_url: str) -> None:
 
 
 def get_infostring() -> str:
-    environment = config.ENVIRONMENT
-
     pst_time = datetime.now(ZoneInfo("America/Los_Angeles"))
     hour = pst_time.strftime("%I").lstrip("0")
     timestamp = f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
-
-    return f"ENV={environment.upper()} 🕒 {timestamp}"
+    return f"🕒 {timestamp}"
 
 
 def log_error_to_discord(identifier_key: str, identifier_value) -> str:
