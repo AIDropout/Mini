@@ -231,7 +231,7 @@ class AgentService(Service):
         # Log agent message to discord
         if config.ENVIRONMENT == "production":
             discord_manager.send_message_to_channel(
-                message=f"-# {self.agent.name} to {self.user.phone_number}: {final_message}",
+                message=f"-# {self.agent.name} -> {self.user.phone_number}: {final_message}",
                 channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1",
             )
 
