@@ -2,7 +2,7 @@ from typing import Callable, Dict, List, Optional, Union
 from uuid import uuid4
 
 import litellm
-import weave
+# import weave
 from litellm import completion, speech
 from litellm.types.utils import ModelResponse
 from litellm.utils import get_supported_openai_params, supports_vision
@@ -30,16 +30,13 @@ class LLMService:
         self.provider = model.provider
         self.model_name = model.model_name
         self.api_key = api_key or self._get_default_api_key()
-
         self.s3_file_prefix = f"{config.ENVIRONMENT}/{uuid4()}.wav"
         self.audio_content_type = "audio/mpeg"
-
         self.supports_json = self._check_json_support()
         self.supports_vision = self._check_vision_support()
-
         self.cost_tracking_callback = cost_tracking_callback
         litellm.success_callback = [self._success_callback]
-        weave.init("aibf_dev")
+        # weave.init("aibf_dev")
 
     def _success_callback(
         self,
@@ -65,7 +62,7 @@ class LLMService:
         }
         return key_mapping.get(self.provider)
 
-    @weave.op()
+    # @weave.op()
     def generate_response(
         self,
         messages: List[Dict[str, str]],
@@ -81,6 +78,7 @@ class LLMService:
             kwargs["response_format"] = {"type": "json_object"}
 
         completion_kwargs = {
+            "api_key": self.api_key,
             "model": self.model_name,
             "messages": prepared_messages,
             **kwargs,
