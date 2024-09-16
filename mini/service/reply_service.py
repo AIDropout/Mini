@@ -5,7 +5,7 @@ from mini.controller.task.task_scheduler import SchedulerService
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Message, Tables
 from mini.manager.database import DatabaseManager
-from mini.manager.messaging import MessagingManagerFactory
+from mini.manager.messaging import MessagingManagerFactory, discord_manager
 from mini.service.base import Service
 from mini.service.context_factory import ContextFactory
 from mini.utils.utils import log_error_to_discord
@@ -61,6 +61,13 @@ class ReplyService(Service):
                     content=message.content,
                 ),
             )
+
+            # Log user message to discord
+            if config.ENVIRONMENT == "production":
+                discord_manager.send_message_to_channel(
+                    message=f"{context.user.phone_number}: {message.content}",
+                    channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1",
+                )
 
             # Calculate delay and schedule response
             delay = self._calculate_response_delay(room_id=context.room.id)
