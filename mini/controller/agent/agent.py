@@ -1,6 +1,7 @@
 import json
 from typing import Union
 
+from config.config import config
 from mini.controller.agent.modules.action import ActionModule
 from mini.controller.agent.modules.intent.filter import FilterModule
 from mini.controller.agent.modules.memory import MemoryModule
@@ -15,7 +16,7 @@ from mini.core.schema.llm import LLMProviders
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
 from mini.manager.database import DatabaseManager
 from mini.manager.llm import LLMManager
-from mini.manager.messaging import MessagingManager
+from mini.manager.messaging import MessagingManager, discord_manager
 from mini.server.cancel import CancelManager
 from mini.service.base import Service
 from mini.utils.time import utc_now
@@ -226,6 +227,13 @@ class AgentService(Service):
                 log=el.get_logs(),
             ),
         )
+
+        # Log agent message to discord
+        if config.ENVIRONMENT == "production":
+            discord_manager.send_message_to_channel(
+                message=f"-# {self.agent.name} to {self.user.phone_number}: {final_message}",
+                channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1",
+            )
 
         self.database_manager.update(
             Tables.ROOMS,
