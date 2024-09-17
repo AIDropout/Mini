@@ -70,39 +70,11 @@ class ReplyService(Service):
                 )
 
             # Calculate delay and schedule response
-            delay = self._calculate_response_delay(room_id=context.room.id)
             self.scheduler_service.schedule_respond(
-                delay=delay,
+                delay=0,
                 message=message,
                 context=context,
             )
         except Exception as e:
             msg = log_error_to_discord("room_id", context.room.id)
             logger.exception(msg)
-
-    def _calculate_response_delay(self, room_id: int) -> int:
-        """
-        Calculate a human-like delay in seconds for message responses.
-
-        :param messages: List of message objects, sorted by creation time (newest first)
-        :return: Delay in seconds
-        """
-
-        recent_messages = self.database_manager.get_multiple_rows(
-            Tables.MESSAGES,
-            max_rows=5,
-            order_by=Tables.MESSAGES__created_at,
-            order_desc=True,
-            conditions={Tables.MESSAGES__room_id: room_id},
-        )
-
-        if not recent_messages:
-            return random.randint(5, 15)  # Default delay if no messages
-
-        return 1  # temp
-
-        # for debugging
-        logger.info("___")
-        logger.info(config.ENABLE_RESPONSE_DELAY)
-        if not config.ENABLE_RESPONSE_DELAY:
-            return 1
