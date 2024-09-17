@@ -85,7 +85,7 @@ class BirdManager(MessagingBase):
 
         text_part = f"text [{content}]" if content else "no text"
         image_part = f"{len(aws_media_urls)} media files"
-        logger.info(f"Received message with {text_part} and {image_part}")
+        logger.info(f"💬 Received message with {text_part} and {image_part}")
 
         return MiniMessage(
             content=content,
@@ -221,17 +221,30 @@ class BirdManager(MessagingBase):
         for webhook in webhooks["results"]:
             if ".ngrok-free.app" in webhook["url"]:
                 self._delete_webhook(webhook["id"])
-
         response = requests.post(url, headers=self._api_header, json=body)
+        logger.info(response.json())
         response.raise_for_status()
         logger.info(f"Webhook registration response: {response.json()}")
 
     def _get_existing_webhooks(self) -> Dict:
-        """Retrieves the list of subscribed webhooks."""
+        """Retrieves the complete list of subscribed webhooks."""
         url = f"{self._api_url}/organizations/{self._organization_id}/workspaces/{self._workspace_id}/webhook-subscriptions"
-        response = requests.get(url, headers=self._api_header)
-        response.raise_for_status()
-        return response.json()
+        all_webhooks = []
+        page_token = None
+
+        while True:
+            params = {"pageToken": page_token} if page_token else {}
+            response = requests.get(url, headers=self._api_header, params=params)
+            response.raise_for_status()
+            data = response.json()
+            
+            all_webhooks.extend(data.get("results", []))
+            
+            page_token = data.get("nextPageToken")
+            if not page_token:
+                break
+
+        return {"results": all_webhooks}
 
     def _delete_webhook(self, webhook_id: str) -> None:
         """Deletes a Bird webhook given a webhook id."""

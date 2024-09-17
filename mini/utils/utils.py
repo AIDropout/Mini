@@ -62,8 +62,9 @@ def get_infostring() -> str:
 
 
 def log_error_to_discord(identifier_key: str, identifier_value) -> str:
+    environment = config.ENVIRONMENT.upper()
     error_traceback = traceback.format_exc()
-    msg = f"⚠️__**ERROR**__⚠️\n-# {get_infostring()} 🏷️ {identifier_key}={identifier_value}\n```{error_traceback}```"
+    msg = f"⚠️__**{environment} ERROR**__⚠️\n-# {get_infostring()} 🏷️ {identifier_key}={identifier_value}\n```{error_traceback}```"
     discord_manager.send_message_to_channel(
         msg, config.DISCORD_CONFIG.server_status_webhook_url
     )
