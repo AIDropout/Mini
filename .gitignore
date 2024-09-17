@@ -18,9 +18,6 @@ venv
 ignore
 app.log
 
-temp.py
-calls.py
-
 # Ignore Celery-related files
 celery@*
 

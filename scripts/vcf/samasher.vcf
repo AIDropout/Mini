@@ -1,0 +1,14 @@
+BEGIN:VCARD
+VERSION:4.0
+N:Asher;Sam;;;
+FN:Sam Asher
+ORG:mini AI
+TITLE:boyfriend
+PHOTO;MEDIATYPE=image/webp:https://i.ibb.co/ky5tx3H/sam.webp
+TEL;TYPE=CELL:+1-555-123-4567
+ADR;TYPE=work;made at="University Avenue and Oxford St\nBerkeley, CA 94720\nUSA":;;University Avenue and Oxford St;Berkeley;CA;94720;USA
+EMAIL:theoluut@usc.edu
+URL:https://www.textmini.com
+NOTE:Friendly, chill, and smart
+REV:20240917T195243Z
+END:VCARD
