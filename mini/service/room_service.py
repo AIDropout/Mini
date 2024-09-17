@@ -10,6 +10,7 @@ from mini.manager.messaging import BirdManager
 from mini.manager.payment import CustomerManager
 from mini.service.base import Service
 from mini.service.user_service import UserService
+from mini.utils.vcf import get_or_create_contact_card
 
 logger = get_logger(__name__)
 
@@ -45,7 +46,21 @@ class RoomService(Service):
             # Send the first message
             self.messaging_manager.set_receiver(user.phone_number)
             self.messaging_manager.set_sender(agent.bird_channel_id)
-            self.messaging_manager.send_message(text=agent.first_message)
+
+            # Get agent phone number
+            channel = self.database_manager.get_row(
+                Tables.CHANNELS,
+                {Tables.CHANNELS__id: agent.bird_channel_id},
+            )
+
+            file_url = get_or_create_contact_card(
+                agent=agent, agent_phone_number=channel.phone_number
+            )
+
+            # Send file
+            self.messaging_manager.send_message(
+                text=agent.first_message, files=[(file_url, "text/vcard")]
+            )
 
             # Create a new room
             new_room = self.database_manager.insert(

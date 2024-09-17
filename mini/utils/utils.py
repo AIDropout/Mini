@@ -12,6 +12,12 @@ import traceback
 from mini.core.logger import get_logger
 from mini.manager.messaging import discord_manager
 
+import base64
+import requests
+from typing import Tuple
+from mini.storage import S3FileStore
+import uuid
+
 
 logger = get_logger(__name__)
 
@@ -69,3 +75,19 @@ def log_error_to_discord(identifier_key: str, identifier_value) -> str:
         msg, config.DISCORD_CONFIG.server_status_webhook_url
     )
     return msg
+
+
+def encode_image_url_to_base64(image_url: str) -> str:
+    """Download image from URL and encode to base64."""
+    response = requests.get(image_url)
+    if response.status_code == 200:
+        return base64.b64encode(response.content).decode("utf-8")
+    else:
+        raise Exception(f"Failed to download image from URL: {image_url}")
+
+
+def upload_file(path: str, content: str, content_type: str) -> Tuple[str, str]:
+    """Upload file content to S3 and return the URL and content type."""
+    fs = S3FileStore()
+    fs.write(path, content.encode("utf-8"), content_type)
+    return fs.generate_presigned_url(path, content_type)

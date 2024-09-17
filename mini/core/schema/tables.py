@@ -27,6 +27,14 @@ class Tables(str, Enum):
     AGENTS__prompt_rules = "prompt_rules"
     AGENTS__prompt_moods = "prompt_moods"
 
+    CHANNELS = "channels"
+    CHANNELS__id = "id"
+    CHANNELS__created_at = "created_at"
+    CHANNELS__phone_number = "phone_number"
+    CHANNELS__agent_id = "agent_id"
+    CHANNELS__note = "note"
+    CHANNELS__name = "name"
+
     USERS = "users"
     USERS__id = "id"
     USERS__created_at = "created_at"
@@ -102,6 +110,15 @@ class Agent(BaseModel):
     prompt_role: str
     prompt_rules: List[str]
     prompt_moods: List[str]
+
+
+class Channel(BaseModel):
+    id: str = Field(default_factory=generate_uuid)
+    created_at: datetime = Field(default_factory=utc_now)
+    phone_number: str
+    agent_id: Optional[str]
+    note: Optional[str]
+    name: str
 
 
 class User(BaseModel):
@@ -184,10 +201,11 @@ class Schedule(BaseModel):
     complete: bool = Field(default=False)
 
 
-TableModel = Union[User, Agent, Room, Message, Schedule, Subscription]
+TableModel = Union[User, Agent, Channel, Room, Message, Schedule, Subscription]
 TABLE_MODEL_MAP = {
     Tables.USERS: User,
     Tables.AGENTS: Agent,
+    Tables.CHANNELS: Channel,
     Tables.ROOMS: Room,
     Tables.MESSAGES: Message,
     Tables.SCHEDULE: Schedule,
