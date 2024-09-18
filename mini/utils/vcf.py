@@ -25,6 +25,7 @@ FN:{agent.name}
 ORG:{"mini"}
 PHOTO;ENCODING=BASE64;TYPE=JPEG:{base64_image}
 TEL;TYPE=CELL:{agent_phone_number}
+URL:{"https://textmini.com"}
 END:VCARD
 """
 
