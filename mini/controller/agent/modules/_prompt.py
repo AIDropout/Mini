@@ -16,6 +16,8 @@ class ResponseFormat(BaseModel):
 
 
 class PromptModule(AgentModule):
+    """Builds the prompt for Agent responses."""
+
     def __init__(
         self,
         database_manager: DatabaseManager,

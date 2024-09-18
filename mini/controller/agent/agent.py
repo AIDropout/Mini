@@ -5,7 +5,12 @@ from config.config import config
 from mini.controller.agent.modules.action import ActionModule
 from mini.controller.agent.modules.intent.filter import FilterModule
 from mini.controller.agent.modules.memory import MemoryModule
-from mini.controller.agent.modules.prompt import PromptModule
+from mini.controller.agent.modules.prompt import (
+    AgentPromptModule,
+    BasePromptModule,
+    ChatMessage,
+    RoleplayPromptModule,
+)
 from mini.controller.agent.modules.subscribe import SubscribeModule
 from mini.controller.agent.modules.vision import VisionModule
 from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
@@ -30,7 +35,7 @@ class AgentService(Service):
         subscribe_module: SubscribeModule,
         filter_module: FilterModule,
         vision_module: VisionModule,
-        prompt_module: PromptModule,
+        prompt_module: BasePromptModule,
     ) -> None:
         super().__init__(database_manager)
         self.cancel_manager = cancel_manager
@@ -43,7 +48,14 @@ class AgentService(Service):
         self.subscribe = subscribe_module
         self.filter = filter_module
         self.vision = vision_module
-        self.prompt = prompt_module
+        self.agent_prompt = AgentPromptModule(
+            database_manager=prompt_module.database_manager,
+            time_manager=prompt_module.time_manager,
+        )
+        self.roleplay_prompt = RoleplayPromptModule(
+            database_manager=prompt_module.database_manager,
+            time_manager=prompt_module.time_manager,
+        )
 
     def configure(
         self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room
@@ -55,7 +67,8 @@ class AgentService(Service):
             self.subscribe,
             self.action,
             self.vision,
-            self.prompt,
+            self.agent_prompt,
+            self.roleplay_prompt,
         ]:
             module.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
@@ -70,15 +83,17 @@ class AgentService(Service):
                 if not self._should_continue_conversation():
                     return True
 
-            response = self._generate_response(task)
+            response, roleplay = self._generate_response(task)
+            text_response = f"**{roleplay}**\n\n{response}"
+
             if self._is_task_cancelled(task):
                 return False
 
-            success = self.action.send_message(text=response)
+            success = self.action.send_message(text=text_response)
             el.log(f"BIRD SMS SENT: {success}")
 
             if success:
-                self._handle_successful_send(task.type, response)
+                self._handle_successful_send(task.type, text_response)
 
             return True
         except Exception:
@@ -99,24 +114,47 @@ class AgentService(Service):
 
     def _generate_response(
         self, task: Union[RespondTask, RemindTask, ReviveTask]
-    ) -> str:
+    ) -> tuple[str, str]:
         all_recent_messages = self.memory.get_recent_messages(
             count=task.recent_message_count
         )
         el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
-        system_prompt = self.prompt.build_prompt(
-            relevant_memories="", chat_history=all_recent_messages
-        )
-        el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
+        chat_history = [
+            ChatMessage(role=msg["role"], content=msg["content"])
+            for msg in all_recent_messages
+        ]
 
-        response_text = self.action.generate_message(
-            [], system_prompt, self.prompt.response_format
+        # ROLEPLAY
+        roleplay_system_prompt = self.roleplay_prompt.build_prompt(
+            relevant_memories="", chat_history=chat_history
         )
-        el.log(f"MAIN LLM RESPONSE: {response_text}")
+        el.log(f"SYSTEM PROMPT FOR ROLEPLAY: {roleplay_system_prompt}")
 
-        response = json.loads(response_text).get("best_response", "")
-        return self.filter.process_message(all_recent_messages, response)
+        roleplay_response_text = self.action.generate_message(
+            [], roleplay_system_prompt, self.roleplay_prompt.response_format
+        )
+        el.log(f"ROLEPLAY LLM RESPONSE: {roleplay_response_text}")
+        roleplay_response = json.loads(roleplay_response_text).get("best_response", "")
+
+        # AGENT
+        agent_system_prompt = self.agent_prompt.build_prompt(
+            relevant_memories="",
+            chat_history=chat_history,
+            roleplay=roleplay_response,
+        )
+        el.log(f"SYSTEM PROMPT FOR AGENT: {agent_system_prompt}")
+
+        agent_response_text = self.action.generate_message(
+            [], agent_system_prompt, self.agent_prompt.response_format
+        )
+        el.log(f"AGENT LLM RESPONSE: {agent_response_text}")
+
+        response = json.loads(agent_response_text).get("best_response", "")
+        return (
+            self.filter.process_message(all_recent_messages, response),
+            roleplay_response,
+        )
 
     def _is_task_cancelled(
         self, task: Union[RespondTask, RemindTask, ReviveTask]

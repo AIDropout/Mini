@@ -162,7 +162,7 @@ class Container:
         from mini.controller.agent.modules.intent.filter import FilterModule
         from mini.controller.agent.modules.intent.intent import Confidence, IntentConfig
         from mini.controller.agent.modules.memory import MemoryModule
-        from mini.controller.agent.modules.prompt import PromptModule
+        from mini.controller.agent.modules.prompt import BasePromptModule
         from mini.controller.agent.modules.subscribe import SubscribeModule
         from mini.controller.agent.modules.vision import VisionModule
 
@@ -204,7 +204,7 @@ class Container:
             llm_manager=vision_llm_man,
         )
 
-        prompt_module = PromptModule(
+        prompt_module = BasePromptModule(
             database_manager=self.database_manager,
             time_manager=self.time_manager,
         )
