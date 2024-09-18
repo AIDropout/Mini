@@ -30,7 +30,7 @@ class BasePromptModule(AgentModule):
 
         self._role = "not set yet"
         self._rules = "not set yet"
-        self._moods = "not set yet"
+        self._moods = ["not set yet"]
         self._is_subscribed = "not set yet"
         self._return_hint = {}
 
