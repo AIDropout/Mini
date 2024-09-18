@@ -5,12 +5,10 @@ from minio import Minio
 
 from config.config import config
 
-from .files import FileStore
-
 AWS_S3_ENDPOINT = "s3.amazonaws.com"
 
 
-class S3FileStore(FileStore):
+class S3FileStore:
     def __init__(self, endpoint: str = AWS_S3_ENDPOINT) -> None:
         access_key = config.AWS_S3_CONFIG.access_key
         secret_key = config.AWS_S3_CONFIG.secret_access_key

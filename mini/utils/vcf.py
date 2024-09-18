@@ -1,7 +1,7 @@
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Agent
-from mini.utils.utils import encode_image_url_to_base64, upload_file
 from mini.storage import S3FileStore
+from mini.utils.utils import encode_image_url_to_base64
 
 logger = get_logger(__name__)
 
