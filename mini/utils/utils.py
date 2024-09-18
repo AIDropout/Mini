@@ -1,23 +1,19 @@
-from datetime import datetime
-from zoneinfo import ZoneInfo
-import re
 import asyncio
+import base64
+import re
 import subprocess
+import traceback
+from datetime import datetime, timezone
+from typing import Tuple
+from zoneinfo import ZoneInfo
+
+import requests
 from pyngrok import ngrok
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.manager.messaging import BirdManager, TelegramManager
-import traceback
-from mini.core.logger import get_logger
-from mini.manager.messaging import discord_manager
-
-import base64
-import requests
-from typing import Tuple
+from mini.manager.messaging import BirdManager, TelegramManager, discord_manager
 from mini.storage import S3FileStore
-import uuid
-
 
 logger = get_logger(__name__)
 
@@ -91,3 +87,7 @@ def upload_file(path: str, content: str, content_type: str) -> Tuple[str, str]:
     fs = S3FileStore()
     fs.write(path, content.encode("utf-8"), content_type)
     return fs.generate_presigned_url(path, content_type)
+
+
+def utc_now():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"

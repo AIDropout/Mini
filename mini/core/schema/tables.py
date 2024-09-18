@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
-from mini.utils.time import utc_now
+from mini.utils.utils import utc_now
 
 
 class Tables(str, Enum):

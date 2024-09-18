@@ -19,8 +19,7 @@ from mini.manager.llm import LLMManager
 from mini.manager.messaging import MessagingManager, discord_manager
 from mini.server.cancel import CancelManager
 from mini.service.base import Service
-from mini.utils.time import utc_now
-from mini.utils.utils import log_error_to_discord
+from mini.utils.utils import log_error_to_discord, utc_now
 
 
 class AgentService(Service):
