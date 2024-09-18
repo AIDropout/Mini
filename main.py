@@ -1,7 +1,13 @@
+"""
+Main entry point for the fastapi application.
+Sets up the application with its routes, middleware, and event handlers.
+"""
+
 import asyncio
 import subprocess
 from contextlib import asynccontextmanager
 
+import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pyngrok import ngrok
@@ -16,8 +22,8 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Life cycle of FastAPI server"""
+async def lifespan(_: FastAPI):
+    """Life cycle of FastAPI server."""
     redis_manager = RedisManager()
     redis_manager.initialize()
 
@@ -37,7 +43,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    subprocess.run(["pkill", "-f", "celery"])
+    subprocess.run(["pkill", "-f", "celery"], check=False)
     ngrok.kill()
     redis_manager.close()
 
@@ -61,13 +67,13 @@ async def log_requests(request: Request, call_next):
     is_stripe_request = "Stripe" in request.headers.get("User-Agent", "")
 
     # Log the basic request info
-    logger.info(f"{request.method} {request.url}")
+    logger.info("%s %s", request.method, request.url)
 
     if not is_stripe_request:
         # Log additional request details if not from Stripe
-        logger.info(f"Headers: {request.headers}")
+        logger.info("Headers: %s", request.headers)
         body = await request.body()
-        logger.info(f"Body: {body.decode()}")
+        logger.info("Body: %s", body.decode())
 
     response = await call_next(request)
 
@@ -75,16 +81,20 @@ async def log_requests(request: Request, call_next):
 
 
 def run_app():
-    LOCAL_URL = "127.0.0.1"
-    PORT = 8000
-    USE_GUNICORN = False
+    """
+    Main entry point for starting the FastAPI server.
+    This function configures webhooks for the server and starts the FastAPI server.
+    """
+    local_url = "127.0.0.1"
+    port = 8000
+    use_gunicorn = False
 
-    asyncio.run(configure_local_webhooks(f"{LOCAL_URL}:{PORT}"))
+    asyncio.run(configure_local_webhooks(f"{local_url}:{port}"))
 
     # Stops all existing servers
-    stop_existing_processes(PORT)
+    stop_existing_processes(port)
 
-    if USE_GUNICORN:
+    if use_gunicorn:
         # Start Gunicorn server
         gunicorn_command = [
             "gunicorn",
@@ -94,14 +104,12 @@ def run_app():
             "uvicorn.workers.UvicornWorker",
             "main:app",
             "--bind",
-            f"{LOCAL_URL}:{PORT}",
+            f"{local_url}:{port}",
         ]
         subprocess.Popen(gunicorn_command)
     else:
         # Start Uvicorn server
-        import uvicorn
-
-        uvicorn.run("main:app", host=LOCAL_URL, port=PORT, reload=True)
+        uvicorn.run("main:app", host=local_url, port=port, reload=True)
 
 
 if __name__ == "__main__":
