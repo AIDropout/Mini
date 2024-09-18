@@ -48,77 +48,80 @@ class AgentService(Service):
     def configure(
         self, messaging_manager: MessagingManager, agent: Agent, user: User, room: Room
     ) -> None:
-        """Sets room details for the agent and its modules"""
-
-        self.agent = agent
-        self.user = user
-        self.room = room
-        self.memory.configure(room, agent, user)
-        self.filter.configure(room, agent, user)
-        self.subscribe.configure(room, agent, user)
-        self.action.configure(room, agent, user)
-        self.vision.configure(room, agent, user)
-        self.prompt.configure(room, agent, user)
+        self.agent, self.user, self.room = agent, user, room
+        for module in [
+            self.memory,
+            self.filter,
+            self.subscribe,
+            self.action,
+            self.vision,
+            self.prompt,
+        ]:
+            module.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
     def handle_chat_task(
         self, task: Union[RespondTask, RemindTask, ReviveTask]
     ) -> bool:
-        """Core logic for generates and sending message"""
-
         el.log(f"TASK: {task}")
-
         try:
             if isinstance(task, RespondTask):
-                # (The user's message has already been stored to db.)
-                if len(task.user_message.media_urls) > 0:
-                    task = self._handle_image(task)
-
-                el.log(
-                    f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}"
-                )
-
-                result = self.subscribe.should_continue_conversation()
-                self.logger.info(f"Room subscription status: {repr(result)}")
-
-                if not result.continue_conversation:
+                task = self._handle_respond_task(task)
+                if not self._should_continue_conversation():
                     return True
 
-            all_recent_messages = self.memory.get_recent_messages(
-                count=task.recent_message_count
-            )
-            el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
-
-            system_prompt = self.prompt.build_prompt(
-                relevant_memories="", chat_history=all_recent_messages
-            )
-            el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
-
-            if self.cancel_manager.newer_task_found(self.room.id, task.id):
+            response = self._generate_response(task)
+            if self._is_task_cancelled(task):
                 return False
 
-            response_format = self.prompt.response_format
-            response_text = self.action.generate_message(
-                [], system_prompt, response_format
-            )
-            el.log(f"MAIN LLM RESPONSE: {response_text}")
-
-            response = json.loads(response_text).get("best_response", "")
-            final_message = self.filter.process_message(all_recent_messages, response)
-
-            if self.cancel_manager.newer_task_found(self.room.id, task.id):
-                return False
-
-            success = self.action.send_message(text=final_message)
+            success = self.action.send_message(text=response)
             el.log(f"BIRD SMS SENT: {success}")
 
             if success:
-                self._handle_successful_send(task.type, final_message)
+                self._handle_successful_send(task.type, response)
 
+            return True
         except Exception:
             msg = log_error_to_discord("task_id", task.id)
             el.log(msg)
             return False
+
+    def _handle_respond_task(self, task: RespondTask) -> RespondTask:
+        if task.user_message.media_urls:
+            task = self._handle_image(task)
+        el.log(f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}")
+        return task
+
+    def _should_continue_conversation(self) -> bool:
+        result = self.subscribe.should_continue_conversation()
+        self.logger.info(f"Room subscription status: {repr(result)}")
+        return result.continue_conversation
+
+    def _generate_response(
+        self, task: Union[RespondTask, RemindTask, ReviveTask]
+    ) -> str:
+        all_recent_messages = self.memory.get_recent_messages(
+            count=task.recent_message_count
+        )
+        el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
+
+        system_prompt = self.prompt.build_prompt(
+            relevant_memories="", chat_history=all_recent_messages
+        )
+        el.log(f"SYSTEM PROMPT FOR AGENT: {system_prompt}")
+
+        response_text = self.action.generate_message(
+            [], system_prompt, self.prompt.response_format
+        )
+        el.log(f"MAIN LLM RESPONSE: {response_text}")
+
+        response = json.loads(response_text).get("best_response", "")
+        return self.filter.process_message(all_recent_messages, response)
+
+    def _is_task_cancelled(
+        self, task: Union[RespondTask, RemindTask, ReviveTask]
+    ) -> bool:
+        return self.cancel_manager.newer_task_found(self.room.id, task.id)
 
     def _handle_image(self, task: RespondTask) -> RespondTask:
         try:
@@ -127,13 +130,16 @@ class AgentService(Service):
         except VisionError:
             task.user_message.content += (
                 "\n\nUser sent an image, but due to some error your phone "
-                "is not recieving images currently."
+                "is not receiving images currently."
             )
-
         return task
 
     def _handle_successful_send(self, task_type: str, final_message: str):
-        """Adds agent message to DB & updates Rooms table"""
+        self._add_message_to_db(task_type, final_message)
+        self._log_to_discord(final_message)
+        self._update_room_last_message_time()
+
+    def _add_message_to_db(self, task_type: str, final_message: str):
         self.database_manager.insert(
             Tables.MESSAGES,
             Message(
@@ -145,13 +151,14 @@ class AgentService(Service):
             ),
         )
 
-        # Log agent message to discord
+    def _log_to_discord(self, final_message: str):
         if config.ENVIRONMENT == "production":
             discord_manager.send_message_to_channel(
                 message=f"-# {self.agent.name} -> {self.user.phone_number}: {final_message}",
                 channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1",
             )
 
+    def _update_room_last_message_time(self):
         self.database_manager.update(
             Tables.ROOMS,
             {Tables.ROOMS__agent_last_msg_sent_at: utc_now()},
