@@ -4,7 +4,7 @@ from config.config import config
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.manager.database import DatabaseManager
-from mini.manager.llm import LLMManager, LLMService, Model
+from mini.manager.llm import LLMService, Model
 from mini.manager.memory import MemoryManager
 from mini.manager.messaging import MessagingManagerFactory
 from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
@@ -189,16 +189,14 @@ class Container:
                 confidence_threshold=Confidence.HIGH,
                 enabled=True,
             ),
-            llm_manager=LLMManager(
-                llm_name=config.ACTION_MANAGER_LLM,
-                llm_provider=config.ACTION_MANAGER_LLM_PROVIDER,  # Configure a Filter LLM
+            llm_manager=LLMService(
+                model=Model.from_model_name(config.ACTION_MANAGER_LLM)
             ),
         )
 
         # TODO: temp using openai creds in a weird way, much change!!
-        vision_llm_man = LLMManager(
-            llm_name=config.VISION_MANAGER_LLM,
-            llm_provider=config.VISION_MANAGER_LLM_PROVIDER,
+        vision_llm_man = LLMService(
+            model=Model.from_model_name(config.VISION_MANAGER_LLM)
         )
         vision_llm_man.api_key = config.MEMORY_EMBEDDINGS_CONFIG.api_key
         vision_module = VisionModule(

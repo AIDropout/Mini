@@ -1,19 +1,18 @@
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union, cast
 from uuid import uuid4
 
 import litellm
-# import weave
-from litellm import completion, speech
+from litellm import CustomStreamWrapper, completion
 from litellm.types.utils import ModelResponse
 from litellm.utils import get_supported_openai_params, supports_vision
+from pydantic import BaseModel
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.storage.s3 import S3FileStore
 
 from .models import Model
 from .provider import Provider
-from .utils import execute_with_retry, parse_content
+from .utils import execute_with_retry
 
 logger = get_logger(__name__)
 
@@ -36,7 +35,6 @@ class LLMService:
         self.supports_vision = self._check_vision_support()
         self.cost_tracking_callback = cost_tracking_callback
         litellm.success_callback = [self._success_callback]
-        # weave.init("aibf_dev")
 
     def _success_callback(
         self,
@@ -62,12 +60,12 @@ class LLMService:
         }
         return key_mapping.get(self.provider)
 
-    # @weave.op()
     def generate_response(
         self,
         messages: List[Dict[str, str]],
         system_prompt: str,
         json_mode: Optional[bool] = False,
+        response_format: Optional[BaseModel] = None,
         **kwargs,
     ) -> Union[str, Dict]:
         """Generate a response using the specified model."""
@@ -76,6 +74,11 @@ class LLMService:
 
         if json_mode and self.supports_json:
             kwargs["response_format"] = {"type": "json_object"}
+        else:
+            litellm.enable_json_schema_validation = True
+
+        if response_format and self.supports_json:
+            kwargs["response_format"] = response_format
 
         completion_kwargs = {
             "api_key": self.api_key,
@@ -83,18 +86,11 @@ class LLMService:
             "messages": prepared_messages,
             **kwargs,
         }
-        content: ModelResponse = execute_with_retry(completion, **completion_kwargs)
-        generated_message: str = content.choices[0].message.content
-
-        return parse_content(
-            generated_message,
-            completion_kwargs.get("response_format", None),
+        content: ModelResponse | CustomStreamWrapper = execute_with_retry(
+            completion, **completion_kwargs
         )
-
-    def generate_speech(self, text: str, voice: str) -> tuple:
-        """Generate speech and upload to S3."""
-        audio_content = speech(model=self.model_name, voice=voice, input=text).content
-        return self._upload_audio(audio_content)
+        generated_message: str | None = content.choices[0].message.content
+        return generated_message
 
     def describe_images(self, system_prompt: str, image_urls: List[str]) -> str:
         """Generate descriptions for images."""
@@ -109,7 +105,7 @@ class LLMService:
                 ],
             },
         ]
-        return self.generate_response(messages, system_prompt)
+        return cast(str, self.generate_response(messages, system_prompt))
 
     def _prepare_messages(self, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
         """Prepare messages by combining consecutive user messages."""
@@ -122,15 +118,6 @@ class LLMService:
         if prepared and prepared[-1]["role"] == "assistant":
             prepared.append({"role": "user", "content": "[ignore]"})
         return prepared
-
-    def _upload_audio(self, audio_content: bytes) -> tuple:
-        """Upload audio content to S3 and return URL."""
-        fs = S3FileStore()
-        fs.write(self.s3_file_prefix, audio_content, self.audio_content_type)
-        return (
-            fs.generate_presigned_url(self.s3_file_prefix, self.audio_content_type),
-            self.audio_content_type,
-        )
 
     def _check_json_support(self) -> bool:
         """Check if the model supports JSON mode."""

@@ -1,6 +1,8 @@
 import json
 from typing import Any, Dict, List, Optional, Union
 
+from pydantic import BaseModel
+
 from mini.controller.agent.modules.intent.intent import (
     Confidence,
     IntentConfig,
@@ -9,7 +11,7 @@ from mini.controller.agent.modules.intent.intent import (
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import LLMResponseParsingError
 from mini.core.logger import get_logger
-from mini.manager.llm import LLMManager
+from mini.manager.llm import LLMService
 
 logger = get_logger(__name__)
 
@@ -53,7 +55,7 @@ class FilterModule(IntentDetector):
         enabled: bool,
         message_input_count: int,
         confidence_threshold: Confidence,
-        llm_manager: LLMManager,
+        llm_manager: LLMService,
     ):
         super().__init__(
             enabled=enabled,
@@ -63,7 +65,7 @@ class FilterModule(IntentDetector):
         )
 
     @classmethod
-    def from_config(cls, config: IntentConfig, llm_manager: LLMManager):
+    def from_config(cls, config: IntentConfig, llm_manager: LLMService):
         enabled = config.enabled
         message_input_count = config.message_input_count
         confidence_threshold = config.confidence_threshold
@@ -84,6 +86,10 @@ class FilterModule(IntentDetector):
 
         """Filters the new agent message"""
 
+        class OutputFormat(BaseModel):
+            confidence: str
+            proposed_message: str
+
         output_format = json.dumps(
             {"confidence": "HIGH", "proposed_message": ""}, indent=2
         )
@@ -95,12 +101,13 @@ class FilterModule(IntentDetector):
             output_format=output_format,
         )
 
-        response = self.llm_manager.generate_response(
+        response: str = self.llm_manager.generate_response(
             messages=[{"role": "user", "content": input_text}],
             system_prompt=system_prompt,
-            json_mode=True,
+            response_format=OutputFormat,
         )
         try:
+            response = json.loads(response)
             confidence = response["confidence"].upper()
             proposed_message = response["proposed_message"]
             approved = Confidence(confidence) >= self.confidence_threshold

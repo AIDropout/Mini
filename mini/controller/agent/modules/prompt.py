@@ -1,10 +1,18 @@
 import json
 from typing import Dict, List
 
+from pydantic import BaseModel
+
 from mini.controller.agent.modules.base import AgentModule
-from mini.core.schema.tables import Agent, Room, Tables, User
+from mini.core.schema.tables import Agent, Room, User
 from mini.manager.database import DatabaseManager
 from mini.manager.time import TimeManager
+
+
+class ResponseFormat(BaseModel):
+    responses: list[str]
+    best_response: str
+    reasoning: str
 
 
 class PromptModule(AgentModule):
@@ -17,11 +25,6 @@ class PromptModule(AgentModule):
         self.time_manager = time_manager
         self.database_manager = database_manager
 
-        self.count_messages = self.database_manager.count_rows(
-            table_name=Tables.MESSAGES
-        )
-        self.days_since_last_seen = 0  # TODO
-
         # set on configure
         self.is_subscribed = False
         self.role: str = ""
@@ -33,16 +36,23 @@ class PromptModule(AgentModule):
         super().configure(room, agent, user)
         self._load_agent_data()
 
+    @property
+    def response_format(self):
+
+        return ResponseFormat
+
     def _load_agent_data(self) -> None:
         self.role = self.agent.prompt_role
         self.rules = self.agent.prompt_rules
         self.moods = self.agent.prompt_moods
 
-        self.agent_return_hint = {
-            "responses": self._response_moods(),
-            "best_response": "insert the best response here",
-            "reasoning": "adjectives describing reasoning for the best response",
-        }
+        response_format = ResponseFormat(
+            responses=self._response_moods(),
+            best_response="insert the best response here",
+            reasoning="adjectives describing reasoning for the best response",
+        )
+
+        self.agent_return_hint = response_format.model_dump()
 
         self.is_subscribed = self.user.is_subscribed
 
@@ -65,7 +75,6 @@ class PromptModule(AgentModule):
         return f"""
         **METADATA:**
 
-        - Days since last interaction: {self.days_since_last_seen}
         - Time: {self.time_manager.current_readable_time()}
         - Here are relevant memories:
         {relevant_memories}

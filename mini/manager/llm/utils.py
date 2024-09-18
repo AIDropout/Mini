@@ -1,6 +1,3 @@
-import json
-import re
-
 from litellm.exceptions import RateLimitError
 from tenacity import (
     retry,
@@ -9,7 +6,6 @@ from tenacity import (
     wait_exponential,
 )
 
-from mini.core.exceptions import MessageParsingError
 from mini.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -31,20 +27,3 @@ def execute_with_retry(func, *args, **kwargs):
     except Exception as e:
         logger.error("Unexpected error after multiple retries: %s", e)
         raise
-
-
-def parse_content(content: str, response_format: dict | None = None):
-    """Parse the content based on the response format."""
-    if content and response_format and response_format.get("type", "") == "json_object":
-
-        start_index = content.find("{")
-        end_index = content.rfind("}") + 1
-        cleaned_output = content[start_index:end_index].strip()
-        cleaned_output = re.sub(r"\n|\r", "", cleaned_output)
-        cleaned_output = re.sub(r"\s+", " ", cleaned_output)
-
-        try:
-            return json.loads(cleaned_output)
-        except json.JSONDecodeError as e:
-            raise MessageParsingError(f"Invalid JSON output: {content}") from e
-    return content

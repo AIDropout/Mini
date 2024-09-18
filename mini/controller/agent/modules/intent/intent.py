@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 from mini.controller.agent.modules.base import AgentModule
-from mini.manager.llm import LLMManager
+from mini.manager.llm import LLMService
 
 
 class Confidence(str, Enum):
@@ -25,7 +25,7 @@ class IntentConfig(BaseModel):
 class IntentDetector(AgentModule):
     def __init__(
         self,
-        llm_manager: LLMManager,
+        llm_manager: LLMService,
         enabled: bool,
         message_input_count: int,
         confidence_threshold: Confidence = Confidence.MEDIUM,

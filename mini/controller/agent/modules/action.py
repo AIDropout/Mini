@@ -1,5 +1,7 @@
 from typing import Dict, List, Optional, Tuple
 
+from pydantic import BaseModel
+
 from mini.controller.agent.modules.base import AgentModule
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Tables
@@ -22,8 +24,11 @@ class ActionModule(AgentModule):
         self,
         messages: List[Dict[str, str]],
         system_prompt: Optional[str],
+        response_format: Optional[BaseModel] = None,
     ) -> str:
-        return self.llm_manager.generate_response(messages, system_prompt)
+        return self.llm_manager.generate_response(
+            messages, system_prompt, json_mode=True, response_format=response_format
+        )
 
     def send_message(
         self,
