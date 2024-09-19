@@ -84,7 +84,7 @@ class AgentService(Service):
                     return True
 
             response, roleplay = self._generate_response(task)
-            text_response = f"**{roleplay}**\n\n{response}"
+            text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
             if self._is_task_cancelled(task):
                 return False
@@ -125,19 +125,23 @@ class AgentService(Service):
             for msg in all_recent_messages
         ]
 
-        # ROLEPLAY
-        roleplay_system_prompt = self.roleplay_prompt.build_prompt(
-            relevant_memories="", chat_history=chat_history
-        )
-        el.log(f"SYSTEM PROMPT FOR ROLEPLAY: {roleplay_system_prompt}")
+        # ROLEPLAY MESSAGE
+        roleplay_response = ""
+        if self.agent.allow_roleplay:
+            roleplay_system_prompt = self.roleplay_prompt.build_prompt(
+                relevant_memories="", chat_history=chat_history
+            )
+            el.log(f"SYSTEM PROMPT FOR ROLEPLAY: {roleplay_system_prompt}")
 
-        roleplay_response_text = self.action.generate_message(
-            [], roleplay_system_prompt, self.roleplay_prompt.response_format
-        )
-        el.log(f"ROLEPLAY LLM RESPONSE: {roleplay_response_text}")
-        roleplay_response = json.loads(roleplay_response_text).get("best_response", "")
+            roleplay_response_text = self.action.generate_message(
+                [], roleplay_system_prompt, self.roleplay_prompt.response_format
+            )
+            el.log(f"ROLEPLAY LLM RESPONSE: {roleplay_response_text}")
+            roleplay_response = json.loads(roleplay_response_text).get(
+                "best_response", ""
+            )
 
-        # AGENT
+        # AGENT MESSAGE
         agent_system_prompt = self.agent_prompt.build_prompt(
             relevant_memories="",
             chat_history=chat_history,
