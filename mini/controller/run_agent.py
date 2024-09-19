@@ -4,7 +4,7 @@ from typing import Literal
 from celery import shared_task
 
 from config.container import container
-from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
+from mini.controller.task import RemindTask, RespondTask, ReviveTask
 from mini.core.logger import get_logger
 from mini.core.schema.task import TaskType
 from mini.utils.utils import log_error_to_discord
@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 @shared_task(bind=True, max_retries=2)
-def process_task(
+def run_agent(
     self,
     room_id: str,
     task_id: str,

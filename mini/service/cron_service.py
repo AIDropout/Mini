@@ -3,8 +3,7 @@ import random
 from datetime import datetime, timedelta, timezone
 
 from config.config import config
-from mini.controller.task.task_scheduler import SchedulerService
-from mini.controller.task.task_types import ReviveTask
+from mini.controller.task import ReviveTask
 from mini.core.logger import get_logger
 from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Message, Room, Tables, User
@@ -28,7 +27,11 @@ class CronService(Service):
             max_rows=100,
             order_by="id",
             order_desc=False,
-            conditions={Tables.AGENTS__bird_channel_id: config.BIRD_DEV_CHANNEL_ID} if dev_mode else None,
+            conditions=(
+                {Tables.AGENTS__bird_channel_id: config.BIRD_DEV_CHANNEL_ID}
+                if dev_mode
+                else None
+            ),
         )
 
         for agent in agents:

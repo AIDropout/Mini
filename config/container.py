@@ -147,15 +147,6 @@ class Container:
             context_factory=self.get_context_factory(),
         )
 
-    def get_scheduler_service(self):
-        from mini.controller.task.task_scheduler import SchedulerService
-
-        return SchedulerService(
-            database_manager=self.database_manager,
-            redis_manager=self.get_redis_manager(),
-            cancel_manager=self.get_cancel_manager(),
-        )
-
     def get_agent_controller(self):
         from mini.controller.agent.agent import AgentService
         from mini.controller.agent.modules.action import ActionModule
@@ -230,7 +221,8 @@ class Container:
             database_manager=self.database_manager,
             messaging_manager_factory=self.get_messaging_manager_factory(),
             context_factory=self.get_context_factory(),
-            scheduler_service=self.get_scheduler_service(),
+            cancel_manager=self.get_cancel_manager(),
+            redis_manager=self.get_redis_manager(),
         )
 
 

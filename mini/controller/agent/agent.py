@@ -13,7 +13,7 @@ from mini.controller.agent.modules.prompt import (
 )
 from mini.controller.agent.modules.subscribe import SubscribeModule
 from mini.controller.agent.modules.vision import VisionModule
-from mini.controller.task.task_types import RemindTask, RespondTask, ReviveTask
+from mini.controller.task import RemindTask, RespondTask, ReviveTask
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
