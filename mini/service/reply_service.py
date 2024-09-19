@@ -10,16 +10,13 @@ from mini.service.base import Service
 from mini.service.context_factory import ContextFactory
 from mini.utils.utils import log_error_to_discord
 from datetime import datetime, timedelta
-from typing import Optional
 from uuid import uuid4
 
-from mini.controller.run_agent import run_agent
+from mini.controller.agent_controller import run_agent
 from mini.controller.task import RespondTask, TaskType
-from mini.core.schema.message import MiniMessage
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
 from mini.service.base import Service
-from mini.service.context_factory import Context
 
 logger = get_logger(__name__)
 
@@ -101,14 +98,14 @@ class ReplyService(Service):
             if self.cancel_manager.newer_task_found(room_id, task.id):
                 return
 
-            # Store task context in Redis
+            # Store task data in Redis
             self.redis_manager.set(
                 key=f"{room_id}:{task.id}",
                 value=task.model_dump_json(),
                 expiry=delay + 120,
             )
 
-            # Run agent in the background
+            # Run agent in the background using a Celery worker
             new_task = run_agent.apply_async(
                 args=[room_id, task.id, TaskType.RESPOND], countdown=delay
             )
