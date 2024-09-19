@@ -1,3 +1,4 @@
+from fastapi import BackgroundTasks
 import random
 
 from config.config import config
@@ -26,7 +27,7 @@ class ReplyService(Service):
         self.context_factory = context_factory
         self.scheduler_service = scheduler_service
 
-    def handle_respond(self, request_body: dict) -> None:
+    def handle_respond(self, request_body: dict, background_tasks: BackgroundTasks) -> None:
         context = None
         try:
             # Process request
@@ -64,9 +65,10 @@ class ReplyService(Service):
 
             # Log user message to discord
             if config.ENVIRONMENT == "production":
-                discord_manager.send_message_to_channel(
+                background_tasks.add_task(
+                    discord_manager.send_message_to_channel,
                     message=f"-# {context.user.phone_number} -> {context.agent.name}: {message.content}",
-                    channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1",
+                    channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1"
                 )
 
             # Calculate delay and schedule response

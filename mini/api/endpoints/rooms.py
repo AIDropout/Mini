@@ -4,6 +4,7 @@ from fastapi import (
     Depends,
     Path,
     Request,
+    BackgroundTasks
 )
 from typing import Annotated
 
@@ -53,11 +54,12 @@ def create_room(
 @router.post("/rooms/respond")
 async def respond_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     reply_service: ReplyServiceDep,
 ):
     """Endpoint hit by incoming user messages."""
     request_body = await request.json()
-    reply_service.handle_respond(request_body)
+    reply_service.handle_respond(request_body, background_tasks)
 
 
 @router.post("/rooms/admin-message")
