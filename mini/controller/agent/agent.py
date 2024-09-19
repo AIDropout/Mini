@@ -3,7 +3,7 @@ from typing import Union
 
 from config.config import config
 from mini.controller.agent.modules.action import ActionModule
-from mini.controller.agent.modules.intent.filter import FilterModule
+from mini.controller.agent.modules.filter.filter import MessageFilterModule
 from mini.controller.agent.modules.memory import MemoryModule
 from mini.controller.agent.modules.prompt import (
     AgentPromptModule,
@@ -33,7 +33,7 @@ class AgentService(Service):
         action_module: ActionModule,
         memory_module: MemoryModule,
         subscribe_module: SubscribeModule,
-        filter_module: FilterModule,
+        filter_module: MessageFilterModule,
         vision_module: VisionModule,
         prompt_module: BasePromptModule,
     ) -> None:
@@ -152,7 +152,7 @@ class AgentService(Service):
 
         response = json.loads(agent_response_text).get("best_response", "")
         return (
-            self.filter.process_message(all_recent_messages, response),
+            self.filter.validate_message(all_recent_messages, response),
             roleplay_response,
         )
 

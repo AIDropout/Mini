@@ -1,6 +1,4 @@
 import json
-
-# from abc import abstractmethod
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -34,7 +32,6 @@ class BasePromptModule(AgentModule):
         self._is_subscribed = "not set yet"
         self._return_hint = {}
 
-    # @abstractmethod
     def configure(self, room: Room, agent: Agent, user: User):
         super().configure(room, agent, user)
         self._load_data()
@@ -45,18 +42,17 @@ class BasePromptModule(AgentModule):
         self._moods = self.agent.prompt_moods
         self._is_subscribed = self.user.is_subscribed
 
-    # @abstractmethod
     def build_prompt(
         self,
         chat_history: Optional[List[ChatMessage]] = None,
         relevant_memories: Optional[str] = None,
     ) -> str:
-        pass
+        raise NotImplementedError("Subclasses must implement build_prompt")
 
     @property
-    # @abstractmethod
-    def response_format(self):
-        pass
+    def response_format(self) -> BaseModel:
+        """The response format of the prompt module."""
+        raise NotImplementedError("Subclasses must implement response_format")
 
     def _prepare_messages(self, chat_history: List[ChatMessage]) -> List[ChatMessage]:
         """Prepare messages by combining consecutive user messages."""
@@ -96,9 +92,9 @@ class BasePromptModule(AgentModule):
         )
 
         return f"""
-            **METADATA:**
+        **METADATA:**
 
-            - Time: {self.time_manager.current_readable_time()}{memories}
+        - Time: {self.time_manager.current_readable_time()}{memories}
         """
 
     def _build_return_hint(self) -> str:

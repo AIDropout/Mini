@@ -159,12 +159,15 @@ class Container:
     def get_agent_controller(self):
         from mini.controller.agent.agent import AgentService
         from mini.controller.agent.modules.action import ActionModule
-        from mini.controller.agent.modules.intent.filter import FilterModule
-        from mini.controller.agent.modules.intent.intent import Confidence, IntentConfig
+        from mini.controller.agent.modules.filter.filter import (
+            IntentConfig,
+            MessageFilterModule,
+        )
         from mini.controller.agent.modules.memory import MemoryModule
         from mini.controller.agent.modules.prompt import BasePromptModule
         from mini.controller.agent.modules.subscribe import SubscribeModule
         from mini.controller.agent.modules.vision import VisionModule
+        from mini.core.enums import ConfidenceLevel
 
         action_module = ActionModule(
             llm_manager=LLMService(
@@ -183,13 +186,13 @@ class Container:
             memory_module=memory_module,
         )
 
-        filter_module = FilterModule.from_config(
+        filter_module = MessageFilterModule.from_config(
             IntentConfig(
                 message_input_count=5,
-                confidence_threshold=Confidence.HIGH,
-                enabled=True,
+                confidence_threshold=ConfidenceLevel.HIGH,
+                is_enabled=True,
             ),
-            llm_manager=LLMService(
+            llm_service=LLMService(
                 model=Model.from_model_name(config.ACTION_MANAGER_LLM)
             ),
         )
