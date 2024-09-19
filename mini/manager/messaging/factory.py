@@ -1,6 +1,6 @@
 from typing import Union
 
-from mini.manager.messaging.bird import BirdManager 
+from mini.manager.messaging.bird.bird import BirdManager 
 from mini.manager.messaging.telegram import TelegramManager
 
 

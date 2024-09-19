@@ -1,6 +1,6 @@
 """This file is IMPORTANT. For managing our bird webhooks."""
 import asyncio
-from mini.manager.messaging.bird import BirdManager
+from mini.manager.messaging.bird.bird import BirdManager
 
 class WebhookManager:
     def __init__(self):

@@ -1,15 +1,37 @@
 from mini.core.logger import get_logger
-from mini.core.schema.tables import Agent
+from mini.core.schema.tables import Agent, Tables
 from mini.storage import S3FileStore
 from mini.utils.utils import encode_image_url_to_base64
+from mini.manager.database import DatabaseManager
 
 logger = get_logger(__name__)
 
-def get_or_create_contact_card(agent: Agent, agent_phone_number: str) -> str:
-    """Returns url of contact card"""
+
+def get_or_create_contact_card(agent_id: str, database_manager: DatabaseManager) -> str:
+    """
+    Retrieves or creates a contact card (VCF file) for a given agent and returns its URL.
+    Fetches agent details and phone number from the database, generates VCF content,
+    and stores it in S3 if it doesn't exist or has changed. Raises ValueError if
+    agent or channel is not found in the database.
+    """
 
     fs = S3FileStore()
-    file_path = f"vcf_files/{agent.id}.vcf"
+    file_path = f"vcf_files/{agent_id}.vcf"
+
+    # Fetch the agent data
+    agent = database_manager.get_row(
+        Tables.AGENTS, conditions={Tables.AGENTS__id: agent_id}
+    )
+    if not agent:
+        raise ValueError(f"Agent with id {agent_id} not found")
+
+    # Fetch the agent's phone number
+    channel = database_manager.get_row(
+        Tables.CHANNELS,
+        {Tables.CHANNELS__id: agent.bird_channel_id},
+    )
+    if not channel:
+        raise ValueError(f"Channel for agent {agent_id} not found")
 
     # Create the new VCF content
     name_parts = agent.name.split(maxsplit=1)
@@ -24,7 +46,7 @@ N:{last_name};{first_name};;;
 FN:{agent.name}
 ORG:{"mini"}
 PHOTO;ENCODING=BASE64;TYPE=JPEG:{base64_image}
-TEL;TYPE=CELL:{agent_phone_number}
+TEL;TYPE=CELL:{channel.phone_number}
 URL:{"https://textmini.com"}
 END:VCARD
 """
@@ -32,7 +54,7 @@ END:VCARD
     try:
         # Try to read the existing file
         existing_content = fs.read(file_path)
-        
+
         # Compare existing content with new content
         if existing_content.decode("utf-8") != new_vcf_content:
             logger.info("Existing VCF doesn't match the new one. Replacing...")

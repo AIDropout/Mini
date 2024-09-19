@@ -1,6 +1,6 @@
 from typing import Union
 
-from .bird import BirdManager
+from .bird.bird import BirdManager
 from .factory import MessagingManagerFactory
 from .telegram import TelegramManager
 from .discord import discord_manager

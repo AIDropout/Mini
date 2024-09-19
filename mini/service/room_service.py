@@ -10,7 +10,7 @@ from mini.manager.messaging import BirdManager
 from mini.manager.payment import CustomerManager
 from mini.service.base import Service
 from mini.service.user_service import UserService
-from mini.utils.vcf import get_or_create_contact_card
+from mini.manager.messaging.bird.contact_card import get_or_create_contact_card
 
 logger = get_logger(__name__)
 
@@ -54,7 +54,7 @@ class RoomService(Service):
             )
 
             file_url = get_or_create_contact_card(
-                agent=agent, agent_phone_number=channel.phone_number
+                agent_id=agent_id, db_manager=self.database_manager
             )
 
             # Send file
