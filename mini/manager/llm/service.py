@@ -70,7 +70,15 @@ class LLMService:
     ) -> Union[str, Dict]:
         """Generate a response using the specified model."""
         prepared_messages = [{"role": "system", "content": system_prompt}]
-        prepared_messages.extend(self._prepare_messages(messages))
+        
+        if self.provider == Provider.ANTHROPIC:
+            # Anthropic has system prompt be sent separately
+            kwargs["system"] = system_prompt
+            # Anthropic requires first message to be of rule user
+            if not prepared_messages or prepared_messages[0]["role"] != "user":
+                prepared_messages.insert(0, {"role": "user", "content": "-"})
+        else:
+            prepared_messages.insert(0, {"role": "system", "content": system_prompt})
 
         if json_mode and self.supports_json:
             kwargs["response_format"] = {"type": "json_object"}
