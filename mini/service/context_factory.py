@@ -6,7 +6,7 @@ from fastapi import HTTPException
 
 from mini.core.schema.message import MessageProvider, MiniMessage
 from mini.core.schema.tables import Agent, Room, Tables, User
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.messaging.factory import MessagingManagerFactory
 from mini.service.base import Service
 from mini.service.user_service import UserService

@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from config.config import config
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Subscription, Tables
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.manager.messaging import discord_manager
 from mini.utils.utils import get_infostring
@@ -129,9 +129,7 @@ class PaymentService(Service):
             logger.error(f"Error retrieving subscription information: {e}")
             raise e
 
-    def _handle_subscription_deleted(
-        self, subscription: stripe.Subscription
-    ) -> None:
+    def _handle_subscription_deleted(self, subscription: stripe.Subscription) -> None:
         """Handles the customer.subscription.deleted event."""
         logger.debug(f"Handling customer.subscription.deleted event")
         try:

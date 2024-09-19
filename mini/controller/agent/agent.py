@@ -18,7 +18,7 @@ from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.messaging import MessagingManager, discord_manager
 from mini.server.cancel import CancelManager
 from mini.service.base import Service

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from mini.controller.agent.modules.base import AgentModule
 from mini.core.schema.tables import Agent, Room, User
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.time import TimeManager
 
 

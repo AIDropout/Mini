@@ -6,7 +6,7 @@ from postgrest.exceptions import APIError
 
 from config.config import config
 from mini.core.schema.tables import Room, Tables, User
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.messaging.discord import discord_manager
 from mini.manager.payment.customer import CustomerManager
 from mini.service.base import Service

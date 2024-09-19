@@ -3,7 +3,7 @@ from typing import Optional
 from config.config import config
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.llm import LLMService, Model
 from mini.manager.memory import MemoryManager
 from mini.manager.messaging import MessagingManagerFactory

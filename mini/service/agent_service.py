@@ -4,7 +4,7 @@ from fastapi import HTTPException
 
 from config.config import config
 from mini.core.schema.tables import Agent, Tables
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.service.base import Service
 
 
@@ -20,15 +20,19 @@ class AgentService(Service):
         )
         if not agents:
             raise HTTPException(status_code=404, detail="Agents not found")
-        
+
         # Filter out agents with specific channel IDs
         filtered_agents = [
-            agent for agent in agents 
-            if agent.bird_channel_id not in [config.PHONE_OTP_CHANNEL_ID, config.BIRD_DEV_CHANNEL_ID]
+            agent
+            for agent in agents
+            if agent.bird_channel_id
+            not in [config.PHONE_OTP_CHANNEL_ID, config.BIRD_DEV_CHANNEL_ID]
         ]
 
         if not filtered_agents:
-            raise HTTPException(status_code=404, detail="No valid agents found after filtering")
+            raise HTTPException(
+                status_code=404, detail="No valid agents found after filtering"
+            )
 
         return filtered_agents
 

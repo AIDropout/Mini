@@ -3,7 +3,7 @@ from typing import List
 from mini.controller.agent.modules.base import AgentModule
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.llm import LLMService
 
 logger = get_logger(__name__)

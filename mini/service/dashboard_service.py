@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Message, Tables
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.messaging import MessagingManagerFactory
 from mini.service.base import Service
 from mini.service.context_factory import ContextFactory

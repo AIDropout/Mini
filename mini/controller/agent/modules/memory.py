@@ -4,7 +4,7 @@ from mini.controller.agent.modules.base import AgentModule
 from mini.core.logger import get_logger
 from mini.core.schema.memory import MemoryRecordSchema
 from mini.core.schema.tables import Tables
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.memory import MemoryManager
 
 logger = get_logger(__name__)

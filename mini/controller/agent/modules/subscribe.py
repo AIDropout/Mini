@@ -7,7 +7,7 @@ from mini.controller.agent.modules.memory import MemoryModule
 from mini.core.logger import get_logger
 from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Agent, Message, Room, Tables, User
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 
 logger = get_logger(__name__)
 

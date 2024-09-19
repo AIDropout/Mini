@@ -7,7 +7,7 @@ from mini.controller.task import ReviveTask
 from mini.core.logger import get_logger
 from mini.core.schema.subscription import SubscriptionStatus
 from mini.core.schema.tables import Message, Room, Tables, User
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.messaging import MessagingManager
 from mini.service.base import Service
 

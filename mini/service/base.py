@@ -1,4 +1,4 @@
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 
 
 class Service:

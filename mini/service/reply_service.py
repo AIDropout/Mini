@@ -4,7 +4,7 @@ import random
 from config.config import config
 from mini.core.logger import get_logger
 from mini.core.schema.tables import Message, Tables
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 from mini.manager.messaging import MessagingManagerFactory, discord_manager
 from mini.service.base import Service
 from mini.service.context_factory import ContextFactory

@@ -1,7 +1,7 @@
 from abc import ABC
 
 from mini.core.schema.tables import Agent, Room, User
-from mini.manager.database import DatabaseManager
+from mini.storage.database import DatabaseManager
 
 
 class AgentModule(ABC):
