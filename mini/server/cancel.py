@@ -4,6 +4,7 @@ from mini.server.redis import RedisManager
 
 logger = get_logger(__name__)
 
+
 class CancelManager:
     def __init__(self, redis_manager: RedisManager):
         self.redis_manager = redis_manager
@@ -29,13 +30,17 @@ class CancelManager:
             if task_id != current_task_id:
                 # A different task was found, assume it's newer
                 newer_task_found = True
-                
-                logger.info(f"🍊 Removing current task {current_task_id} for room id {room_id} due to newer task {task_id}...")
+
+                logger.info(
+                    f"🍊 Removing current task {current_task_id} for room id {room_id} due to newer task {task_id}..."
+                )
                 self.remove_task(room_id, current_task_id)
                 break  # Exit after finding the first different task
 
         if not newer_task_found:
-            logger.info(f"No newer tasks found for room id {room_id}. Current task {current_task_id} can continue.")
+            logger.info(
+                f"No newer tasks found for room id {room_id}. Current task {current_task_id} can continue."
+            )
 
         return newer_task_found
 

@@ -8,7 +8,6 @@ from mini.storage.database import DatabaseManager
 from mini.manager.messaging import MessagingManagerFactory, discord_manager
 from mini.service.base import Service
 from mini.service.context_factory import ContextFactory
-from mini.utils.utils import log_error_to_discord
 from datetime import datetime, timedelta
 from uuid import uuid4
 
@@ -77,9 +76,8 @@ class ReplyService(Service):
             # Log user message to discord
             if config.ENVIRONMENT == "production":
                 background_tasks.add_task(
-                    discord_manager.send_message_to_channel,
+                    discord_manager.log_message,
                     message=f"-# {context.user.phone_number} -> {context.agent.name}: {message.content}",
-                    channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1",
                 )
 
             # Delay is set to 0. In the future we could implement esponse rate limiting / human responsive times.
@@ -118,5 +116,5 @@ class ReplyService(Service):
                 )
 
         except Exception as e:
-            msg = log_error_to_discord("room_id", context.room.id)
+            msg = discord_manager.log_error(f"room_id={context.room.id}")
             logger.exception(msg)

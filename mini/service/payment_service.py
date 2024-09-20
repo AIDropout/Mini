@@ -7,7 +7,6 @@ from mini.core.schema.tables import Subscription, Tables
 from mini.storage.database import DatabaseManager
 from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.manager.messaging import discord_manager
-from mini.utils.utils import get_infostring
 
 from .base import Service
 
@@ -120,9 +119,8 @@ class PaymentService(Service):
             )
 
             if config.ENVIRONMENT == "production":
-                discord_manager.send_message_to_channel(
-                    message=f"-# **Subscription created** 🎉: user {user_id} {get_infostring()}",
-                    channel=config.DISCORD_CONFIG.website_activity_webhook_url,
+                discord_manager.log_website_activity(
+                    message=f"-# **Subscription created** 🎉: user {user_id}",
                 )
 
         except Exception as e:

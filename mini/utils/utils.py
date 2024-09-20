@@ -2,17 +2,15 @@ import asyncio
 import base64
 import re
 import subprocess
-import traceback
 from datetime import datetime, timezone
 from typing import Tuple
-from zoneinfo import ZoneInfo
 
 import requests
 from pyngrok import ngrok
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.manager.messaging import BirdManager, TelegramManager, discord_manager
+from mini.manager.messaging import BirdManager, TelegramManager
 from mini.storage import S3FileStore
 
 logger = get_logger(__name__)
@@ -54,23 +52,6 @@ async def configure_local_webhooks(local_url: str) -> None:
     )
 
     logger.info("Ngrok and webhooks successfully set up!")
-
-
-def get_infostring() -> str:
-    pst_time = datetime.now(ZoneInfo("America/Los_Angeles"))
-    hour = pst_time.strftime("%I").lstrip("0")
-    timestamp = f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
-    return f"🕒 {timestamp}"
-
-
-def log_error_to_discord(identifier_key: str, identifier_value) -> str:
-    environment = config.ENVIRONMENT.upper()
-    error_traceback = traceback.format_exc()
-    msg = f"⚠️__**{environment} ERROR**__⚠️\n-# {get_infostring()} 🏷️ {identifier_key}={identifier_value}\n```{error_traceback}```"
-    discord_manager.send_message_to_channel(
-        msg, config.DISCORD_CONFIG.server_status_webhook_url
-    )
-    return msg
 
 
 def encode_image_url_to_base64(image_url: str) -> str:

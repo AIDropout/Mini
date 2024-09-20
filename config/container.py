@@ -104,7 +104,7 @@ class Container:
         return self.memory_manager
 
     def get_cron_service(self):
-        from mini.service.cron_service import CronService
+        from mini.server.tasks.cron_service import CronService
 
         return CronService(
             database_manager=self.database_manager,

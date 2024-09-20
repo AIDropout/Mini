@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path, BackgroundTasks
 from fastapi.responses import JSONResponse
 from typing import List, Annotated
 
@@ -19,9 +19,12 @@ def create_user(
     ],
     phone_number: Annotated[str, Body(..., title="The phone number of the new user")],
     user_service: UserServiceDep,
+    background_tasks: BackgroundTasks,
     api_key: ApiKeyDep,
 ) -> User:
-    return user_service.create_user(id=id, phone_number=phone_number)
+    return user_service.create_user(
+        id=id, phone_number=phone_number, background_tasks=BackgroundTasks
+    )
 
 
 @router.get("/users/{user_id}", response_model=User)

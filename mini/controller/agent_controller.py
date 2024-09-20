@@ -7,7 +7,7 @@ from config.container import container
 from mini.controller.task import RemindTask, RespondTask, ReviveTask
 from mini.core.logger import get_logger
 from mini.core.schema.task import TaskType
-from mini.utils.utils import log_error_to_discord
+from mini.manager.messaging.discord import discord_manager
 
 logger = get_logger(__name__)
 
@@ -70,6 +70,6 @@ def run_agent(
         cancel_manager.remove_task(room_id, task_id)
 
     except Exception as e:
-        msg = log_error_to_discord("task_id", task_id)
+        msg = discord_manager.log_error(f"task_id={task_id}")
         logger.exception(msg)
         raise self.retry(exc=e)

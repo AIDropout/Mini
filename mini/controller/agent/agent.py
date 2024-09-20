@@ -22,7 +22,7 @@ from mini.storage.database import DatabaseManager
 from mini.manager.messaging import MessagingManager, discord_manager
 from mini.server.cancel import CancelManager
 from mini.service.base import Service
-from mini.utils.utils import log_error_to_discord, utc_now
+from mini.utils.utils import utc_now
 
 
 class AgentService(Service):
@@ -97,7 +97,7 @@ class AgentService(Service):
 
             return True
         except Exception:
-            msg = log_error_to_discord("task_id", task.id)
+            msg = discord_manager.log_error(f"task_id={task.id}")
             el.log(msg)
             return False
 
@@ -195,9 +195,8 @@ class AgentService(Service):
 
     def _log_to_discord(self, final_message: str):
         if config.ENVIRONMENT == "production":
-            discord_manager.send_message_to_channel(
+            discord_manager.log_message(
                 message=f"-# {self.agent.name} -> {self.user.phone_number}: {final_message}",
-                channel="https://discord.com/api/webhooks/1285123477619081237/xCmCDv_j0XV7Sm0xSAfbLxM603AaJML9TJVefhmiDkglfAmYwh9ElqYQgo88qHk1Ubz1",
             )
 
     def _update_room_last_message_time(self):

@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
 
@@ -10,7 +10,6 @@ from mini.storage.database import DatabaseManager
 from mini.manager.messaging.discord import discord_manager
 from mini.manager.payment.customer import CustomerManager
 from mini.service.base import Service
-from mini.utils.utils import get_infostring
 
 
 class UserService(Service):
@@ -20,7 +19,9 @@ class UserService(Service):
         super().__init__(database_manager)
         self.customer_manager = customer_manager
 
-    def create_user(self, id: str, phone_number: str) -> User:
+    def create_user(
+        self, id: str, phone_number: str, background_tasks: BackgroundTasks
+    ) -> User:
         try:
             customer = self.customer_manager.create_customer(phone=phone_number)
             new_user = self.database_manager.insert(
@@ -31,9 +32,9 @@ class UserService(Service):
                 raise HTTPException(status_code=500, detail="Failed to create user")
 
             if config.ENVIRONMENT == "production":
-                discord_manager.send_message_to_channel(
-                    message=f"-# **New signup**: {phone_number} {get_infostring()}",
-                    channel=config.DISCORD_CONFIG.website_activity_webhook_url,
+                background_tasks.add_task(
+                    discord_manager.log_website_activity,
+                    message=f"-# **New signup**: {phone_number}",
                 )
 
             return new_user
