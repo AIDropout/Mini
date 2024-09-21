@@ -31,7 +31,6 @@ import requests
 import traceback
 from pydantic import BaseModel, HttpUrl
 from zoneinfo import ZoneInfo
-from mini.utils.utils import get_infostring
 
 logger = get_logger(__name__)
 
@@ -75,5 +74,5 @@ class DiscordManager:
         error_traceback = traceback.format_exc()
         msg = f"⚠️__**{environment} ERROR**__⚠️\n-# {get_infostring()} 🏷️ {error_message}\n```{error_traceback}```"
         return msg
-
+    
 discord_manager = DiscordManager()

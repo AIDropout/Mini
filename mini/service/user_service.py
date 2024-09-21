@@ -8,11 +8,9 @@ from config.config import config
 from mini.core.schema.tables import Room, Tables, User
 from mini.storage.database import DatabaseManager
 from mini.manager.messaging.discord import discord_manager
+from mini.utils.utils import get_infostring
 from mini.manager.payment.customer import CustomerManager
 from mini.service.base import Service
-from mini.utils.utils import get_infostring
-from fastapi import BackgroundTasks
-
 
 class UserService(Service):
     def __init__(
