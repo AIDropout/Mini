@@ -14,7 +14,7 @@ from mini.core.schema.message import (
     MessageType,
     MiniMessage,
 )
-from mini.core.schema.sms_otp import ErrorCode, VerificationStatus
+from mini.core.schema.verify import ErrorCode, VerificationStatus
 from mini.manager.messaging.base import MessagingBase
 from mini.storage import get_file_store
 
@@ -237,9 +237,9 @@ class BirdManager(MessagingBase):
             response = requests.get(url, headers=self._api_header, params=params)
             response.raise_for_status()
             data = response.json()
-            
+
             all_webhooks.extend(data.get("results", []))
-            
+
             page_token = data.get("nextPageToken")
             if not page_token:
                 break

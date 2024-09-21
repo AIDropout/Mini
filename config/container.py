@@ -104,17 +104,17 @@ class Container:
         return self.memory_manager
 
     def get_cron_service(self):
-        from mini.server.tasks.cron_service import CronService
+        from mini.service.cron_service import CronService
 
         return CronService(
             database_manager=self.database_manager,
             messaging_manager=self.get_messaging_manager_factory().bird_manager,
         )
 
-    def get_sms_otp_service(self):
-        from mini.service.sms_otp_service import SMSOTPService
+    def get_verify_service(self):
+        from mini.service.verify_service import VerifyService
 
-        return SMSOTPService(
+        return VerifyService(
             bird_manager=self.get_messaging_manager_factory().bird_manager
         )
 

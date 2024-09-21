@@ -15,7 +15,7 @@ from mini.manager.messaging import BirdManager
 logger = get_logger(__name__)
 
 
-class SMSOTPService:
+class VerifyService:
     def __init__(self, bird_manager: BirdManager):
         self.bird_sms = bird_manager
 
@@ -25,13 +25,11 @@ class SMSOTPService:
         try:
             self.bird_sms.set_receiver(request.phone_number)
             self.bird_sms.set_sender(config.PHONE_OTP_CHANNEL_ID)
-            is_sent, expires_at, verification_id = (
-                self.bird_sms.send_verification(
-                    locale=request.locale,
-                    max_attempts=request.max_attempts,
-                    timeout=request.timeout,
-                    code_length=request.code_length,
-                )
+            is_sent, expires_at, verification_id = self.bird_sms.send_verification(
+                locale=request.locale,
+                max_attempts=request.max_attempts,
+                timeout=request.timeout,
+                code_length=request.code_length,
             )
             print(is_sent)
             return SendVerificationResponse(

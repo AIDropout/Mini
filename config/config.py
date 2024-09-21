@@ -105,6 +105,10 @@ class DiscordConfig(BaseSettings):
     message_webhook_url: str
 
 
+class InstagramConfig(BaseSettings):
+    verify_token: str
+
+
 class Config(BaseSettings):
     ENVIRONMENT: str
     BACKEND_API_KEY: str
@@ -153,6 +157,7 @@ class Config(BaseSettings):
     AWS_S3_CONFIG: AWSS3Config
     SECRET_PHRASES: SecretPhrases
     DISCORD_CONFIG: DiscordConfig
+    INSTAGRAM_CONFIG: InstagramConfig
 
     @classmethod
     def from_yaml(cls, file_path: str):

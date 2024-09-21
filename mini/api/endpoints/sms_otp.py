@@ -12,12 +12,12 @@ from mini.core.schema.request import (
     VerifyCodeRequest,
     VerifyCodeResponse,
 )
-from mini.service.sms_otp_service import SMSOTPService
+from mini.service.verify_service import VerifyService
 
-router = APIRouter(prefix="/sms-otp", tags=["sms-otp"])
+router = APIRouter(prefix="/sms_otp", tags=["sms_otp"])
 
-SMSOTPServiceDep = Annotated[
-    SMSOTPService, Depends(lambda: container.get_sms_otp_service())
+VerifyServiceDep = Annotated[
+    VerifyService, Depends(lambda: container.get_verify_service())
 ]
 RateLimiterDep = Annotated[RateLimiter, Depends(lambda: container.get_rate_limiter())]
 
@@ -26,7 +26,7 @@ RateLimiterDep = Annotated[RateLimiter, Depends(lambda: container.get_rate_limit
 def send_verification(
     request: SendVerificationRequest,
     http_request: Request,
-    sms_otp_service: SMSOTPServiceDep,
+    verify_service: VerifyServiceDep,
     rate_limiter: RateLimiterDep,
     api_key: ApiKeyDep,
 ) -> SendVerificationResponse:
@@ -36,26 +36,26 @@ def send_verification(
         raise HTTPException(
             status_code=429, detail="Rate limit exceeded. Try again later."
         )
-    return sms_otp_service.send_verification(request)
+    return verify_service.send_verification(request)
 
 
 @router.post("/{verification_id}/resend")
 def resend_verification(
     verification_id: Annotated[str, Path(...)],
     request: ResendVerificationRequest,
-    sms_otp_service: SMSOTPServiceDep,
+    verify_service: VerifyServiceDep,
     api_key: ApiKeyDep,
 ) -> ResendVerificationResponse:
     """Resend an SMS OTP for an existing verification."""
-    return sms_otp_service.resend_verification(verification_id, request)
+    return verify_service.resend_verification(verification_id, request)
 
 
 @router.post("/{verification_id}/verify")
 def verify_code(
     verification_id: Annotated[str, Path(...)],
     request: VerifyCodeRequest,
-    sms_otp_service: SMSOTPServiceDep,
+    verify_service: VerifyServiceDep,
     api_key: ApiKeyDep,
 ) -> VerifyCodeResponse:
     """Verify an SMS OTP code for an existing verification."""
-    return sms_otp_service.verify_code(verification_id, request)
+    return verify_service.verify_code(verification_id, request)

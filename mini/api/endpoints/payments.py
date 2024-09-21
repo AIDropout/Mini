@@ -6,8 +6,8 @@ from mini.api.security import ApiKeyDep
 from mini.service.payment_service import PaymentService
 
 router = APIRouter(
-    prefix="/payment",
-    tags=["payment"],
+    prefix="/payments",
+    tags=["payments"],
 )
 
 PaymentServiceDep = Annotated[
