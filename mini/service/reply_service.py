@@ -90,6 +90,7 @@ class ReplyService(Service):
                 scheduled_for=scheduled_time,
                 user_message=message,
                 context=context,
+                created_at=datetime.now().isoformat()
             )
 
             # Cancel this task if a new task has come in
@@ -105,7 +106,7 @@ class ReplyService(Service):
 
             # Run agent in the background using a Celery worker
             new_task = run_agent.apply_async(
-                args=[room_id, task.id, TaskType.RESPOND], countdown=delay
+                args=[room_id, task.id], countdown=delay
             )
 
             if new_task:

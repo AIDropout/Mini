@@ -1,12 +1,10 @@
 from datetime import datetime
-from typing import Literal
 
 from celery import shared_task
 
 from config.container import container
-from mini.controller.task import RemindTask, RespondTask, ReviveTask
+from mini.controller.task import RespondTask
 from mini.core.logger import get_logger
-from mini.core.schema.task import TaskType
 from mini.manager.messaging.discord import discord_manager
 
 logger = get_logger(__name__)
@@ -17,7 +15,6 @@ def run_agent(
     self,
     room_id: str,
     task_id: str,
-    task_type: Literal[TaskType.REMIND, TaskType.RESPOND, TaskType.REVIVE],
 ):
     try:
         logger.info(f"🔴🔴🔴 running at {datetime.now()}")
@@ -32,14 +29,7 @@ def run_agent(
             return
 
         # Convert JSON to Task objects
-        task: RespondTask = None
-
-        if task_type == TaskType.RESPOND:
-            task = RespondTask.model_validate_json(task_json)
-        elif task_type == TaskType.REMIND:
-            pass
-        elif task_type == TaskType.REVIVE:
-            pass
+        task = RespondTask.model_validate_json(task_json)
 
         if not task or not messaging_manager:
             logger.error(
