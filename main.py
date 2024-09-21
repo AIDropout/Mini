@@ -8,15 +8,23 @@ import subprocess
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from pyngrok import ngrok
 
 from config.config import config
-from mini.api import router as api_router
 from mini.core.logger import get_logger
 from mini.server.redis import RedisManager
 from mini.utils.utils import configure_local_webhooks, stop_existing_processes
+
+from mini.messaging.bird import endpoint as bird_endpoint
+from mini.messaging.bird.verification import endpoint as smsotp_endpoint
+from mini.dashboard import endpoint as dashboard_endpoint
+from mini.payment import endpoint as payment_endpoint
+from mini.database.rooms import endpoint as rooms_endpoint
+from mini.database.agents import endpoint as agents_endpoint
+from mini.database.users import endpoint as users_endpoint
+from mini.messaging.instagram import endpoint as instagram_endpoint
 
 logger = get_logger(__name__)
 
@@ -25,9 +33,11 @@ logger = get_logger(__name__)
 async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
     redis_manager = RedisManager()
+    
     redis_manager.initialize()
 
     if config.ENVIRONMENT == "local":
+        redis_manager.flush_all()
         subprocess.Popen(
             [
                 "celery",
@@ -57,7 +67,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router)
+router = APIRouter()
+router.include_router(bird_endpoint.router)
+router.include_router(payment_endpoint.router)
+router.include_router(smsotp_endpoint.router)
+router.include_router(dashboard_endpoint.router)
+router.include_router(rooms_endpoint.router)
+router.include_router(agents_endpoint.router)
+router.include_router(users_endpoint.router)
+router.include_router(instagram_endpoint.router)
+
+app.include_router(router)
 
 
 @app.middleware("http")

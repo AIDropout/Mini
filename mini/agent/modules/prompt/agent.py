@@ -1,0 +1,78 @@
+from typing import List
+
+from pydantic import BaseModel
+
+from mini.agent.modules.prompt.base import BasePromptModule, ChatMessage
+from mini.database.models import Agent, Room, User
+
+
+class ResponseFormat(BaseModel):
+    responses: List[str]
+    best_response: str
+    reasoning: str
+
+
+class AgentPromptModule(BasePromptModule):
+    def configure(self, room: Room, agent: Agent, user: User):
+        super().configure(room, agent, user)
+        self._load_agent_data()
+
+    @property
+    def response_format(self):
+        return ResponseFormat
+
+    def _load_agent_data(self) -> None:
+        response_format = ResponseFormat(
+            responses=self._response_moods(),
+            best_response="insert the best response here",
+            reasoning="adjectives describing reasoning for the best response",
+        )
+
+        self._return_hint = response_format.model_dump()
+
+    def _response_moods(self) -> list[str]:
+        return [f"insert {mood} message" for mood in self._moods]
+
+    def _build_role(self) -> str:
+        return self._role
+
+    def _build_rules(self) -> str:
+        rules = "\n".join([f"- {rule}" for rule in self._rules])
+        return f"""
+        **RULES:**
+
+        Keep the following in mind:
+        {rules}
+        """
+
+    def _build_roleplay(self, roleplay: str | None) -> str:
+        if roleplay is None:
+            return ""
+
+        return f"""
+        **ROLEPLAY:**
+
+        Here is the current roleplay:
+        {roleplay}
+
+        - ensure to move the roleplay forward.
+        """
+
+    def build_prompt(
+        self,
+        chat_history: List[ChatMessage] | None = None,
+        relevant_memories: str | None = None,
+        roleplay: str | None = None,
+    ) -> str:
+        self._load_agent_data()
+
+        prompt = [
+            self._build_role(),
+            self._build_rules(),
+            self._build_metadata(relevant_memories=relevant_memories),
+            self._build_chat_history(chat_history),
+            self._build_roleplay(roleplay),
+            self._build_return_hint(),
+        ]
+
+        return "\n\n".join(prompt)

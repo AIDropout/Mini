@@ -7,6 +7,7 @@ from mini.server.redis import RedisManager
 
 logger = get_logger(__name__)
 
+#TODO: handle: first message fails (but key still remains). 
 
 class CancelManager:
     def __init__(self, redis_manager: RedisManager):

@@ -3,16 +3,15 @@ from typing import Optional
 from config.config import config
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
-from mini.storage.database import DatabaseManager
-from mini.manager.llm import LLMService, Model
-from mini.manager.memory import MemoryManager
-from mini.manager.messaging import MessagingManagerFactory
-from mini.manager.payment import CheckoutManager, CustomerManager, SubscriptionManager
-from mini.manager.time import TimeManager
+from mini.database.database import DatabaseManager
+from mini.llm import LLMService, Model
+from mini.agent.modules.memory import MemoryManager
+from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
+from mini.utils.time import TimeManager
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
-from mini.service.context_factory import ContextFactory
-from mini.service.user_service import UserService
+from mini.messaging.context import ContextFactory
+from mini.database.users.service import UserService
 
 logger = get_logger(__name__)
 
@@ -24,7 +23,6 @@ class Container:
             # TODO: Save user's timezone on signup
             user_timezone=config.TIME_API.default_timezone
         )
-        self.messaging_manager_factory: Optional[MessagingManagerFactory] = None
         self.checkout_manager = CheckoutManager()
         self.customer_manager = CustomerManager.from_config(config)
         self.subscription_manager = SubscriptionManager()
@@ -54,16 +52,8 @@ class Container:
 
         return self.redis_manager
 
-    def get_messaging_manager_factory(self):
-        from mini.manager.messaging import MessagingManagerFactory
-
-        if self.messaging_manager_factory is None:
-            self.messaging_manager_factory = MessagingManagerFactory()
-
-        return self.messaging_manager_factory
-
     def get_user_service(self):
-        from mini.service.user_service import UserService
+        from mini.database.users.service import UserService
 
         if self.user_service is None:
             self.user_service = UserService(
@@ -73,7 +63,7 @@ class Container:
         return self.user_service
 
     def get_agent_service(self):
-        from mini.service.agent_service import AgentService
+        from mini.database.agents.service import AgentService
 
         return AgentService(database_manager=self.database_manager)
 
@@ -103,33 +93,23 @@ class Container:
 
         return self.memory_manager
 
-    def get_cron_service(self):
-        from mini.service.cron_service import CronService
-
-        return CronService(
-            database_manager=self.database_manager,
-            messaging_manager=self.get_messaging_manager_factory().bird_manager,
-        )
-
     def get_verify_service(self):
-        from mini.service.verify_service import VerifyService
+        from mini.messaging.bird.verification.service import VerifyService
+        from mini.messaging.bird.bird import BirdManager
 
-        return VerifyService(
-            bird_manager=self.get_messaging_manager_factory().bird_manager
-        )
+        return VerifyService(bird_manager=BirdManager())
 
     def get_room_service(self):
-        from mini.service.room_service import RoomService
+        from mini.database.rooms.service import RoomService
 
         return RoomService(
             database_manager=self.database_manager,
-            messaging_manager=self.get_messaging_manager_factory().bird_manager,
             customer_manager=self.customer_manager,
             user_service=self.get_user_service(),
         )
 
     def get_payment_service(self):
-        from mini.service.payment_service import PaymentService
+        from mini.payment.service import PaymentService
 
         return PaymentService(
             database_manager=self.database_manager,
@@ -139,25 +119,24 @@ class Container:
         )
 
     def get_dashboard_service(self):
-        from mini.service.dashboard_service import DashboardService
+        from mini.dashboard.service import DashboardService
 
         return DashboardService(
             database_manager=self.database_manager,
-            messaging_manager_factory=self.get_messaging_manager_factory(),
             context_factory=self.get_context_factory(),
         )
 
     def get_agent_controller(self):
-        from mini.controller.agent.agent import AgentService
-        from mini.controller.agent.modules.action import ActionModule
-        from mini.controller.agent.modules.filter.filter import (
+        from mini.agent.agent import AgentService
+        from mini.agent.modules.action import ActionModule
+        from mini.agent.modules.filter.filter import (
             IntentConfig,
             MessageFilterModule,
         )
-        from mini.controller.agent.modules.memory import MemoryModule
-        from mini.controller.agent.modules.prompt import BasePromptModule
-        from mini.controller.agent.modules.subscribe import SubscribeModule
-        from mini.controller.agent.modules.vision import VisionModule
+        from mini.agent.modules.memory.service import MemoryModule
+        from mini.agent.modules.prompt import BasePromptModule
+        from mini.agent.modules.subscribe import SubscribeModule
+        from mini.agent.modules.vision import VisionModule
         from mini.core.enums import ConfidenceLevel
 
         action_module = ActionModule(
@@ -215,11 +194,10 @@ class Container:
         )
 
     def get_reply_service(self):
-        from mini.service.reply_service import ReplyService
+        from mini.messaging.service import ReplyService
 
         return ReplyService(
             database_manager=self.database_manager,
-            messaging_manager_factory=self.get_messaging_manager_factory(),
             context_factory=self.get_context_factory(),
             cancel_manager=self.get_cancel_manager(),
             redis_manager=self.get_redis_manager(),

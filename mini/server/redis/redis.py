@@ -80,3 +80,10 @@ class RedisManager:
             _, call_count, _, _ = pipe.execute()
 
             return call_count >= max_calls
+
+    def flush_all(self) -> None:
+        """Delete all keys from all databases in the Redis instance."""
+        with self.get_connection() as client:
+            client.flushall()
+            logger.warning("All keys in all Redis databases have been deleted")
+

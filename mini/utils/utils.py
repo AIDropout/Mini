@@ -11,8 +11,9 @@ from pyngrok import ngrok
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.manager.messaging import BirdManager, TelegramManager
-from mini.storage import S3FileStore
+from mini.messaging.bird.bird import BirdManager
+from mini.messaging.telegram.telegram import TelegramManager
+from mini.utils.storage import S3FileStore
 
 logger = get_logger(__name__)
 

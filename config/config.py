@@ -1,8 +1,14 @@
 import yaml
 from pydantic import Field
 from pydantic_settings import BaseSettings
+from enum import Enum
 
-from mini.core.schema.llm import LLMProviders
+class LLMProviders(Enum):
+    GEMINI = "GEMINI_API_KEY"
+    OPENAI = "OPENAI_API_KEY"
+    ANTHROPIC = "ANTHROPIC_API_KEY"
+    GROQ = "GROQ_API_KEY"
+    GOOGLE = "GOOGLE_API_KEY"
 
 
 def get_api_key(provider: LLMProviders) -> str:
@@ -106,7 +112,9 @@ class DiscordConfig(BaseSettings):
 
 
 class InstagramConfig(BaseSettings):
+    api_version: str
     verify_token: str
+    access_token: str
 
 
 class Config(BaseSettings):
