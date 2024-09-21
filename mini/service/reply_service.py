@@ -62,24 +62,7 @@ class ReplyService(Service):
                     text="Successfully deleted your user from Auth tables and Users table"
                 )
                 return
-
-            # Insert user message
-            self.database_manager.insert(
-                Tables.MESSAGES,
-                Message(
-                    room_id=context.room.id,
-                    sender_id=context.user.id,
-                    content=message.content,
-                ),
-            )
-
-            # Log user message to discord
-            if config.ENVIRONMENT == "production":
-                background_tasks.add_task(
-                    discord_manager.log_message,
-                    message=f"-# {context.user.phone_number} -> {context.agent.name}: {message.content}",
-                )
-
+            
             # Delay is set to 0. In the future we could implement esponse rate limiting / human responsive times.
             delay = 0
             scheduled_time = datetime.now() + timedelta(seconds=delay)
@@ -103,6 +86,23 @@ class ReplyService(Service):
                 value=task.model_dump_json(),
                 expiry=delay + 120,
             )
+
+            # Insert user message
+            self.database_manager.insert(
+                Tables.MESSAGES,
+                Message(
+                    room_id=context.room.id,
+                    sender_id=context.user.id,
+                    content=message.content,
+                ),
+            )
+
+            # Log user message to discord
+            if config.ENVIRONMENT == "production":
+                background_tasks.add_task(
+                    discord_manager.log_message,
+                    message=f"-# {context.user.phone_number} -> {context.agent.name}: {message.content}",
+                )
 
             # Run agent in the background using a Celery worker
             new_task = run_agent.apply_async(
