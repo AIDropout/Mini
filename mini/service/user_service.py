@@ -10,6 +10,8 @@ from mini.storage.database import DatabaseManager
 from mini.manager.messaging.discord import discord_manager
 from mini.manager.payment.customer import CustomerManager
 from mini.service.base import Service
+from mini.utils.utils import get_infostring
+from fastapi import BackgroundTasks
 
 
 class UserService(Service):
@@ -19,9 +21,7 @@ class UserService(Service):
         super().__init__(database_manager)
         self.customer_manager = customer_manager
 
-    def create_user(
-        self, id: str, phone_number: str, background_tasks: BackgroundTasks
-    ) -> User:
+    def create_user(self, id: str, phone_number: str, background_tasks: BackgroundTasks) -> User:
         try:
             customer = self.customer_manager.create_customer(phone=phone_number)
             new_user = self.database_manager.insert(
@@ -34,7 +34,7 @@ class UserService(Service):
             if config.ENVIRONMENT == "production":
                 background_tasks.add_task(
                     discord_manager.log_website_activity,
-                    message=f"-# **New signup**: {phone_number}",
+                    f"-# **New signup**: {phone_number} {get_infostring()}"
                 )
 
             return new_user

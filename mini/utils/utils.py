@@ -4,6 +4,7 @@ import re
 import subprocess
 from datetime import datetime, timezone
 from typing import Tuple
+from zoneinfo import ZoneInfo
 
 import requests
 from pyngrok import ngrok
@@ -72,3 +73,13 @@ def upload_file(path: str, content: str, content_type: str) -> Tuple[str, str]:
 
 def utc_now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+
+def get_infostring() -> str:
+    """ex: 🕒 7:40PM PT, 9/18"""
+    pst_time = datetime.now(ZoneInfo("America/Los_Angeles"))
+    hour = pst_time.strftime("%I").lstrip("0")
+    timestamp = (
+        f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
+    )
+    return f"🕒 {timestamp}"

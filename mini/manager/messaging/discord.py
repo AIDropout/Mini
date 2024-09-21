@@ -31,6 +31,7 @@ import requests
 import traceback
 from pydantic import BaseModel, HttpUrl
 from zoneinfo import ZoneInfo
+from mini.utils.utils import get_infostring
 
 logger = get_logger(__name__)
 
@@ -72,18 +73,7 @@ class DiscordManager:
     def _format_error_message(cls, error_message) -> str:
         environment = config.ENVIRONMENT.upper()
         error_traceback = traceback.format_exc()
-        msg = f"⚠️__**{environment} ERROR**__⚠️\n-# {cls._get_infostring()} 🏷️ {error_message}\n```{error_traceback}```"
+        msg = f"⚠️__**{environment} ERROR**__⚠️\n-# {get_infostring()} 🏷️ {error_message}\n```{error_traceback}```"
         return msg
-
-    @staticmethod
-    def _get_infostring() -> str:
-        """ex: 🕒 7:40PM PT, 9/18"""
-        pst_time = datetime.now(ZoneInfo("America/Los_Angeles"))
-        hour = pst_time.strftime("%I").lstrip("0")
-        timestamp = (
-            f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
-        )
-        return f"🕒 {timestamp}"
-
 
 discord_manager = DiscordManager()
