@@ -1,21 +1,19 @@
-from fastapi import BackgroundTasks
-import random
-
-from config.config import config
-from mini.core.logger import get_logger
-from mini.core.schema.tables import Message, Tables
-from mini.storage.database import DatabaseManager
-from mini.manager.messaging import MessagingManagerFactory, discord_manager
-from mini.service.base import Service
-from mini.service.context_factory import ContextFactory
 from datetime import datetime, timedelta
 from uuid import uuid4
 
+from fastapi import BackgroundTasks
+
+from config.config import config
 from mini.controller.agent_controller import run_agent
 from mini.controller.task import RespondTask, TaskType
+from mini.core.logger import get_logger
+from mini.core.schema.tables import Message, Tables
+from mini.manager.messaging import MessagingManagerFactory, discord_manager
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
 from mini.service.base import Service
+from mini.service.context_factory import ContextFactory
+from mini.storage.database import DatabaseManager
 
 logger = get_logger(__name__)
 

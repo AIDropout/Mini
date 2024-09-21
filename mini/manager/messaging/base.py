@@ -8,7 +8,7 @@ from mini.core.schema.message import MiniMessage
 
 class MessagingBase(ABC):
     @abstractmethod
-    def receive_message(cls, request: Request) -> MiniMessage:
+    def receive_message(self, request: Request) -> MiniMessage:
         """Handle an incoming message from a sender."""
         pass
 
