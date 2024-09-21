@@ -60,6 +60,30 @@ class ReplyService(Service):
                     text="Successfully deleted your user from Auth tables and Users table"
                 )
                 return
+            
+            # Delay is set to 0. In the future we could implement esponse rate limiting / human responsive times.
+            delay = 0
+            scheduled_time = datetime.now() + timedelta(seconds=delay)
+            room_id = context.room.id
+
+            task = RespondTask(
+                id=str(uuid4()),
+                scheduled_for=scheduled_time,
+                user_message=message,
+                context=context,
+                created_at=datetime.now().isoformat()
+            )
+
+            # Cancel this task if a new task has come in
+            if self.cancel_manager.newer_task_found(room_id, task.id):
+                return
+
+            # Store task data in Redis
+            self.redis_manager.set(
+                key=f"{room_id}:{task.id}",
+                value=task.model_dump_json(),
+                expiry=delay + 120,
+            )
 
             # Insert user message
             self.database_manager.insert(
@@ -78,32 +102,9 @@ class ReplyService(Service):
                     message=f"-# {context.user.phone_number} -> {context.agent.name}: {message.content}",
                 )
 
-            # Delay is set to 0. In the future we could implement esponse rate limiting / human responsive times.
-            delay = 0
-            scheduled_time = datetime.now() + timedelta(seconds=delay)
-            room_id = context.room.id
-
-            task = RespondTask(
-                id=str(uuid4()),
-                scheduled_for=scheduled_time,
-                user_message=message,
-                context=context,
-            )
-
-            # Cancel this task if a new task has come in
-            if self.cancel_manager.newer_task_found(room_id, task.id):
-                return
-
-            # Store task data in Redis
-            self.redis_manager.set(
-                key=f"{room_id}:{task.id}",
-                value=task.model_dump_json(),
-                expiry=delay + 120,
-            )
-
             # Run agent in the background using a Celery worker
             new_task = run_agent.apply_async(
-                args=[room_id, task.id, TaskType.RESPOND], countdown=delay
+                args=[room_id, task.id], countdown=delay
             )
 
             if new_task:

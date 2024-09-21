@@ -38,7 +38,6 @@ async def lifespan(_: FastAPI):
                 "worker1@%h",
                 "--loglevel=ERROR",
             ]
-            + (["--beat"] if config.ENABLE_CELERY_BEAT else [])
         )
 
     yield
