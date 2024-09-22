@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 
 from fastapi import HTTPException
 
-from mini.messaging.models import MessageProvider, MiniMessage
+from mini.messaging.models import MessagingProviderEnum, MiniMessage
 from mini.database.models import Agent, Room, Tables, User
 from mini.database.database import DatabaseManager
 from mini.database.users.service import UserService
@@ -17,7 +17,7 @@ class Context:
     room: Optional[Room] = None
 
 
-class ContextFactory():
+class ContextFactory:
     def __init__(self, database_manager: DatabaseManager, user_service: UserService):
         self.database_manager = database_manager
         self.user_service = user_service
@@ -41,7 +41,7 @@ class ContextFactory():
             room=room,
         )
 
-    def create_message_context(self, message: MiniMessage) -> Context:
+    def get_context_from_message(self, message: MiniMessage) -> Context:
 
         user, agent = self._get_user_and_agent_from_db(message)
 
@@ -52,7 +52,7 @@ class ContextFactory():
                 ),  # If user verifies later, this will be replaced with Supabase Auth uuid
                 phone_number=(
                     message.metadata.phone_number
-                    if message.provider == MessageProvider.BIRD
+                    if message.provider == MessagingProviderEnum.BIRD
                     else None
                 ),
             )
@@ -71,7 +71,7 @@ class ContextFactory():
         user = None
         agent = None
 
-        if message.provider == MessageProvider.TELEGRAM:
+        if message.provider == MessagingProviderEnum.TELEGRAM:
             user = self.database_manager.get_row(
                 Tables.USERS,
                 conditions={Tables.USERS__telegram_uid: message.metadata.uid},
@@ -80,7 +80,7 @@ class ContextFactory():
             #     Tables.AGENTS,
             #     conditions={Tables.AGENTS__telegram_chat_id: message.metadata.chat_id},
             # ) # Add telegram_chat_id back to agents table if we end up adding this integration
-        elif message.provider == MessageProvider.BIRD:
+        elif message.provider == MessagingProviderEnum.BIRD:
             user = self.database_manager.get_row(
                 Tables.USERS,
                 conditions={Tables.USERS__phone_number: message.metadata.phone_number},

@@ -12,7 +12,7 @@ from pyngrok import ngrok
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.messaging.bird.bird import BirdManager
+from mini.messaging.bird.bird import BirdMessagingService
 from mini.messaging.telegram.telegram import TelegramManager
 from mini.utils.storage import S3FileStore
 
@@ -45,7 +45,7 @@ async def configure_local_webhooks(local_url: str) -> None:
 
     webhook = f"{ngrok_connection.public_url}/rooms/respond"
     _telegram = TelegramManager()
-    _bird = BirdManager()
+    _bird = BirdMessagingService()
 
     _bird.set_sender(config.BIRD_DEV_CHANNEL_ID)
 
@@ -81,9 +81,7 @@ def get_infostring() -> str:
     """ex: 🕒 7:40PM PT, 9/18"""
     pst_time = datetime.now(ZoneInfo("America/Los_Angeles"))
     hour = pst_time.strftime("%I").lstrip("0")
-    timestamp = (
-        f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
-    )
+    timestamp = f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
     return f"🕒 {timestamp}"
 
 

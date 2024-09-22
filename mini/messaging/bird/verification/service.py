@@ -10,13 +10,13 @@ from mini.messaging.bird.verification.models import (
     VerifyCodeRequest,
     VerifyCodeResponse,
 )
-from mini.messaging.bird.bird import BirdManager
+from mini.messaging.bird.bird import BirdMessagingService
 
 logger = get_logger(__name__)
 
 
 class VerifyService:
-    def __init__(self, bird_manager: BirdManager):
+    def __init__(self, bird_manager: BirdMessagingService):
         self.bird_sms = bird_manager
 
     def send_verification(

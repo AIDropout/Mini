@@ -1,14 +1,14 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
-
+from typing import List, Optional, Union
 from pydantic import BaseModel, Field
+import uuid
 
-from .telegram.models import TelegramMessage
 
-
-class MessageProvider(Enum):
+# GENERAL
+class MessagingProviderEnum(Enum):
     TELEGRAM = "telegram"
     BIRD = "bird"
+    INSTAGRAM = "instagram"
 
 
 class MessageType(Enum):
@@ -17,6 +17,7 @@ class MessageType(Enum):
     TEXT_AND_FILE = "text_and_file"
 
 
+# IDENTITY METADATA
 class TelegramMetadata(BaseModel):
     uid: Union[int, str]
     user_name: Optional[str]
@@ -28,9 +29,17 @@ class BirdMetadata(BaseModel):
     phone_number: str
 
 
+class InstagramMetadata(BaseModel):
+    sender_id: str
+    recipient_id: str
+
+
+
+# MINIMESSAGE
 class MiniMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     content: str
-    metadata: Union[TelegramMetadata, BirdMetadata]
-    provider: MessageProvider
+    metadata: Union[TelegramMetadata, BirdMetadata, InstagramMetadata]
+    provider: MessagingProviderEnum
     type: MessageType
     media_urls: List[str] = Field(default_factory=list)

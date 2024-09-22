@@ -1,10 +1,12 @@
 """This file is IMPORTANT. For managing our bird webhooks."""
+
 import asyncio
-from mini.messaging.bird.bird import BirdManager
+from mini.messaging.bird.bird import BirdMessagingService
+
 
 class WebhookManager:
     def __init__(self):
-        self.bird_provider = BirdManager()
+        self.bird_provider = BirdMessagingService()
 
     async def list_webhooks(self):
         try:
@@ -18,10 +20,10 @@ class WebhookManager:
                     print(f"Service: {webhook['service']}")
 
                     channel_id = None
-                    if 'eventFilters' in webhook:
-                        for filter in webhook['eventFilters']:
-                            if filter['key'] == 'channelId':
-                                channel_id = filter['value']
+                    if "eventFilters" in webhook:
+                        for filter in webhook["eventFilters"]:
+                            if filter["key"] == "channelId":
+                                channel_id = filter["value"]
                                 break
                     print(f"Channel ID: {channel_id}")
                     print("---")
@@ -41,36 +43,40 @@ class WebhookManager:
     async def add_webhook(self, channel_id):
         try:
             self.bird_provider.set_sender(channel_id)
-            await self.bird_provider.register_webhook("sms.inbound", "https://app-kilu.onrender.com/rooms/respond")
+            await self.bird_provider.register_webhook(
+                "sms.inbound", "https://app-kilu.onrender.com/rooms/respond"
+            )
             print(f"Webhook for event added successfully with Channel ID: {channel_id}")
         except Exception as e:
             print(f"Error adding webhook: {e}")
 
+
 async def main():
     manager = WebhookManager()
-    
+
     while True:
         print("\nWebhook Manager")
         print("1. List all webhooks")
         print("2. Delete webhook")
         print("3. Add webhook")
         print("4. Exit")
-        
+
         choice = input("Enter your choice (1-4): ")
-        
-        if choice == '1':
+
+        if choice == "1":
             await manager.list_webhooks()
-        elif choice == '2':
+        elif choice == "2":
             webhook_id = input("Enter webhook ID to delete: ")
             await manager.delete_webhook(webhook_id)
-        elif choice == '3':
+        elif choice == "3":
             channel_id = input("Enter channel ID: ")
             await manager.add_webhook(channel_id)
-        elif choice == '4':
+        elif choice == "4":
             print("Exiting...")
             break
         else:
             print("Invalid choice. Please try again.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

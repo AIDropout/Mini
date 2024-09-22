@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Request, Response, HTTPException, Depends
+from fastapi import APIRouter, Request, Response, HTTPException, Depends, BackgroundTasks
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.messaging.instagram.service import InstagramWebhookService
+from mini.messaging.instagram.webhook import InstagramWebhookService
 from mini.messaging.instagram.dependencies import validate_instagram_webhook
 from mini.messaging.instagram.models import InstagramWebhook
+from mini.messaging.dependencies import MessagingServiceDep
 from mini.database.database import DatabaseManager
 
 router = APIRouter(prefix="/webhooks")
@@ -31,9 +32,11 @@ async def verify_instagram_webhook(request: Request):
 
 @router.post("/instagram")
 def handle_instagram_webhook(
+    messaging_service: MessagingServiceDep,
+    background_tasks: BackgroundTasks,
     webhook: InstagramWebhook = Depends(validate_instagram_webhook),
-    database_manager: DatabaseManager = Depends(DatabaseManager)
+    database_manager: DatabaseManager = Depends(DatabaseManager),
 ):
     """Instagram events for any of our characters hit this endpoint"""
-    service = InstagramWebhookService(database_manager)
-    return service.handle_webhook(webhook)
+    service = InstagramWebhookService(messaging_service, database_manager)
+    return service.handle_webhook(webhook, background_tasks)

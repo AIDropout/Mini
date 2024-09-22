@@ -13,13 +13,14 @@ from mini.agent.modules.prompt import (
 )
 from mini.agent.modules.subscribe import SubscribeModule
 from mini.agent.modules.vision import VisionModule
-from mini.agent.tasks.models import RespondTask
+from mini.agent.tasks.models import MessageTask
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
 from mini.database.models import Agent, Message, Room, Tables, User
 from mini.database.database import DatabaseManager
-from mini.messaging.bird.bird import BirdManager
+from mini.messaging.models import MiniMessage
+from mini.messaging.bird.bird import BirdMessagingService
 from mini.messaging.discord.discord import discord_manager
 from mini.server.cancel import CancelManager
 from mini.utils.utils import utc_now
@@ -58,7 +59,11 @@ class AgentService:
         )
 
     def configure(
-        self, messaging_manager: BirdManager, agent: Agent, user: User, room: Room
+        self,
+        messaging_manager: BirdMessagingService,
+        agent: Agent,
+        user: User,
+        room: Room,
     ) -> None:
         self.agent, self.user, self.room = agent, user, room
         for module in [
@@ -73,20 +78,20 @@ class AgentService:
             module.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
-    def handle_chat_task(
-        self, task: RespondTask
-    ) -> bool:
-        el.log(f"TASK: {task}")
+    def respond_to_message(self, message: MiniMessage) -> bool:
+        el.log(f"MESSAGE: {message}")
         try:
-            if isinstance(task, RespondTask):
-                task = self._handle_respond_task(task)
-                if not self._should_continue_conversation():
-                    return True
+            if message.media_urls:
+                message = self._handle_image(message)
+                el.log(f"RESPONDING TO: '{message.content}' in Room {self.room.id}")
 
-            response, roleplay = self._generate_response(task)
+            if not self._should_continue_conversation():
+                return True
+
+            response, roleplay = self._generate_response(message)
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
-            if self._is_task_cancelled(task):
+            if self.cancel_manager.newer_message_found(self.room.id, message.id):
                 return False
 
             success = self.action.send_message(text=text_response)
@@ -97,26 +102,18 @@ class AgentService:
 
             return True
         except Exception:
-            msg = discord_manager.log_error(f"task_id={task.id}")
+            msg = discord_manager.log_error(f"message_id={message.id}")
             el.log(msg)
             return False
-
-    def _handle_respond_task(self, task: RespondTask) -> RespondTask:
-        if task.user_message.media_urls:
-            task = self._handle_image(task)
-        el.log(f"RESPONDING TO: '{task.user_message.content}' in Room {self.room.id}")
-        return task
 
     def _should_continue_conversation(self) -> bool:
         result = self.subscribe.should_continue_conversation()
         self.logger.info(f"Room subscription status: {repr(result)}")
         return result.continue_conversation
 
-    def _generate_response(
-        self, task: RespondTask
-    ) -> tuple[str, str]:
+    def _generate_response(self, message: MiniMessage) -> tuple[str, str]:
         all_recent_messages = self.memory.get_recent_messages(
-            count=task.recent_message_count
+            count=10  # TODO: Make this configurable?
         )
         el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
 
@@ -160,21 +157,16 @@ class AgentService:
             roleplay_response,
         )
 
-    def _is_task_cancelled(
-        self, task: RespondTask
-    ) -> bool:
-        return self.cancel_manager.newer_task_found(self.room.id, task.id)
-
-    def _handle_image(self, task: RespondTask) -> RespondTask:
+    def _handle_image(self, message: MiniMessage) -> MessageTask:
         try:
-            description = self.vision.handle_images(task.user_message.media_urls)
-            task.user_message.content += f"\n\nUser sent an image: {description}"
+            description = self.vision.handle_images(message.media_urls)
+            message.content += f"\n\nUser sent an image: {description}"
         except VisionError:
-            task.user_message.content += (
+            message.content += (
                 "\n\nUser sent an image, but due to some error your phone "
-                "is not receiving images currently."
+                "is not loading the images."
             )
-        return task
+        return message
 
     def _handle_successful_send(self, final_message: str):
         self._add_message_to_db(final_message)

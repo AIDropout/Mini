@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from mini.core.logger import get_logger
 from mini.database.models import Agent, Message, Room, Tables
 from mini.database.database import DatabaseManager
-from mini.messaging.bird.bird import BirdManager
+from mini.messaging.bird.bird import BirdMessagingService
 from mini.payment.stripe.customer import CustomerManager
 from mini.database.users.service import UserService
 from mini.messaging.bird.contact_card import get_or_create_contact_card
@@ -17,11 +17,11 @@ class RoomService:
     def __init__(
         self,
         database_manager: DatabaseManager,
-        messaging_manager: BirdManager,
+        messaging_manager: BirdMessagingService,
         customer_manager: CustomerManager,
         user_service: UserService,
     ):
-        self.database_manager=database_manager
+        self.database_manager = database_manager
         self.messaging_manager = messaging_manager
         self.customer_manager = customer_manager
         self.user_service = user_service

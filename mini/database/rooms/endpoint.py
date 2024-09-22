@@ -1,26 +1,19 @@
-from fastapi import (
-    APIRouter,
-    Body,
-    Depends,
-    Path,
-    Request,
-    BackgroundTasks
-)
+from fastapi import APIRouter, Body, Depends, Path, Request, BackgroundTasks
 from typing import Annotated
 
 from config.container import container
 from mini.core.security import ApiKeyDep
 from mini.core.logger import get_logger
 from mini.database.models import Room
-from mini.messaging.service import ReplyService
+from mini.messaging.service import MessagingService
 from mini.database.rooms.service import RoomService
 
 router = APIRouter()
 logger = get_logger(__name__)
 
 RoomServiceDep = Annotated[RoomService, Depends(lambda: container.get_room_service())]
-ReplyServiceDep = Annotated[
-    ReplyService, Depends(lambda: container.get_reply_service())
+MessagingServiceDep = Annotated[
+    MessagingService, Depends(lambda: container.get_messaging_service())
 ]
 
 

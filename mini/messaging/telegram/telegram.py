@@ -10,7 +10,7 @@ import telegram
 from config.config import config
 from mini.core.logger import get_logger
 from mini.messaging.models import (
-    MessageProvider,
+    MessagingProviderEnum,
     MessageType,
     TelegramMetadata,
     MiniMessage,
@@ -72,7 +72,7 @@ class TelegramManager:
         return MiniMessage(
             content=telegram_message,
             metadata=metadata,
-            provider=MessageProvider.TELEGRAM,
+            provider=MessagingProviderEnum.TELEGRAM,
             type=message_type,
         )
 

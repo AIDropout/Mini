@@ -7,34 +7,43 @@ from mini.server.redis import RedisManager
 
 logger = get_logger(__name__)
 
-#TODO: handle: first message fails (but key still remains). 
 
 class CancelManager:
     def __init__(self, redis_manager: RedisManager):
         self.redis_manager = redis_manager
 
-    def newer_task_found(self, room_id: str, current_task_id: str) -> bool:
+    def newer_message_found(self, room_id: str, current_message_id: str) -> bool:
         pattern = f"{room_id}:*"
         current_task_time = None
-        newer_task_found = False
+        newer_message_found = False
 
+        # First, get the current task's created_at time
+        current_key = f"{room_id}:{current_message_id}"
+        current_task_data = json.loads(self.redis_manager.get(current_key))
+        current_task_time = datetime.fromisoformat(current_task_data["created_at"])
+
+        # Now compare with all other tasks
         for key in self.redis_manager.scan_iter(match=pattern):
-            _, task_id = key.split(":", 1)
-            task_data = json.loads(self.redis_manager.get(key))
-            task_time = datetime.fromisoformat(task_data['created_at'])
+            _, message_id = key.split(":", 1)
+            if message_id == current_message_id:
+                continue  # Skip the current task
 
-            if task_id == current_task_id:
-                current_task_time = task_time
-            elif current_task_time is None or task_time > current_task_time:
-                newer_task_found = True
-                logger.info(f"🍊 Removing current task {current_task_id} for room id {room_id} due to newer task {task_id}...")
-                self.remove_task(room_id, current_task_id)
+            task_data = json.loads(self.redis_manager.get(key))
+            task_time = datetime.fromisoformat(task_data["created_at"])
+
+            if task_time > current_task_time:
+                newer_message_found = True
+                logger.info(
+                    f"🍊 Found newer task for room id {room_id}. Current task should be cancelled."
+                )
                 break
 
-        if not newer_task_found:
-            logger.info(f"No newer tasks found for room id {room_id}. Current task {current_task_id} can continue.")
+        if not newer_message_found:
+            logger.info(
+                f"No newer tasks found for room id {room_id}. Current task can continue."
+            )
 
-        return newer_task_found
+        return newer_message_found
 
     def remove_task(self, room_id: str, task_id: str) -> None:
         """

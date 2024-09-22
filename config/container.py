@@ -11,6 +11,8 @@ from mini.utils.time import TimeManager
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
 from mini.messaging.context import ContextFactory
+from mini.messaging.bird.bird import BirdMessagingService
+from mini.messaging.instagram.instagram import InstagramMessagingService
 from mini.database.users.service import UserService
 
 logger = get_logger(__name__)
@@ -95,9 +97,9 @@ class Container:
 
     def get_verify_service(self):
         from mini.messaging.bird.verification.service import VerifyService
-        from mini.messaging.bird.bird import BirdManager
+        from mini.messaging.bird.bird import BirdMessagingService
 
-        return VerifyService(bird_manager=BirdManager())
+        return VerifyService(bird_manager=BirdMessagingService())
 
     def get_room_service(self):
         from mini.database.rooms.service import RoomService
@@ -193,14 +195,18 @@ class Container:
             prompt_module=prompt_module,
         )
 
-    def get_reply_service(self):
-        from mini.messaging.service import ReplyService
+    def get_messaging_service(self):
+        from mini.messaging.service import MessagingService
 
-        return ReplyService(
+        return MessagingService(
             database_manager=self.database_manager,
             context_factory=self.get_context_factory(),
             cancel_manager=self.get_cancel_manager(),
             redis_manager=self.get_redis_manager(),
+            bird_manager=BirdMessagingService(),
+            instagram_manager=InstagramMessagingService(
+                database_manager=self.database_manager
+            ),
         )
 
 

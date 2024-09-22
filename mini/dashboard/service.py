@@ -1,6 +1,6 @@
 from mini.core.logger import get_logger
 from mini.database.models import Message, Tables
-from mini.messaging.bird.bird import BirdManager
+from mini.messaging.bird.bird import BirdMessagingService
 from mini.messaging.context import ContextFactory
 from mini.database.database import DatabaseManager
 
@@ -20,7 +20,7 @@ class DashboardService:
 
         context = self.context_factory.create_cron_context(room_id)
 
-        bird_manager = BirdManager()
+        bird_manager = BirdMessagingService()
         bird_manager.set_receiver(context.user.phone_number)
         bird_manager.set_sender(context.agent.bird_channel_id)
         success = bird_manager.send_message(text=message)

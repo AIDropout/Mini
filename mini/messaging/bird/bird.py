@@ -10,17 +10,18 @@ from mini.core.logger import get_logger, logger
 from mini.messaging.bird.models import BirdRequest
 from mini.messaging.models import (
     BirdMetadata,
-    MessageProvider,
+    MessagingProviderEnum,
     MessageType,
     MiniMessage,
 )
+from mini.messaging.base import MessagingProvider
 from mini.messaging.bird.models import ErrorCode, VerificationStatus
 from mini.utils.storage import get_file_store
 
 logger = get_logger(__name__)
 
 
-class BirdManager:
+class BirdMessagingService(MessagingProvider):
     def __init__(self):
         """Initialize Bird credentials."""
         self._api_url = config.BIRD_API_URL
@@ -89,7 +90,7 @@ class BirdManager:
         return MiniMessage(
             content=content,
             metadata=BirdMetadata(channel_id=channel_id, phone_number=phone_number),
-            provider=MessageProvider.BIRD,
+            provider=MessagingProviderEnum.BIRD,
             type=message_type,
             media_urls=aws_media_urls,
         )
@@ -223,7 +224,6 @@ class BirdManager:
         response = requests.post(url, headers=self._api_header, json=body)
         logger.info(response.json())
         response.raise_for_status()
-        logger.info(f"Webhook registration response: {response.json()}")
 
     def _get_existing_webhooks(self) -> Dict:
         """Retrieves the complete list of subscribed webhooks."""

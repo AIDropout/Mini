@@ -37,7 +37,7 @@ async def lifespan(_: FastAPI):
     redis_manager.initialize()
 
     if config.ENVIRONMENT == "local":
-        redis_manager.flush_all()
+        # redis_manager.flush_all()
         subprocess.Popen(
             [
                 "celery",

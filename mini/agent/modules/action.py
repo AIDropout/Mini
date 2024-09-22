@@ -6,7 +6,7 @@ from mini.agent.modules.base import AgentModule
 from mini.core.logger import get_logger
 from mini.database.models import Tables
 from mini.llm import LLMService
-from mini.messaging.bird.bird import BirdManager
+from mini.messaging.bird.bird import BirdMessagingService
 
 logger = get_logger(__name__)
 
@@ -17,7 +17,7 @@ class ActionModule(AgentModule):
         self.llm_manager.cost_tracking_callback = self._update_user_message_cost
         self.messaging_manager = None
 
-    def set_messaging_manager(self, messaging_manager: BirdManager) -> None:
+    def set_messaging_manager(self, messaging_manager: BirdMessagingService) -> None:
         self.messaging_manager = messaging_manager
 
     def generate_message(
@@ -38,7 +38,7 @@ class ActionModule(AgentModule):
         subject: Optional[str] = None,
     ) -> bool:
         """
-        Send a message using the BirdManager. If only text is provided, it's split and sent in parts.
+        Send a message using the BirdMessagingService. If only text is provided, it's split and sent in parts.
         For messages with images or files, everything is sent at once.
 
         Args:
