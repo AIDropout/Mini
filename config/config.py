@@ -1,20 +1,6 @@
 import yaml
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from enum import Enum
-
-
-class LLMProviders(Enum):
-    GEMINI = "GEMINI_API_KEY"
-    OPENAI = "OPENAI_API_KEY"
-    ANTHROPIC = "ANTHROPIC_API_KEY"
-    GROQ = "GROQ_API_KEY"
-    GOOGLE = "GOOGLE_API_KEY"
-
-
-def get_api_key(provider: LLMProviders) -> str:
-    """Fetches the API key from the config based on the provider."""
-    return getattr(config, provider.value)
 
 
 class StripeConfig(BaseSettings):
@@ -142,18 +128,15 @@ class Config(BaseSettings):
     FLOWER_UNAUTHENTICATED_API: bool
     FILTER_LLM: str
     SKIP_LLM: str
-    ACTION_MANAGER_LLM_PROVIDER: LLMProviders
     ACTION_MANAGER_LLM: str
     INTENT_MANAGER_LLM: str
     MEMORY_MANAGER_LLM: str
     VISION_MANAGER_LLM: str
-    VISION_MANAGER_LLM_PROVIDER: LLMProviders
     STRIPE_CONFIG: StripeConfig
     PHONE_OTP_CHANNEL_ID: str
     FRONTEND_URL: str
     TIME_API: TimeApiConfig = TimeApiConfig()
     MEMORY_GENERAL_LLM: str
-    MEMORY_GENERAL_LLM_PROVIDER: LLMProviders
     MEMORY_VECTOR_STORE_PROVIDER: str
     MEMORY_QDRANT_CONFIG: MemoryQdrantConfig
     MEMORY_LLM_PROVIDER: str

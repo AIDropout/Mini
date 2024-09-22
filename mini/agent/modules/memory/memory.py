@@ -8,18 +8,18 @@ from mem0 import Memory
 from pydantic import ValidationError
 
 from config.config import config
-from mini.core.exceptions import (
-    MemoryAdditionError,
-    MissingAgentIdError,
-    MissingUserIdError,
-)
-from mini.core.logger import get_logger
 from mini.agent.modules.memory.models import (
     MemoryMetadataSchema,
     MemoryRecordSchema,
     RetrievedMemoryMetadataSchema,
     SavedMemoryMetadataSchema,
 )
+from mini.core.exceptions import (
+    MemoryAdditionError,
+    MissingAgentIdError,
+    MissingUserIdError,
+)
+from mini.core.logger import get_logger
 from mini.llm import LLMService
 from mini.utils.time import TimeManager
 
@@ -95,7 +95,6 @@ class MemoryManager:
             messages=[{"role": "user", "content": data}],
             system_prompt=system_prompt,
             json_mode=True,
-            # expect_json=True,
         )
 
         try:
