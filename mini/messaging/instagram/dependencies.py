@@ -7,3 +7,4 @@ async def validate_instagram_webhook(request: Request) -> InstagramWebhook:
         return InstagramWebhook.model_validate(body)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid webhook payload: {str(e)}")
+    

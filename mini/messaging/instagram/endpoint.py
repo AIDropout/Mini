@@ -5,8 +5,9 @@ from mini.core.logger import get_logger
 from mini.messaging.instagram.service import InstagramWebhookService
 from mini.messaging.instagram.dependencies import validate_instagram_webhook
 from mini.messaging.instagram.models import InstagramWebhook
+from mini.database.database import DatabaseManager
 
-router = APIRouter()
+router = APIRouter(prefix="/webhooks")
 logger = get_logger(__name__)
 
 
@@ -29,8 +30,10 @@ async def verify_instagram_webhook(request: Request):
 
 
 @router.post("/instagram")
-async def handle_instagram_webhook(
+def handle_instagram_webhook(
     webhook: InstagramWebhook = Depends(validate_instagram_webhook),
+    database_manager: DatabaseManager = Depends(DatabaseManager)
 ):
     """Instagram events for any of our characters hit this endpoint"""
-    return await InstagramWebhookService.handle_webhook(webhook)
+    service = InstagramWebhookService(database_manager)
+    return service.handle_webhook(webhook)
