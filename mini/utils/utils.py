@@ -5,6 +5,7 @@ import subprocess
 from datetime import datetime, timezone
 from typing import Tuple
 from zoneinfo import ZoneInfo
+import uuid
 
 import requests
 from pyngrok import ngrok
@@ -84,3 +85,7 @@ def get_infostring() -> str:
         f"{hour}:{pst_time.strftime('%M%p')} PT, {pst_time.strftime('%-m/%-d')}"
     )
     return f"🕒 {timestamp}"
+
+
+def generate_uuid():
+    return str(uuid.uuid4())

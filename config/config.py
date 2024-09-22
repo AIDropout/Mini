@@ -3,6 +3,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 from enum import Enum
 
+
 class LLMProviders(Enum):
     GEMINI = "GEMINI_API_KEY"
     OPENAI = "OPENAI_API_KEY"
@@ -114,7 +115,6 @@ class DiscordConfig(BaseSettings):
 class InstagramConfig(BaseSettings):
     api_version: str
     verify_token: str
-    access_token: str
 
 
 class Config(BaseSettings):
