@@ -4,7 +4,7 @@ from config.container import container
 from mini.core.models.task.chat import ProactiveTask
 from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderEnum
-from mini.messaging.provider.discord.discord import discord_manager
+from mini.messaging.discord.discord import discord_manager
 
 
 logger = get_logger(__name__)

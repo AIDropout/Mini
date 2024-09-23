@@ -4,7 +4,7 @@ import requests
 
 from config.config import config
 from mini.core.logger import get_logger, logger
-from mini.messaging.provider.instagram.models import MessageEvent
+from mini.messaging.instagram.models import MessageEvent
 from mini.core.models.message import (
     MessagingProviderEnum,
     MiniMessage,
@@ -13,7 +13,7 @@ from mini.core.models.message import (
 )
 from mini.database.database import DatabaseManager
 from mini.database.models import Tables
-from mini.messaging.provider.base import ProviderBase
+from mini.messaging.base import ProviderBase
 
 logger = get_logger(__name__)
 

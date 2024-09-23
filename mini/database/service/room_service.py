@@ -5,10 +5,10 @@ from fastapi import HTTPException
 from mini.core.logger import get_logger
 from mini.database.models import Agent, Message, Room, Tables
 from mini.database.database import DatabaseManager
-from mini.messaging.provider.bird.bird import BirdMessaging
+from mini.messaging.bird.bird import BirdMessaging
 from mini.payment.stripe.customer import CustomerManager
 from mini.database.service.user_service import UserService
-from mini.messaging.provider.bird.contact_card import get_or_create_contact_card
+from mini.messaging.bird.contact_card import get_or_create_contact_card
 
 logger = get_logger(__name__)
 

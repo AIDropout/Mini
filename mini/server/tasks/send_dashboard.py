@@ -1,6 +1,6 @@
 # from mini.core.logger import get_logger
 # from mini.database.models import Message, Tables
-# from mini.messaging.provider.bird.bird import BirdMessaging
+# from mini.messaging.bird.bird import BirdMessaging
 # from mini.messaging.context import ContextFactory
 # from mini.database.database import DatabaseManager
 

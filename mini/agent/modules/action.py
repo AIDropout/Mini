@@ -6,7 +6,7 @@ from mini.agent.modules.base import AgentModule
 from mini.core.logger import get_logger
 from mini.database.models import Tables
 from mini.llm import LLMService
-from mini.messaging.provider import MessagingProvider
+from mini.messaging import MessagingProvider
 
 logger = get_logger(__name__)
 

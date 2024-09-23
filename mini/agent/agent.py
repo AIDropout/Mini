@@ -20,8 +20,8 @@ from mini.core.models.task.chat import ProactiveTask, ResponseTask
 from mini.core.models.task.task import Task
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Message, Room, Tables, User
-from mini.messaging.provider.bird.bird import BirdMessaging
-from mini.messaging.provider.discord.discord import discord_manager
+from mini.messaging.bird.bird import BirdMessaging
+from mini.messaging.discord.discord import discord_manager
 from mini.core.models.message import MiniMessage
 from mini.server.redis.cancel import CancelManager
 from mini.server.schedule.scheduler import Scheduler

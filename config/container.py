@@ -107,7 +107,7 @@ class Container:
 
     def get_verify_service(self):
         from mini.messaging.bird.bird import BirdMessaging
-        from mini.messaging.provider.bird.verification.service import VerifyService
+        from mini.messaging.bird.verification.service import VerifyService
 
         return VerifyService()
 

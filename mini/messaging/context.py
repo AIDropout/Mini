@@ -8,9 +8,9 @@ from mini.core.models.message import MessagingProviderEnum, MiniMessage
 from mini.database.models import Agent, Room, Tables, User
 from mini.database.database import DatabaseManager
 from mini.database.service.user_service import UserService
-from mini.messaging.provider import MessagingProvider, messaging_providers
-from mini.messaging.provider.bird.bird import BirdMessaging
-from mini.messaging.provider.instagram.instagram import InstagramMessaging
+from mini.messaging import MessagingProvider, messaging_providers
+from mini.messaging.bird.bird import BirdMessaging
+from mini.messaging.instagram.instagram import InstagramMessaging
 
 
 class ContextFactory:

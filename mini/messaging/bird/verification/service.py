@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from config.config import config
 from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderEnum
-from mini.messaging.provider.bird.verification.models import (
+from mini.messaging.bird.verification.models import (
     ResendVerificationRequest,
     ResendVerificationResponse,
     SendVerificationRequest,
@@ -11,7 +11,7 @@ from mini.messaging.provider.bird.verification.models import (
     VerifyCodeRequest,
     VerifyCodeResponse,
 )
-from mini.messaging.provider import messaging_providers
+from mini.messaging import messaging_providers
 
 logger = get_logger(__name__)
 

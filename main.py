@@ -17,8 +17,8 @@ from config.container import container
 from mini.api import router as api_router
 from mini.core.logger import get_logger
 from mini.utils.utils import stop_existing_processes
-from mini.messaging.provider.bird.bird import BirdMessaging
-from mini.messaging.provider.telegram.telegram import TelegramManager
+from mini.messaging.bird.bird import BirdMessaging
+from mini.messaging.telegram.telegram import TelegramManager
 
 logger = get_logger(__name__)
 

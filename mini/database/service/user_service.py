@@ -7,9 +7,10 @@ from postgrest.exceptions import APIError
 from config.config import config
 from mini.database.models import Room, Tables, User
 from mini.database.database import DatabaseManager
-from mini.messaging.provider.discord.discord import discord_manager
+from mini.messaging.discord.discord import discord_manager
 from mini.utils.utils import get_infostring
 from mini.payment.stripe.customer import CustomerManager
+
 
 class UserService:
     def __init__(
@@ -18,7 +19,9 @@ class UserService:
         self.database_manager = database_manager
         self.customer_manager = customer_manager
 
-    def create_user(self, id: str, phone_number: str, background_tasks: BackgroundTasks) -> User:
+    def create_user(
+        self, id: str, phone_number: str, background_tasks: BackgroundTasks
+    ) -> User:
         try:
             customer = self.customer_manager.create_customer(phone=phone_number)
             new_user = self.database_manager.insert(
@@ -31,7 +34,7 @@ class UserService:
             if config.ENVIRONMENT == "production":
                 background_tasks.add_task(
                     discord_manager.log_website_activity,
-                    f"-# **New signup**: {phone_number} {get_infostring()}"
+                    f"-# **New signup**: {phone_number} {get_infostring()}",
                 )
 
             return new_user

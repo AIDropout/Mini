@@ -2,7 +2,7 @@ from fastapi import APIRouter, BackgroundTasks
 from config.config import config
 import requests
 from mini.core.logger import get_logger
-from mini.messaging.provider.instagram.models import InstagramWebhook, MessageEvent
+from mini.messaging.instagram.models import InstagramWebhook, MessageEvent
 from mini.server.tasks.send_response import send_response
 from mini.core.models.message import MessagingProviderEnum
 from mini.database.database import DatabaseManager

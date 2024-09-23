@@ -12,9 +12,9 @@ from mini.core.models.message import MessagingProviderEnum
 from fastapi import Depends
 
 from config.config import config
-from mini.messaging.provider.instagram.webhook import InstagramWebhookService
-from mini.messaging.provider.instagram.dependencies import validate_instagram_webhook
-from mini.messaging.provider.instagram.models import InstagramWebhook
+from mini.messaging.instagram.webhook import InstagramWebhookService
+from mini.messaging.instagram.dependencies import validate_instagram_webhook
+from mini.messaging.instagram.models import InstagramWebhook
 from mini.database.database import DatabaseManager
 from mini.server.tasks.send_response import send_response
 

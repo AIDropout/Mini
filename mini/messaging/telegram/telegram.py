@@ -15,8 +15,8 @@ from mini.core.models.message import (
     MiniMessageMetadata,
     MiniMessage,
 )
-from mini.messaging.provider.base import ProviderBase
-from mini.messaging.provider.telegram.models import (
+from mini.messaging.base import ProviderBase
+from mini.messaging.telegram.models import (
     TelegramMessage,
     _TelegramMessageDocument,
     _TelegramMessagePhoto,

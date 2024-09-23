@@ -7,15 +7,15 @@ import requests
 
 from config.config import config
 from mini.core.logger import get_logger, logger
-from mini.messaging.provider.bird.models import BirdRequest
+from mini.messaging.bird.models import BirdRequest
 from mini.core.models.message import (
     MessagingProviderEnum,
     MessageType,
     MiniMessage,
     MiniMessageMetadata,
 )
-from mini.messaging.provider.base import ProviderBase
-from mini.messaging.provider.bird.models import ErrorCode, VerificationStatus
+from mini.messaging.base import ProviderBase
+from mini.messaging.bird.models import ErrorCode, VerificationStatus
 from mini.utils.storage import get_file_store
 
 logger = get_logger(__name__)

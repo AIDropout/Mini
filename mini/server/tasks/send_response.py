@@ -9,8 +9,8 @@ from mini.database.models import Tables, Message
 from mini.core.logger import get_logger
 from mini.core.models.context import Context
 from mini.core.models.message import MessagingProviderEnum, MiniMessage
-from mini.messaging.provider.discord.discord import discord_manager
-from mini.messaging.provider import messaging_providers, MessagingProvider
+from mini.messaging.discord.discord import discord_manager
+from mini.messaging import messaging_providers, MessagingProvider
 
 
 logger = get_logger(__name__)

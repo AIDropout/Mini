@@ -4,7 +4,7 @@ from typing import Annotated
 from config.container import container
 from mini.api.security import ApiKeyDep
 from mini.core.rate_limiter import RateLimiter
-from mini.messaging.provider.bird.verification.models import (
+from mini.messaging.bird.verification.models import (
     ResendVerificationRequest,
     ResendVerificationResponse,
     SendVerificationRequest,
@@ -12,7 +12,7 @@ from mini.messaging.provider.bird.verification.models import (
     VerifyCodeRequest,
     VerifyCodeResponse,
 )
-from mini.messaging.provider.bird.verification.service import VerifyService
+from mini.messaging.bird.verification.service import VerifyService
 
 router = APIRouter(prefix="/verifications", tags=["verifications"])
 
