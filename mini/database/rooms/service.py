@@ -17,12 +17,12 @@ class RoomService:
     def __init__(
         self,
         database_manager: DatabaseManager,
-        messaging_manager: BirdMessagingService,
+        messaging_provider: BirdMessagingService,
         customer_manager: CustomerManager,
         user_service: UserService,
     ):
         self.database_manager = database_manager
-        self.messaging_manager = messaging_manager
+        self.messaging_provider = messaging_provider
         self.customer_manager = customer_manager
         self.user_service = user_service
 
@@ -42,8 +42,8 @@ class RoomService:
             user = self.user_service.get_user(user_id)
 
             # Send the first message
-            self.messaging_manager.set_receiver(user.phone_number)
-            self.messaging_manager.set_sender(agent.bird_channel_id)
+            self.messaging_provider.set_receiver(user.phone_number)
+            self.messaging_provider.set_sender(agent.bird_channel_id)
 
             # Get agent phone number
             channel = self.database_manager.get_row(
@@ -56,7 +56,7 @@ class RoomService:
             )
 
             # Send file
-            self.messaging_manager.send_message(
+            self.messaging_provider.send_message(
                 text=agent.first_message, files=[(file_url, "text/vcard")]
             )
 

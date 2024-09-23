@@ -2,12 +2,14 @@
 
 from datetime import datetime, timedelta
 from typing import Dict, Optional
+import uuid
 
 from fastapi import BackgroundTasks
 
 from config.config import config
+from mini.core.models.context import Context
+from mini.core.task.chat import ResponseTask
 from mini.agent.run_agent import run_agent
-from mini.agent.tasks.models import MessageTask
 from mini.core.logger import get_logger
 from mini.database.models import Message, Tables
 from mini.messaging.discord.discord import discord_manager
@@ -16,7 +18,7 @@ from mini.messaging.instagram.instagram import InstagramMessagingService
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
 from mini.messaging.base import MessagingProvider
-from mini.messaging.context import ContextFactory, Context
+from mini.messaging.context import ContextFactory
 from mini.messaging.models import MiniMessage, MessagingProviderEnum
 from mini.database.database import DatabaseManager
 
@@ -49,7 +51,7 @@ class MessagingService:
         background_tasks: BackgroundTasks,
     ) -> None:
         context: Optional[Context] = None
-        task: Optional[MessageTask] = None
+        task: Optional[ResponseTask] = None
         try:
             # Get correct provider class given provider name
             messaging_provider = self.providers.get(provider)
@@ -61,31 +63,42 @@ class MessagingService:
                 messaging_provider, request_body
             )
 
+            # Handle return cases
             if self._handle_reset_user(
                 messaging_provider, message.content, context.user.id
             ):
                 return
-            task = self._create_task(message.id, provider, request_body)
-            self._store_task_to_redis(context.room.id, task)
-            if self.cancel_manager.newer_message_found(
-                context.room.id, task.message_id
-            ):
-                return
-            self._insert_and_log_user_message(message, context, background_tasks)
+            if context.room.disabled_by_admin:
+                logger.warning(f"Room {context.room.id} disabled. Canceling process.")
+                return False
+
+            # Create Response Task
             delay = 0  # Future scheduling logic goes here
-            new_task = run_agent.apply_async(
-                args=[context.room.id, message.id], countdown=delay
+            task = ResponseTask(
+                id=str(uuid.uuid4()),
+                context=context,
+                provider=provider,
+                created_at=datetime.now(),
+                scheduled_for=datetime.now() + timedelta(seconds=delay),
+                message=message,
             )
-            if new_task:
-                logger.info(
-                    f"🟢 Scheduled short-term task in 0 seconds\n"
-                    f"🟢 Current time: {datetime.now().isoformat()}\n"
-                    f"🟢 Scheduled time: {task.scheduled_time}\n"
-                )
+
+            # Store the serialized version to Redis
+            self._store_task_to_redis(context.room.id, task)
+
+            # Handle logging
+            self._insert_and_log_user_message(message, context, background_tasks)
+
+            # Schedule task for Celery
+            if self.cancel_manager.newer_message_found(context.room.id, task.id):
+                return
+            new_task = run_agent.apply_async(
+                args=[context.room.id, task.id], countdown=delay
+            )
 
         except Exception as e:
             self._handle_error(
-                context.room.id if context else None, task.message_id if task else None
+                context.room.id if context else None, task.id if task else None
             )
 
     def _process_incoming_message(
@@ -115,21 +128,9 @@ class MessagingService:
             return True
         return False
 
-    def _create_task(
-        self, message_id: str, provider: MessagingProviderEnum, request_body: dict
-    ) -> MessageTask:
-        delay = 0  # Implement delay logic here
-        return MessageTask(
-            message_id=message_id,
-            created_at=datetime.now(),
-            scheduled_time=datetime.now() + timedelta(seconds=delay),
-            provider=provider,
-            request_body=request_body,
-        )
-
-    def _store_task_to_redis(self, room_id: str, task: MessageTask):
+    def _store_task_to_redis(self, room_id: str, task: ResponseTask):
         self.redis_manager.set(
-            key=f"{room_id}:{task.message_id}",
+            key=f"{room_id}:{task.id}",
             value=task.model_dump_json(),
             expiry=120,  # Assuming delay is 0
         )

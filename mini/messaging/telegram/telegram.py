@@ -12,7 +12,7 @@ from mini.core.logger import get_logger
 from mini.messaging.models import (
     MessagingProviderEnum,
     MessageType,
-    TelegramMetadata,
+    MiniMessageMetadata,
     MiniMessage,
 )
 from mini.messaging.telegram.models import (
@@ -61,17 +61,14 @@ class TelegramManager:
             f"{telegram_message.message.from_.last_name}"
         ).strip()
 
-        metadata = TelegramMetadata(
-            uid=telegram_message.message.from_.id,
-            user_name=user_name,
-            chat_id=telegram_message.message.chat.id,
-        )
-
         cls._user_id = telegram_message.message.from_.id
 
         return MiniMessage(
             content=telegram_message,
-            metadata=metadata,
+            metadata=MiniMessageMetadata(
+                receiver_id=telegram_message.message.from_.id,
+                sender_id=telegram_message.message.chat.id,
+            ),
             provider=MessagingProviderEnum.TELEGRAM,
             type=message_type,
         )
