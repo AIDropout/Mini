@@ -148,7 +148,7 @@ class AgentService:
             # TEMPORARY DEVANSHU
             res = self.task_scheduler.schedule_proactive_message_from_now(
                 room_id=self.room.id,
-                minutes_from_now=30,  # TODO: Make this configurable
+                minutes_from_now=0.1,  # TODO: Make this configurable
             )
 
             el.log(f"TASK SCHEDULED: {res}")

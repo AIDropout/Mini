@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Depends
 
+from config.container import container
 from mini.core.logger import get_logger
 from mini.core.security import ApiKeyDep
 from mini.database.database import DatabaseManager
@@ -20,11 +21,13 @@ logger = get_logger(__name__)
 def send_proactive_message(
     api_key: ApiKeyDep,
     room_id: Annotated[str, Path(..., title="Room ID for proactive messaging")],
-    database_manager: DatabaseManager = Depends(DatabaseManager),
-    redis_manager: RedisManager = Depends(RedisManager),
-    context_factory: ContextFactory = Depends(ContextFactory),
-    cancel_manager: CancelManager = Depends(CancelManager)
+    database_manager: Annotated[DatabaseManager, Depends(DatabaseManager)],
+    redis_manager: Annotated[RedisManager, Depends(RedisManager)],
+    context_factory: Annotated[ContextFactory, Depends(container.get_context_factory)],
+    cancel_manager: Annotated[CancelManager, Depends(container.get_cancel_manager)],
 ):
     """Endpoint for sending proactive messages."""
-    service = ProactiveService(database_manager, redis_manager, context_factory, cancel_manager)
-    return service.send_proactive_message(room_id, provider=MessagingProviderEnum.BIRD)
+    service = ProactiveService(
+        database_manager, redis_manager, context_factory, cancel_manager
+    )
+    service.send_proactive_message(room_id, provider=MessagingProviderEnum.BIRD)

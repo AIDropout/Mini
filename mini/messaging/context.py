@@ -11,7 +11,9 @@ from mini.database.users.service import UserService
 
 
 class ContextFactory:
-    def __init__(self, database_manager: DatabaseManager, user_service: UserService):
+    def __init__(
+        self, database_manager: DatabaseManager, user_service: UserService
+    ) -> None:
         self.database_manager = database_manager
         self.user_service = user_service
 
@@ -69,7 +71,7 @@ class ContextFactory:
         if message.provider == MessagingProviderEnum.TELEGRAM:
             user_id_col = Tables.USERS__telegram_uid
             # not implemented:
-            # agent_id_col = Tables.USERS__telegram_chat_id 
+            # agent_id_col = Tables.USERS__telegram_chat_id
         elif message.provider == MessagingProviderEnum.BIRD:
             user_id_col = Tables.USERS__phone_number
             agent_id_col = Tables.AGENTS__bird_channel_id

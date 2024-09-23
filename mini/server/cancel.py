@@ -7,9 +7,9 @@ from mini.server.redis import RedisManager
 
 logger = get_logger(__name__)
 
-
+ 
 class CancelManager:
-    def __init__(self, redis_manager: RedisManager):
+    def __init__(self, redis_manager: RedisManager) -> None:
         self.redis_manager = redis_manager
 
     def newer_message_found(self, room_id: str, current_task_id: str) -> bool:

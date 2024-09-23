@@ -29,8 +29,6 @@ from mini.utils.utils import configure_local_webhooks, stop_existing_processes
 
 logger = get_logger(__name__)
 
-task_scheduler = TaskScheduler(db_url=config.SCHEDULER_DB_URL)
-task_scheduler.initialize()
 
 
 @asynccontextmanager
@@ -38,6 +36,8 @@ async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
     redis_manager = RedisManager()
     redis_manager.initialize()
+    task_scheduler = TaskScheduler(db_url=config.SCHEDULER_DB_URL)
+    task_scheduler.initialize()
 
     if config.ENVIRONMENT == "local":
         # redis_manager.flush_all()

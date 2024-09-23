@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 
 class RedisManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.pool = None
 
     def initialize(self) -> None:
@@ -86,4 +86,3 @@ class RedisManager:
         with self.get_connection() as client:
             client.flushall()
             logger.warning("All keys in all Redis databases have been deleted")
-

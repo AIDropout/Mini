@@ -80,11 +80,11 @@ class TaskScheduler:
         return job_id
 
     def schedule_proactive_message_from_now(
-        self, room_id: str, minutes_from_now: int
+        self, room_id: str, minutes_from_now: float
     ) -> str:
 
         run_date = datetime.now(tz=timezone(self.schedule_timezone)) + timedelta(
-            seconds=minutes_from_now
+            minutes=minutes_from_now
         )  # TODO: change to minutes
         job_id = self.schedule_proactive_message(room_id, run_date)
         return job_id
