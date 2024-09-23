@@ -56,7 +56,7 @@ class TaskScheduler:
     def job_func(
         room_id: str,
         api_key: str,
-        url: str = "https://32c7-132-161-243-149.ngrok-free.app",
+        url: str = config.ngrok.get_url(),
     ):
         logger.info("Running proactive message for room %s", room_id)
         url = f"{url}/rooms/proactive/{room_id}"

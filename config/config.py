@@ -103,7 +103,19 @@ class InstagramConfig(BaseSettings):
     verify_token: str
 
 
+
+class NgrokConfig:
+    url: str = None
+
+    def set_url(self, url: str):
+        self.url = url
+
+    def get_url(self) -> str:
+        return self.url
+    
+
 class Config(BaseSettings):
+    ngrok: NgrokConfig = NgrokConfig()
     ENVIRONMENT: str
     SCHEDULER_DB_URL: str
     BACKEND_API_KEY: str
