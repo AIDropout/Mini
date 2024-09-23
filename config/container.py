@@ -1,19 +1,20 @@
 from typing import Optional
 
 from config.config import config
+from mini.agent.modules.memory import MemoryManager
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
+from mini.database.users.service import UserService
 from mini.llm import LLMService, Model
-from mini.agent.modules.memory import MemoryManager
+from mini.messaging.bird.bird import BirdMessagingService
+from mini.messaging.context import ContextFactory
+from mini.messaging.instagram.instagram import InstagramMessagingService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
-from mini.utils.time import TimeManager
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
-from mini.messaging.context import ContextFactory
-from mini.messaging.bird.bird import BirdMessagingService
-from mini.messaging.instagram.instagram import InstagramMessagingService
-from mini.database.users.service import UserService
+from mini.server.schedule import TaskScheduler
+from mini.utils.time import TimeManager
 
 logger = get_logger(__name__)
 
@@ -34,6 +35,14 @@ class Container:
         self.rate_limiter: Optional[RateLimiter] = None
         self.memory_manager: Optional[MemoryManager] = None
         self.cancel_manager: Optional[CancelManager] = None
+        self.task_scheduler: Optional[TaskScheduler] = None
+
+    def get_task_scheduler(self):
+        from main import task_scheduler
+
+        if self.task_scheduler is None:
+            self.task_scheduler = task_scheduler
+        return self.task_scheduler
 
     def get_cancel_manager(self):
         if self.cancel_manager is None:
@@ -53,6 +62,16 @@ class Container:
             self.redis_manager = RedisManager()
 
         return self.redis_manager
+
+    def get_proactive_service(self):
+        from mini.server.schedule.service import ProactiveService
+
+        return ProactiveService(
+            database_manager=self.database_manager,
+            # messaging_manager_factory=self.get_messaging_manager_factory(),
+            # context_factory=self.get_context_factory(),
+            messaging_service=self.get_messaging_service(),
+        )
 
     def get_user_service(self):
         from mini.database.users.service import UserService
@@ -96,8 +115,8 @@ class Container:
         return self.memory_manager
 
     def get_verify_service(self):
-        from mini.messaging.bird.verification.service import VerifyService
         from mini.messaging.bird.bird import BirdMessagingService
+        from mini.messaging.bird.verification.service import VerifyService
 
         return VerifyService(bird_manager=BirdMessagingService())
 
@@ -131,10 +150,7 @@ class Container:
     def get_agent_controller(self):
         from mini.agent.agent import AgentService
         from mini.agent.modules.action import ActionModule
-        from mini.agent.modules.filter.filter import (
-            IntentConfig,
-            MessageFilterModule,
-        )
+        from mini.agent.modules.filter.filter import IntentConfig, MessageFilterModule
         from mini.agent.modules.memory.service import MemoryModule
         from mini.agent.modules.prompt import BasePromptModule
         from mini.agent.modules.subscribe import SubscribeModule
@@ -186,6 +202,7 @@ class Container:
 
         return AgentService(
             database_manager=self.database_manager,
+            task_scheduler=self.get_task_scheduler(),
             cancel_manager=self.get_cancel_manager(),
             action_module=action_module,
             memory_module=memory_module,

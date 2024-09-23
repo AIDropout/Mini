@@ -105,6 +105,7 @@ class InstagramConfig(BaseSettings):
 
 class Config(BaseSettings):
     ENVIRONMENT: str
+    SCHEDULER_DB_URL: str
     BACKEND_API_KEY: str
     OPENAI_API_KEY: str
     ANTHROPIC_API_KEY: str

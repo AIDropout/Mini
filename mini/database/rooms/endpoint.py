@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Body, Depends, Path, Request, BackgroundTasks
 from typing import Annotated
 
+from fastapi import APIRouter, Body, Depends, Path
+
 from config.container import container
-from mini.core.security import ApiKeyDep
 from mini.core.logger import get_logger
+from mini.core.security import ApiKeyDep
 from mini.database.models import Room
-from mini.messaging.service import MessagingService
 from mini.database.rooms.service import RoomService
+from mini.messaging.service import MessagingService
 
 router = APIRouter()
 logger = get_logger(__name__)

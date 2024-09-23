@@ -58,11 +58,21 @@ class AgentPromptModule(BasePromptModule):
         - ensure to move the roleplay forward.
         """
 
+    def _build_proactive_prompt(self) -> str:
+        return """
+        **REMINDER:**
+
+        It has been a while since the user has sent you a message.
+        Ensure that you build a message that is not necessarily just a continuation of the previous message.
+        Try to strike up a new conversation.
+        """
+
     def build_prompt(
         self,
         chat_history: List[ChatMessage] | None = None,
         relevant_memories: str | None = None,
         roleplay: str | None = None,
+        proactive_prompt: bool | None = False,
     ) -> str:
         self._load_agent_data()
 
@@ -74,5 +84,8 @@ class AgentPromptModule(BasePromptModule):
             self._build_roleplay(roleplay),
             self._build_return_hint(),
         ]
+
+        if proactive_prompt:
+            prompt.append(self._build_proactive_prompt())
 
         return "\n\n".join(prompt)

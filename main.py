@@ -8,32 +8,35 @@ import subprocess
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request, APIRouter
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pyngrok import ngrok
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.server.redis import RedisManager
-from mini.utils.utils import configure_local_webhooks, stop_existing_processes
-
+from mini.dashboard import endpoint as dashboard_endpoint
+from mini.database.agents import endpoint as agents_endpoint
+from mini.database.rooms import endpoint as rooms_endpoint
+from mini.database.users import endpoint as users_endpoint
 from mini.messaging.bird import endpoint as bird_endpoint
 from mini.messaging.bird.verification import endpoint as smsotp_endpoint
-from mini.dashboard import endpoint as dashboard_endpoint
-from mini.payment import endpoint as payment_endpoint
-from mini.database.rooms import endpoint as rooms_endpoint
-from mini.database.agents import endpoint as agents_endpoint
-from mini.database.users import endpoint as users_endpoint
 from mini.messaging.instagram import endpoint as instagram_endpoint
+from mini.payment import endpoint as payment_endpoint
+from mini.server.redis import RedisManager
+from mini.server.schedule import endpoint as proactive_endpoint
+from mini.server.schedule.scheduler import TaskScheduler
+from mini.utils.utils import configure_local_webhooks, stop_existing_processes
 
 logger = get_logger(__name__)
+
+task_scheduler = TaskScheduler(db_url=config.SCHEDULER_DB_URL)
+task_scheduler.initialize()
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
     redis_manager = RedisManager()
-    
     redis_manager.initialize()
 
     if config.ENVIRONMENT == "local":
@@ -52,6 +55,7 @@ async def lifespan(_: FastAPI):
 
     yield
 
+    task_scheduler.scheduler.shutdown(wait=False)
     subprocess.run(["pkill", "-f", "celery"], check=False)
     ngrok.kill()
     redis_manager.close()
@@ -76,6 +80,7 @@ router.include_router(rooms_endpoint.router)
 router.include_router(agents_endpoint.router)
 router.include_router(users_endpoint.router)
 router.include_router(instagram_endpoint.router)
+router.include_router(proactive_endpoint.router)
 
 app.include_router(router)
 

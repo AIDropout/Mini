@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 
 class TaskScheduler:
-    def __init__(self, db_url: str, schedule_timezone: str = "US/Pacific") -> None:
+    def __init__(self, db_url: str, schedule_timezone: str = "US/Central") -> None:
         self.db_url = db_url
         jobstores = {"default": SQLAlchemyJobStore(url=self.db_url)}
         executors = {
@@ -29,18 +29,30 @@ class TaskScheduler:
             job_defaults=job_defaults,
             timezone=timezone(schedule_timezone),
         )
+        self.schedule_timezone = schedule_timezone
 
-        self.scheduler.start()
-        logger.info("Scheduler initialized!")
+    def initialize(self) -> None:
+        logger.info("🕰️ Starting scheduler")
+        try:
+            self.scheduler.start()
+        except Exception as e:
+            logger.error("Failed to start scheduler: %s", e)
 
     def _add_job(self, func, trigger, **kwargs) -> str:
         job = self.scheduler.add_job(func, trigger, **kwargs)
-        logger.info("Scheduled Job added: %s", job.id)
+        logger.info(
+            f"🕥 Scheduled Job added: {job.id} with trigger: {trigger} and kwargs {kwargs}"
+        )
         return job.id
 
     @staticmethod
-    def job_func(room_id: str, api_key: str):
-        url = f"https://app-kilu.onrender.com/rooms/proactive/{room_id}"
+    def job_func(
+        room_id: str,
+        api_key: str,
+        url: str = "https://32c7-132-161-243-149.ngrok-free.app",
+    ):
+        logger.info("Running proactive message for room %s", room_id)
+        url = f"{url}/rooms/proactive/{room_id}"
         try:
             headers = {"Authorization": f"Bearer {api_key}"}
             response = requests.post(url, headers=headers, timeout=100)
@@ -60,7 +72,10 @@ class TaskScheduler:
         # new user: 4 hrs, 1 day user: 8 hrs, 5 days user: 48 hrs, else never
         api_key = config.BACKEND_API_KEY
         job_id = self._add_job(
-            lambda: self.job_func(room_id, api_key), trigger="date", run_date=run_date
+            TaskScheduler.job_func,
+            trigger="date",
+            run_date=run_date,
+            kwargs={"room_id": room_id, "api_key": api_key},
         )
         return job_id
 
@@ -68,7 +83,9 @@ class TaskScheduler:
         self, room_id: str, minutes_from_now: int
     ) -> str:
 
-        run_date = datetime.now() + timedelta(minutes=minutes_from_now)
+        run_date = datetime.now(tz=timezone(self.schedule_timezone)) + timedelta(
+            seconds=minutes_from_now
+        )  # TODO: change to minutes
         job_id = self.schedule_proactive_message(room_id, run_date)
         return job_id
 
@@ -91,12 +108,7 @@ class TaskScheduler:
             return False
 
     def get_jobs(self):
-        jobs = cast(list[Job], self.scheduler.get_jobs())
-        job_list = [
-            {"id": job.id, "trigger": job.trigger, "next_run_time": job.next_run_time}
-            for job in jobs
-        ]
-
+        job_list = cast(list[Job], self.scheduler.get_jobs())
         logger.info("Current Scheduled Jobs: %s", job_list)
         return job_list
 

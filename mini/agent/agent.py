@@ -1,5 +1,4 @@
 import json
-from typing import Union
 
 from config.config import config
 from mini.agent.modules.action import ActionModule
@@ -17,12 +16,13 @@ from mini.agent.tasks.models import MessageTask
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
-from mini.database.models import Agent, Message, Room, Tables, User
 from mini.database.database import DatabaseManager
-from mini.messaging.models import MiniMessage
+from mini.database.models import Agent, Message, Room, Tables, User
 from mini.messaging.bird.bird import BirdMessagingService
 from mini.messaging.discord.discord import discord_manager
+from mini.messaging.models import MiniMessage
 from mini.server.cancel import CancelManager
+from mini.server.schedule import TaskScheduler
 from mini.utils.utils import utc_now
 
 
@@ -30,6 +30,7 @@ class AgentService:
     def __init__(
         self,
         database_manager: DatabaseManager,
+        task_scheduler: TaskScheduler,
         cancel_manager: CancelManager,
         action_module: ActionModule,
         memory_module: MemoryModule,
@@ -40,6 +41,7 @@ class AgentService:
     ) -> None:
         self.database_manager = database_manager
         self.cancel_manager = cancel_manager
+        self.task_scheduler = task_scheduler
         self.logger = get_logger(__name__)
         self.agent: Agent = None
         self.user: User = None
@@ -78,6 +80,27 @@ class AgentService:
             module.configure(room, agent, user)
         self.action.set_messaging_manager(messaging_manager)
 
+    def send_proactive_message(self) -> bool:
+        el.log("BUILDING PROACTIVE MESSAGE...")
+        try:
+            response, roleplay = self._generate_response(
+                message=None, is_proactive=True
+            )
+
+            text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
+
+            success = self.action.send_message(text=text_response)
+            el.log(f"BIRD SMS SENT: {success}")
+
+            if success:
+                self._handle_successful_send(text_response)
+
+            return True
+        except Exception as e:
+            msg = discord_manager.log_error(str(e))
+            el.log(msg)
+            return False
+
     def respond_to_message(self, message: MiniMessage) -> bool:
         el.log(f"MESSAGE: {message}")
         try:
@@ -100,6 +123,16 @@ class AgentService:
             if success:
                 self._handle_successful_send(text_response)
 
+            # TEMPORARY DEVANSHU
+            res = self.task_scheduler.schedule_proactive_message_from_now(
+                room_id=self.room.id,
+                minutes_from_now=30,  # TODO: Make this configurable
+            )
+
+            el.log(f"TASK SCHEDULED: {res}")
+
+            self.task_scheduler.get_jobs()
+
             return True
         except Exception:
             msg = discord_manager.log_error(f"message_id={message.id}")
@@ -111,7 +144,9 @@ class AgentService:
         self.logger.info(f"Room subscription status: {repr(result)}")
         return result.continue_conversation
 
-    def _generate_response(self, message: MiniMessage) -> tuple[str, str]:
+    def _generate_response(
+        self, message: MiniMessage | None, is_proactive: bool = False
+    ) -> tuple[str, str]:
         all_recent_messages = self.memory.get_recent_messages(
             count=10  # TODO: Make this configurable?
         )
@@ -143,6 +178,7 @@ class AgentService:
             relevant_memories="",
             chat_history=chat_history,
             roleplay=roleplay_response,
+            proactive_prompt=is_proactive,
         )
         el.log(f"SYSTEM PROMPT FOR AGENT: {agent_system_prompt}")
 

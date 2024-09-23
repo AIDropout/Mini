@@ -1,7 +1,8 @@
+import uuid
 from enum import Enum
 from typing import List, Optional, Union
+
 from pydantic import BaseModel, Field
-import uuid
 
 
 # GENERAL
@@ -9,6 +10,11 @@ class MessagingProviderEnum(Enum):
     TELEGRAM = "telegram"
     BIRD = "bird"
     INSTAGRAM = "instagram"
+
+
+class ResponseTypeEnum(Enum):
+    PROACTIVE = "proactive"
+    RESPOND = "respond"
 
 
 class MessageType(Enum):
@@ -32,7 +38,6 @@ class BirdMetadata(BaseModel):
 class InstagramMetadata(BaseModel):
     sender_id: str
     recipient_id: str
-
 
 
 # MINIMESSAGE

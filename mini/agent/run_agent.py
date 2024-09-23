@@ -1,12 +1,12 @@
 from datetime import datetime
+
 from celery import shared_task
+
 from config.container import container
 from mini.agent.tasks.models import MessageTask
 from mini.core.logger import get_logger
 from mini.messaging.discord.discord import discord_manager
-
-# from mini.messaging.service import MessagingService
-
+from mini.messaging.models import ResponseTypeEnum
 
 logger = get_logger(__name__)
 
@@ -33,6 +33,7 @@ def run_agent(self, room_id: str, message_id: str):
 
         # Initialize and run the task
         success = process_agent_task(task, messaging_service)
+
         if not success:
             logger.warning(
                 f"Task {message_id} in room {room_id} was not processed successfully"

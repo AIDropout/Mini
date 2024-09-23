@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 from typing import Dict, Optional
+from uuid import uuid4
 
 from fastapi import BackgroundTasks
 
@@ -9,16 +10,16 @@ from config.config import config
 from mini.agent.run_agent import run_agent
 from mini.agent.tasks.models import MessageTask
 from mini.core.logger import get_logger
+from mini.database.database import DatabaseManager
 from mini.database.models import Message, Tables
-from mini.messaging.discord.discord import discord_manager
+from mini.messaging.base import MessagingProvider
 from mini.messaging.bird.bird import BirdMessagingService
+from mini.messaging.context import Context, ContextFactory
+from mini.messaging.discord.discord import discord_manager
 from mini.messaging.instagram.instagram import InstagramMessagingService
+from mini.messaging.models import MessagingProviderEnum, MiniMessage, ResponseTypeEnum
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
-from mini.messaging.base import MessagingProvider
-from mini.messaging.context import ContextFactory, Context
-from mini.messaging.models import MiniMessage, MessagingProviderEnum
-from mini.database.database import DatabaseManager
 
 logger = get_logger(__name__)
 
@@ -116,11 +117,16 @@ class MessagingService:
         return False
 
     def _create_task(
-        self, message_id: str, provider: MessagingProviderEnum, request_body: dict
+        self,
+        message_id: str,
+        provider: MessagingProviderEnum,
+        request_body: dict,
+        response_type: ResponseTypeEnum = ResponseTypeEnum.RESPOND,
     ) -> MessageTask:
         delay = 0  # Implement delay logic here
         return MessageTask(
             message_id=message_id,
+            response_type=response_type,
             created_at=datetime.now(),
             scheduled_time=datetime.now() + timedelta(seconds=delay),
             provider=provider,

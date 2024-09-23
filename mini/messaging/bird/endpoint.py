@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Request, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Request
 
 from mini.core.logger import get_logger
-from mini.messaging.models import MessagingProviderEnum
 from mini.messaging.dependencies import MessagingServiceDep
+from mini.messaging.models import MessagingProviderEnum
 
 router = APIRouter()
 logger = get_logger(__name__)

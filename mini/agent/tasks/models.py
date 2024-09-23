@@ -1,11 +1,13 @@
 from datetime import datetime
+
 from pydantic import BaseModel
 
-from mini.messaging.models import MessagingProviderEnum
+from mini.messaging.models import MessagingProviderEnum, ResponseTypeEnum
 
 
 class MessageTask(BaseModel):
     message_id: str
+    response_type: ResponseTypeEnum
     created_at: datetime
     scheduled_time: datetime
     provider: MessagingProviderEnum
