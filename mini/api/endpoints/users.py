@@ -45,7 +45,6 @@ def get_user_rooms(
     """Gets all rooms that a user is in"""
     return user_service.get_user_rooms(user_id)
 
-
 @router.patch("/{user_id}", response_model=User)
 def update_user(
     user_id: Annotated[str, Path(..., title="The ID of the user to update")],

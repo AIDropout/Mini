@@ -19,17 +19,6 @@ router = APIRouter(
 logger = get_logger(__name__)
 
 
-# TODO: fix this wack path
-@router.get("/{user_id}")
-def get_rooms(
-    user_id: Annotated[str, Path(..., title="The user's ID")],
-    room_service: RoomServiceDep,
-    api_key: ApiKeyDep,
-) -> Room:
-    """Creates a room and sends the first message to the user"""
-    return room_service.get_user_rooms(user_id=user_id)
-
-
 @router.post("/")
 def create_room(
     agent_id: Annotated[
