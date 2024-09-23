@@ -12,7 +12,7 @@ from mini.messaging.models import (
     MessagingProviderEnum,
     MessageType,
     MiniMessage,
-    MiniMessageMetadata
+    MiniMessageMetadata,
 )
 from mini.messaging.base import MessagingProvider
 from mini.messaging.bird.models import ErrorCode, VerificationStatus
@@ -89,7 +89,9 @@ class BirdMessagingService(MessagingProvider):
 
         return MiniMessage(
             content=content,
-            metadata=MiniMessageMetadata(sender_id=channel_id, receiver_id=phone_number),
+            metadata=MiniMessageMetadata(
+                sender_id=channel_id, receiver_id=phone_number
+            ),
             provider=MessagingProviderEnum.BIRD,
             type=message_type,
             media_urls=aws_media_urls,

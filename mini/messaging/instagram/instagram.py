@@ -47,8 +47,8 @@ class InstagramMessagingService(MessagingProvider):
 
     def receive_message(self, event: MessageEvent) -> MiniMessage:
         """Turn a request body into a MiniMessage"""
-        recipient_id = event.recipient.id # Agent
-        sender_id = event.sender.id # User
+        recipient_id = event.recipient.id  # Agent
+        sender_id = event.sender.id  # User
         message_text = event.message.text if event.message.text else "-"
         logger.info(f"Received message from {sender_id}: {message_text}")
 

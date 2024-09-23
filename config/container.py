@@ -63,16 +63,6 @@ class Container:
 
         return self.redis_manager
 
-    def get_proactive_service(self):
-        from mini.server.schedule.service import ProactiveService
-
-        return ProactiveService(
-            database_manager=self.database_manager,
-            # messaging_manager_factory=self.get_messaging_manager_factory(),
-            # context_factory=self.get_context_factory(),
-            messaging_service=self.get_messaging_service(),
-        )
-
     def get_user_service(self):
         from mini.database.users.service import UserService
 

@@ -1,4 +1,11 @@
-from fastapi import APIRouter, Request, Response, HTTPException, Depends, BackgroundTasks
+from fastapi import (
+    APIRouter,
+    Request,
+    Response,
+    HTTPException,
+    Depends,
+    BackgroundTasks,
+)
 
 from config.config import config
 from mini.core.logger import get_logger

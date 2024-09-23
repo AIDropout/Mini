@@ -8,9 +8,9 @@ class ChatTask(BaseTask):
 
 
 class ResponseTask(ChatTask):
-    created_at: datetime
     scheduled_for: datetime
     message: MiniMessage
+    instructions: str = "You are texting someone." #TODO: implement in prompt builder
 
     class Config:
         arbitrary_types_allowed = True
@@ -26,4 +26,4 @@ class ResponseTask(ChatTask):
 
 
 class ProactiveTask(ChatTask):
-    pass
+    instructions: str = "You are reaching out." #TODO: Add time context (ex: "you last texted them last night") and implement

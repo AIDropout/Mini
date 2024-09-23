@@ -1,12 +1,13 @@
-from datetime import datetime
-from uuid import uuid4
-
-from config.container import container
-from mini.agent.tasks.models import MessageTask
+from mini.core.task.chat import ProactiveTask
 from mini.core.logger import get_logger
 from mini.database.database import DatabaseManager
-from mini.messaging.models import MessagingProviderEnum, ResponseTypeEnum
-from mini.messaging.service import MessagingService
+from mini.messaging.models import MessagingProviderEnum
+from mini.agent.run_agent import run_agent
+from mini.messaging.context import ContextFactory
+from mini.server.redis import RedisManager
+from mini.server.cancel import CancelManager
+from mini.messaging.discord.discord import discord_manager
+
 
 logger = get_logger(__name__)
 
@@ -15,50 +16,35 @@ class ProactiveService:
     def __init__(
         self,
         database_manager: DatabaseManager,
-        messaging_service: MessagingService,
+        redis_manager: RedisManager,
+        context_factory: ContextFactory,
+        cancel_manager: CancelManager,
     ):
 
         self.database_manager = database_manager
-        self.messaging_service = messaging_service
+        self.redis_manager = redis_manager
+        self.context_factory = context_factory
+        self.cancel_manager = cancel_manager
 
     def send_proactive_message(self, room_id: str, provider: MessagingProviderEnum):
-        message_id = str(uuid4())
-        task = MessageTask(
-            message_id=message_id,
-            provider=provider,
-            created_at=datetime.now(),
-            scheduled_time=datetime.now(),
-            request_body={},
-            response_type=ResponseTypeEnum.PROACTIVE,  # TODO: clean up MessageTask
-        )
+        task = None
+        try:
+            context = self.context_factory.get_context_from_room_id(room_id)
 
-        return self.process_proactive_task(room_id, task, self.messaging_service)
+            task = ProactiveTask(
+                context=context,
+                provider=provider,
+            )
 
-    def process_proactive_task(
-        self, room_id: str, task: MessageTask, messaging_service
-    ):
-        from mini.messaging.service import MessagingService  # To avoid circular import
+            self.redis_manager.set(
+                key=f"{room_id}:{task.id}",
+                value=task.model_dump_json(),
+                expiry=120,
+            )
 
-        if not isinstance(messaging_service, MessagingService):
-            raise TypeError("messaging_service must be an instance of MessagingService")
-
-        """Internal logic for processing a proactive task"""
-        context = messaging_service.context_factory.create_cron_context(room_id)
-        messaging_provider = messaging_service.providers.get(task.provider)
-
-        messaging_provider.set_receiver(context.user.phone_number)
-        messaging_provider.set_sender(context.agent.bird_channel_id)
-
-        agent = container.get_agent_controller()
-        agent.configure(
-            messaging_manager=messaging_provider,
-            agent=context.agent,
-            user=context.user,
-            room=context.room,
-        )
-
-        success = agent.send_proactive_message()
-        if success:
-            logger.info("Agent processing finished successfully.")
-
-        return success
+            run_agent.apply_async(args=[room_id, task.id])
+        except Exception as e:
+            if room_id and task.id:
+                self.cancel_manager.remove_task(room_id, task.id)
+            msg = discord_manager.log_error(f"room_id={room_id}")
+            logger.exception(msg)

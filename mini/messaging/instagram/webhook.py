@@ -27,7 +27,7 @@ class InstagramWebhookService:
             for event in entry.messaging:
                 if event.message:
                     if event.message.is_echo:
-                        return # Don't process echo
+                        return  # Don't process echo
                     self.messaging_service.handle_incoming_message(
                         MessagingProviderEnum.INSTAGRAM, event, background_tasks
                     )

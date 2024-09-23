@@ -15,7 +15,7 @@ class ContextFactory:
         self.database_manager = database_manager
         self.user_service = user_service
 
-    def create_cron_context(self, room_id) -> Context:
+    def get_context_from_room_id(self, room_id) -> Context:
         room = self.database_manager.get_row(
             Tables.ROOMS, conditions={Tables.ROOMS__id: room_id}
         )
