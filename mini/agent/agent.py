@@ -1,4 +1,5 @@
 import json
+from typing import Union
 
 from config.config import config
 from mini.agent.modules.action import ActionModule
@@ -12,10 +13,12 @@ from mini.agent.modules.prompt import (
 )
 from mini.agent.modules.subscribe import SubscribeModule
 from mini.agent.modules.vision import VisionModule
-from mini.agent.tasks.models import MessageTask
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
+from mini.core.models.provider import MessagingProvider
+from mini.core.task.chat import ProactiveTask, ResponseTask
+from mini.core.task.task import Task
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Message, Room, Tables, User
 from mini.messaging.bird.bird import BirdMessagingService
@@ -60,9 +63,8 @@ class AgentService:
             time_manager=prompt_module.time_manager,
         )
 
-    def configure(
+    def _configure(
         self,
-        messaging_manager: BirdMessagingService,
         agent: Agent,
         user: User,
         room: Room,
@@ -78,7 +80,6 @@ class AgentService:
             self.roleplay_prompt,
         ]:
             module.configure(room, agent, user)
-        self.action.set_messaging_manager(messaging_manager)
 
     def send_proactive_message(self) -> bool:
         el.log("BUILDING PROACTIVE MESSAGE...")
@@ -101,20 +102,41 @@ class AgentService:
             el.log(msg)
             return False
 
-    def respond_to_message(self, message: MiniMessage) -> bool:
-        el.log(f"MESSAGE: {message}")
+    def handle_chat_task(
+        self,
+        task: Union[ResponseTask, ProactiveTask],
+        messaging_provider: MessagingProvider,
+    ) -> bool:
+        self._configure(task.context.agent, task.context.user, task.context.room)
+        self.action.set_messaging_provider(messaging_provider)
+
+        if isinstance(task, ResponseTask):
+            result = self._handle_response_task(task)
+        elif isinstance(task, ProactiveTask):
+            result = self._handle_proactive_task(task)
+
+        self.cancel_manager.remove_task(task.context.room.id, task.id)
+        return result
+
+    def _handle_proactive_task(self, task: ProactiveTask) -> bool:
+        pass
+
+    def _handle_response_task(self, task: ResponseTask) -> bool:
+        el.log(f"MESSAGE: {task.message.content}")
         try:
-            if message.media_urls:
-                message = self._handle_image(message)
-                el.log(f"RESPONDING TO: '{message.content}' in Room {self.room.id}")
+            if task.message.media_urls:
+                task = self._handle_image(task.message)
+                el.log(
+                    f"RESPONDING TO: '{task.message.content}' in Room {self.room.id}"
+                )
 
             if not self._should_continue_conversation():
                 return True
 
-            response, roleplay = self._generate_response(message)
+            response, roleplay = self._generate_response(task.message)
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
-            if self.cancel_manager.newer_message_found(self.room.id, message.id):
+            if self.cancel_manager.newer_message_found(self.room.id, task.id):
                 return False
 
             success = self.action.send_message(text=text_response)
@@ -135,7 +157,7 @@ class AgentService:
 
             return True
         except Exception:
-            msg = discord_manager.log_error(f"message_id={message.id}")
+            msg = discord_manager.log_error(f"task_id={task.id}")
             el.log(msg)
             return False
 
@@ -193,7 +215,7 @@ class AgentService:
             roleplay_response,
         )
 
-    def _handle_image(self, message: MiniMessage) -> MessageTask:
+    def _handle_image(self, message: MiniMessage) -> ResponseTask:
         try:
             description = self.vision.handle_images(message.media_urls)
             message.content += f"\n\nUser sent an image: {description}"

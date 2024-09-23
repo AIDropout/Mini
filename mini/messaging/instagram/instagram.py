@@ -8,7 +8,7 @@ from mini.messaging.instagram.models import MessageEvent
 from mini.messaging.models import (
     MessagingProviderEnum,
     MiniMessage,
-    InstagramMetadata,
+    MiniMessageMetadata,
     MessageType,
 )
 from mini.database.database import DatabaseManager
@@ -34,11 +34,21 @@ class InstagramMessagingService(MessagingProvider):
     def set_sender(self, sender_id: str) -> None:
         """Sets id of sender"""
         self._sender_id = sender_id
+        # Fetch access token of character's account from db
+        agent_ig_account = self.database_manager.get_row(
+            Tables.IGACCOUNTS,
+            {Tables.IGACCOUNTS__account_id: sender_id},
+        )
+        if not agent_ig_account:
+            logger.error(f"No Instagram account found for recipient_id: {sender_id}")
+            return
+
+        self._access_token = agent_ig_account.access_token
 
     def receive_message(self, event: MessageEvent) -> MiniMessage:
         """Turn a request body into a MiniMessage"""
-        recipient_id = event.recipient.id
-        sender_id = event.sender.id
+        recipient_id = event.recipient.id # Agent
+        sender_id = event.sender.id # User
         message_text = event.message.text if event.message.text else "-"
         logger.info(f"Received message from {sender_id}: {message_text}")
 
@@ -46,21 +56,12 @@ class InstagramMessagingService(MessagingProvider):
         self.set_sender(recipient_id)
         self.set_receiver(sender_id)
 
-        # Fetch access token of character's account from db
-        agent_ig_account = self.database_manager.get_row(
-            Tables.IGACCOUNTS,
-            {Tables.IGACCOUNTS__account_id: recipient_id},
-        )
-        if not agent_ig_account:
-            logger.error(f"No Instagram account found for recipient_id: {recipient_id}")
-            return
-
-        self._access_token = agent_ig_account.access_token
-
         # Construct the Mini Message
         return MiniMessage(
             content=message_text,
-            metadata=InstagramMetadata(sender_id, recipient_id),
+            metadata=MiniMessageMetadata(
+                sender_id=self._sender_id, receiver_id=self._recipient_id
+            ),
             provider=MessagingProviderEnum.BIRD,
             type=MessageType.TEXT,  # TODO: Handle files
             media_urls=None,

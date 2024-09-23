@@ -23,28 +23,16 @@ class MessageType(Enum):
     TEXT_AND_FILE = "text_and_file"
 
 
-# IDENTITY METADATA
-class TelegramMetadata(BaseModel):
-    uid: Union[int, str]
-    user_name: Optional[str]
-    chat_id: Optional[str]
-
-
-class BirdMetadata(BaseModel):
-    channel_id: str
-    phone_number: str
-
-
-class InstagramMetadata(BaseModel):
+# Our version of sender & receiver
+class MiniMessageMetadata(BaseModel):
     sender_id: str
-    recipient_id: str
+    receiver_id: str
 
 
 # MINIMESSAGE
 class MiniMessage(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     content: str
-    metadata: Union[TelegramMetadata, BirdMetadata, InstagramMetadata]
+    metadata: MiniMessageMetadata
     provider: MessagingProviderEnum
     type: MessageType
     media_urls: List[str] = Field(default_factory=list)

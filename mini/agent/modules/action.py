@@ -6,7 +6,7 @@ from mini.agent.modules.base import AgentModule
 from mini.core.logger import get_logger
 from mini.database.models import Tables
 from mini.llm import LLMService
-from mini.messaging.bird.bird import BirdMessagingService
+from mini.core.models.provider import MessagingProvider
 
 logger = get_logger(__name__)
 
@@ -15,10 +15,10 @@ class ActionModule(AgentModule):
     def __init__(self, llm_manager: LLMService):
         self.llm_manager = llm_manager
         self.llm_manager.cost_tracking_callback = self._update_user_message_cost
-        self.messaging_manager = None
+        self.messaging_provider = None
 
-    def set_messaging_manager(self, messaging_manager: BirdMessagingService) -> None:
-        self.messaging_manager = messaging_manager
+    def set_messaging_provider(self, messaging_provider: MessagingProvider) -> None:
+        self.messaging_provider = messaging_provider
 
     def generate_message(
         self,
@@ -67,7 +67,7 @@ class ActionModule(AgentModule):
 
         for i, part in enumerate(texts):
             try:
-                success, details = self.messaging_manager.send_message(
+                success, details = self.messaging_provider.send_message(
                     text=part.strip()
                 )
                 overall_success = overall_success and success
@@ -90,7 +90,7 @@ class ActionModule(AgentModule):
         subject: Optional[str],
     ) -> bool:
         try:
-            success, details = self.messaging_manager.send_message(
+            success, details = self.messaging_provider.send_message(
                 text=text, images=images, files=files, subject=subject
             )
 

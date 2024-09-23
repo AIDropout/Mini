@@ -77,7 +77,7 @@ class Tables(str, Enum):
     SCHEDULE__room_id = "room_id"
     SCHEDULE__message_id = "message_id"
     SCHEDULE__created_at = "created_at"
-    SCHEDULE__run_at = "run_at"
+    SCHEDULE__scheduled_for = "scheduled_for"
     SCHEDULE__type = "type"  # respond, remind, revive
     SCHEDULE__info = "info"
     SCHEDULE__complete = "complete"
@@ -192,7 +192,7 @@ class Schedule(BaseModel):
     room_id: str
     message_id: Optional[str]
     created_at: datetime = Field(default_factory=utc_now)
-    run_at: str
+    scheduled_for: str
     type: Literal["respond", "remind", "revive"] = Field(default="respond")
     task: Optional[str] = Field(default=None)
     complete: bool = Field(default=False)
