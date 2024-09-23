@@ -25,7 +25,7 @@ from mini.messaging.bird.bird import BirdMessagingService
 from mini.messaging.discord.discord import discord_manager
 from mini.messaging.models import MiniMessage
 from mini.server.cancel import CancelManager
-from mini.server.schedule import TaskScheduler
+from mini.server.schedule.task_scheduler import TaskScheduler
 from mini.utils.utils import utc_now
 
 
@@ -153,7 +153,7 @@ class AgentService:
 
             el.log(f"TASK SCHEDULED: {res}")
 
-            self.task_scheduler.get_jobs()
+            self.task_scheduler.engine.get_jobs()
 
             return True
         except Exception:

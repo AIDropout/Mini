@@ -13,7 +13,8 @@ from mini.messaging.instagram.instagram import InstagramMessagingService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.server.cancel import CancelManager
 from mini.server.redis import RedisManager
-from mini.server.schedule import TaskScheduler
+from mini.server.schedule.engine import SchedulerEngine
+from mini.server.schedule.task_scheduler import TaskScheduler
 from mini.utils.time import TimeManager
 
 logger = get_logger(__name__)
@@ -35,11 +36,17 @@ class Container:
         self.rate_limiter: Optional[RateLimiter] = None
         self.memory_manager: Optional[MemoryManager] = None
         self.cancel_manager: Optional[CancelManager] = None
+        self.scheduler_engine: Optional[SchedulerEngine] = None
         self.task_scheduler: Optional[TaskScheduler] = None
+
+    def get_scheduler_engine(self):
+        if self.scheduler_engine is None:
+            self.scheduler_engine = SchedulerEngine(db_url=config.SCHEDULER_DB_URL)
+        return self.scheduler_engine
 
     def get_task_scheduler(self):
         if self.task_scheduler is None:
-            self.task_scheduler = TaskScheduler(db_url=config.SCHEDULER_DB_URL)
+            self.task_scheduler = TaskScheduler(self.get_scheduler_engine())
         return self.task_scheduler
 
     def get_cancel_manager(self):

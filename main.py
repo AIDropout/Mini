@@ -23,13 +23,10 @@ from mini.messaging.bird import endpoint as bird_endpoint
 from mini.messaging.bird.verification import endpoint as smsotp_endpoint
 from mini.messaging.instagram import endpoint as instagram_endpoint
 from mini.payment import endpoint as payment_endpoint
-from mini.server.redis import RedisManager
 from mini.server.schedule import endpoint as proactive_endpoint
-from mini.server.schedule.scheduler import TaskScheduler
 from mini.utils.utils import configure_local_webhooks, stop_existing_processes
 
 logger = get_logger(__name__)
-
 
 
 @asynccontextmanager
@@ -37,8 +34,8 @@ async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
     redis_manager = container.get_redis_manager()
     redis_manager.initialize()
-    task_scheduler = container.get_task_scheduler()
-    task_scheduler.initialize()
+    scheduler_engine = container.get_scheduler_engine()
+    scheduler_engine.initialize()
 
     if config.ENVIRONMENT == "local":
         # redis_manager.flush_all()
@@ -57,7 +54,7 @@ async def lifespan(_: FastAPI):
     yield
 
     redis_manager.close()
-    task_scheduler.close()
+    scheduler_engine.close()
     subprocess.run(["pkill", "-f", "celery"], check=False)
     ngrok.kill()
 
