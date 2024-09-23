@@ -1,4 +1,4 @@
-from mini.server.redis import RedisManager
+from mini.server.redis.redis import RedisManager
 
 
 class RateLimiter:

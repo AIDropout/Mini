@@ -6,7 +6,7 @@ from mini.core.logger import get_logger
 from mini.database.models import Subscription, Tables
 from mini.database.database import DatabaseManager
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
-from mini.messaging.discord.discord import discord_manager
+from mini.messaging.provider.discord.discord import discord_manager
 
 
 logger = get_logger(__name__)

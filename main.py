@@ -8,23 +8,17 @@ import subprocess
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pyngrok import ngrok
 
 from config.config import config
 from config.container import container
+from mini.api import router as api_router
 from mini.core.logger import get_logger
-from mini.dashboard import endpoint as dashboard_endpoint
-from mini.database.agents import endpoint as agents_endpoint
-from mini.database.rooms import endpoint as rooms_endpoint
-from mini.database.users import endpoint as users_endpoint
-from mini.messaging.bird import endpoint as bird_endpoint
-from mini.messaging.bird.verification import endpoint as smsotp_endpoint
-from mini.messaging.instagram import endpoint as instagram_endpoint
-from mini.payment import endpoint as payment_endpoint
-from mini.server.schedule import endpoint as proactive_endpoint
-from mini.utils.utils import configure_local_webhooks, stop_existing_processes
+from mini.utils.utils import stop_existing_processes
+from mini.messaging.provider.bird.bird import BirdMessaging
+from mini.messaging.provider.telegram.telegram import TelegramManager
 
 logger = get_logger(__name__)
 
@@ -32,11 +26,6 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
-    redis_manager = container.get_redis_manager()
-    redis_manager.initialize()
-    scheduler_engine = container.get_scheduler_engine()
-    scheduler_engine.initialize()
-
     if config.ENVIRONMENT == "local":
         # redis_manager.flush_all()
         subprocess.Popen(
@@ -50,11 +39,15 @@ async def lifespan(_: FastAPI):
                 "--loglevel=ERROR",
             ]
         )
+    redis_manager = container.get_redis_manager()
+    redis_manager.initialize()
+    apscheduler = container.get_apscheduler()
+    apscheduler.initialize()
 
     yield
 
     redis_manager.close()
-    scheduler_engine.close()
+    apscheduler.close()
     subprocess.run(["pkill", "-f", "celery"], check=False)
     ngrok.kill()
 
@@ -69,18 +62,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-router = APIRouter()
-router.include_router(bird_endpoint.router)
-router.include_router(payment_endpoint.router)
-router.include_router(smsotp_endpoint.router)
-router.include_router(dashboard_endpoint.router)
-router.include_router(rooms_endpoint.router)
-router.include_router(agents_endpoint.router)
-router.include_router(users_endpoint.router)
-router.include_router(instagram_endpoint.router)
-router.include_router(proactive_endpoint.router)
-
-app.include_router(router)
+app.include_router(api_router)
 
 
 @app.middleware("http")
@@ -100,6 +82,30 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
 
     return response
+
+
+async def configure_local_webhooks(local_url: str) -> None:
+    """Sets up an Ngrok public URL, and directs received Bird/Telegram messages to the URL"""
+
+    ngrok_connection = ngrok.connect(addr=local_url, proto="http")
+    logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
+
+    config.ngrok.set_url(ngrok_connection.public_url)
+
+    _telegram = TelegramManager()
+    _bird = BirdMessaging()
+
+    _bird.set_sender(config.BIRD_DEV_CHANNEL_ID)
+
+    await asyncio.gather(
+        # _telegram.register_webhook(webhook),
+        _bird.register_webhook(
+            event="sms.inbound",
+            webhook_url=f"{ngrok_connection.public_url}/webhooks/bird",
+        ),
+    )
+
+    logger.info("Ngrok and webhooks successfully set up!")
 
 
 def run_app():

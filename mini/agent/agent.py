@@ -16,16 +16,15 @@ from mini.agent.modules.vision import VisionModule
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
-from mini.core.models.provider import MessagingProvider
-from mini.core.task.chat import ProactiveTask, ResponseTask
-from mini.core.task.task import Task
+from mini.core.models.task.chat import ProactiveTask, ResponseTask
+from mini.core.models.task.task import Task
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Message, Room, Tables, User
-from mini.messaging.bird.bird import BirdMessagingService
-from mini.messaging.discord.discord import discord_manager
-from mini.messaging.models import MiniMessage
-from mini.server.cancel import CancelManager
-from mini.server.schedule.task_scheduler import TaskScheduler
+from mini.messaging.provider.bird.bird import BirdMessaging
+from mini.messaging.provider.discord.discord import discord_manager
+from mini.core.models.message import MiniMessage
+from mini.server.redis.cancel import CancelManager
+from mini.server.schedule.scheduler import Scheduler
 from mini.utils.utils import utc_now
 
 
@@ -33,7 +32,7 @@ class AgentService:
     def __init__(
         self,
         database_manager: DatabaseManager,
-        task_scheduler: TaskScheduler,
+        scheduler: Scheduler,
         cancel_manager: CancelManager,
         action_module: ActionModule,
         memory_module: MemoryModule,
@@ -44,7 +43,7 @@ class AgentService:
     ) -> None:
         self.database_manager = database_manager
         self.cancel_manager = cancel_manager
-        self.task_scheduler = task_scheduler
+        self.scheduler = scheduler
         self.logger = get_logger(__name__)
         self.agent: Agent = None
         self.user: User = None
@@ -81,7 +80,7 @@ class AgentService:
         ]:
             module.configure(room, agent, user)
 
-    def send_proactive_message(self) -> bool:
+    def send_proactive(self) -> bool:
         el.log("BUILDING PROACTIVE MESSAGE...")
         try:
             response, roleplay = self._generate_response(
@@ -102,20 +101,24 @@ class AgentService:
             el.log(msg)
             return False
 
-    def handle_chat_task(
+    def process_chat_task(
         self,
         task: Union[ResponseTask, ProactiveTask],
-        messaging_provider: MessagingProvider,
     ) -> bool:
+        """Processes a chat task and removes it from queue"""
+        # Configure modules
         self._configure(task.context.agent, task.context.user, task.context.room)
-        self.action.set_messaging_provider(messaging_provider)
+        self.action.set_messaging_provider(task.messaging_provider)
 
+        # Handle each task type
         if isinstance(task, ResponseTask):
             result = self._handle_response_task(task)
         elif isinstance(task, ProactiveTask):
             result = self._handle_proactive_task(task)
 
-        self.cancel_manager.remove_task(task.context.room.id, task.id)
+        # Remove task
+        # self.cancel_manager.remove_task(task.context.room.id, task.id)
+
         return result
 
     def _handle_proactive_task(self, task: ProactiveTask) -> bool:
@@ -136,8 +139,8 @@ class AgentService:
             response, roleplay = self._generate_response(task.message)
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
-            if self.cancel_manager.newer_message_found(self.room.id, task.id):
-                return False
+            # if self.cancel_manager.newer_message_found(self.room.id, task.id):
+            #     return False
 
             success = self.action.send_message(text=text_response)
             el.log(f"BIRD SMS SENT: {success}")
@@ -146,14 +149,14 @@ class AgentService:
                 self._handle_successful_send(text_response)
 
             # TEMPORARY DEVANSHU
-            res = self.task_scheduler.schedule_proactive_message_from_now(
+            res = self.scheduler.schedule_proactive_message_from_now(
                 room_id=self.room.id,
                 minutes_from_now=0.1,  # TODO: Make this configurable
             )
 
             el.log(f"TASK SCHEDULED: {res}")
 
-            self.task_scheduler.engine.get_jobs()
+            self.scheduler.engine.get_jobs()
 
             return True
         except Exception:

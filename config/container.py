@@ -5,16 +5,14 @@ from mini.agent.modules.memory import MemoryManager
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
-from mini.database.users.service import UserService
+from mini.database.service.user_service import UserService
 from mini.llm import LLMService, Model
-from mini.messaging.bird.bird import BirdMessagingService
 from mini.messaging.context import ContextFactory
-from mini.messaging.instagram.instagram import InstagramMessagingService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
-from mini.server.cancel import CancelManager
-from mini.server.redis import RedisManager
-from mini.server.schedule.engine import SchedulerEngine
-from mini.server.schedule.task_scheduler import TaskScheduler
+from mini.server.redis.cancel import CancelManager
+from mini.server.redis.redis import RedisManager
+from mini.server.schedule.apscheduler import APScheduler
+from mini.server.schedule.scheduler import Scheduler
 from mini.utils.time import TimeManager
 
 logger = get_logger(__name__)
@@ -36,18 +34,18 @@ class Container:
         self.rate_limiter: Optional[RateLimiter] = None
         self.memory_manager: Optional[MemoryManager] = None
         self.cancel_manager: Optional[CancelManager] = None
-        self.scheduler_engine: Optional[SchedulerEngine] = None
-        self.task_scheduler: Optional[TaskScheduler] = None
+        self.apscheduler: Optional[APScheduler] = None
+        self.scheduler: Optional[Scheduler] = None
 
-    def get_scheduler_engine(self):
-        if self.scheduler_engine is None:
-            self.scheduler_engine = SchedulerEngine(db_url=config.SCHEDULER_DB_URL)
-        return self.scheduler_engine
+    def get_apscheduler(self):
+        if self.apscheduler is None:
+            self.apscheduler = APScheduler(db_url=config.SCHEDULER_DB_URL)
+        return self.apscheduler
 
-    def get_task_scheduler(self):
-        if self.task_scheduler is None:
-            self.task_scheduler = TaskScheduler(self.get_scheduler_engine())
-        return self.task_scheduler
+    def get_scheduler(self):
+        if self.scheduler is None:
+            self.scheduler = Scheduler(self.get_apscheduler())
+        return self.scheduler
 
     def get_cancel_manager(self):
         if self.cancel_manager is None:
@@ -69,8 +67,6 @@ class Container:
         return self.redis_manager
 
     def get_user_service(self):
-        from mini.database.users.service import UserService
-
         if self.user_service is None:
             self.user_service = UserService(
                 database_manager=self.database_manager,
@@ -79,7 +75,7 @@ class Container:
         return self.user_service
 
     def get_agent_service(self):
-        from mini.database.agents.service import AgentService
+        from mini.database.service.agent_service import AgentService
 
         return AgentService(database_manager=self.database_manager)
 
@@ -110,13 +106,13 @@ class Container:
         return self.memory_manager
 
     def get_verify_service(self):
-        from mini.messaging.bird.bird import BirdMessagingService
-        from mini.messaging.bird.verification.service import VerifyService
+        from mini.messaging.bird.bird import BirdMessaging
+        from mini.messaging.provider.bird.verification.service import VerifyService
 
-        return VerifyService(bird_manager=BirdMessagingService())
+        return VerifyService()
 
     def get_room_service(self):
-        from mini.database.rooms.service import RoomService
+        from mini.database.rooms_service import RoomService
 
         return RoomService(
             database_manager=self.database_manager,
@@ -132,14 +128,6 @@ class Container:
             checkout_manager=self.checkout_manager,
             customer_manager=self.customer_manager,
             subscription_manager=self.subscription_manager,
-        )
-
-    def get_dashboard_service(self):
-        from mini.dashboard.service import DashboardService
-
-        return DashboardService(
-            database_manager=self.database_manager,
-            context_factory=self.get_context_factory(),
         )
 
     def get_agent_controller(self):
@@ -197,7 +185,7 @@ class Container:
 
         return AgentService(
             database_manager=self.database_manager,
-            task_scheduler=self.get_task_scheduler(),
+            scheduler=self.get_scheduler(),
             cancel_manager=self.get_cancel_manager(),
             action_module=action_module,
             memory_module=memory_module,
@@ -207,18 +195,14 @@ class Container:
             prompt_module=prompt_module,
         )
 
-    def get_messaging_service(self):
-        from mini.messaging.service import MessagingService
+    def get_response_service(self):
+        from mini.messaging.response.service import ResponseService
 
-        return MessagingService(
+        return ResponseService(
             database_manager=self.database_manager,
             context_factory=self.get_context_factory(),
             cancel_manager=self.get_cancel_manager(),
             redis_manager=self.get_redis_manager(),
-            bird_manager=BirdMessagingService(),
-            instagram_manager=InstagramMessagingService(
-                database_manager=self.database_manager
-            ),
         )
 
 

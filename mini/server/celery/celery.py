@@ -1,11 +1,18 @@
+from config.config import config
 from celery import Celery
 
-app = Celery("mini")
+celery_app = Celery("mini")
 
-app.config_from_object("mini.server.celery.celeryconfig")
+celery_app.conf.update(
+    broker_url=config.REDIS_URL,
+    result_backend=config.REDIS_URL,
+    task_serializer="json",
+    result_serializer="json",
+    accept_content=["json"],
+    timezone="UTC",
+    enable_utc=True,
+)
 
-app.autodiscover_tasks(
-    [
-        "mini.agent.run_agent",
-    ]
+celery_app.autodiscover_tasks(
+    ["mini.server.tasks.send_response", "mini.server.tasks.send_proactive"]
 )

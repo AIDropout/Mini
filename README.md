@@ -1,3 +1,7 @@
+#TODO:
+# 1. Change all wehook urls to /messages/bird
+# 2. Notify David of webhook rename (mainly /verifications)
+
 Ensure that [ngrok](https://ngrok.com/), and [uv](https://github.com/astral-sh/uv) are installed.
 
 Grab your ngrok auth token here (https://dashboard.ngrok.com/get-started/your-authtoken)

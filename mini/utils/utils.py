@@ -12,8 +12,6 @@ from pyngrok import ngrok
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.messaging.bird.bird import BirdMessagingService
-from mini.messaging.telegram.telegram import TelegramManager
 from mini.utils.storage import S3FileStore
 
 logger = get_logger(__name__)
@@ -36,27 +34,6 @@ def stop_existing_processes(port: int) -> None:
     except subprocess.CalledProcessError:
         logger.info(f"No processes found using port {port}")
 
-
-async def configure_local_webhooks(local_url: str) -> None:
-    """Sets up an Ngrok public URL, and directs received Bird/Telegram messages to the URL"""
-
-    ngrok_connection = ngrok.connect(addr=local_url, proto="http")
-    logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
-
-    config.ngrok.set_url(ngrok_connection.public_url)
-
-    webhook = f"{ngrok_connection.public_url}/rooms/respond"
-    _telegram = TelegramManager()
-    _bird = BirdMessagingService()
-
-    _bird.set_sender(config.BIRD_DEV_CHANNEL_ID)
-
-    await asyncio.gather(
-        _telegram.register_webhook(webhook),
-        _bird.register_webhook(event="sms.inbound", webhook_url=webhook),
-    )
-
-    logger.info("Ngrok and webhooks successfully set up!")
 
 
 def encode_image_url_to_base64(image_url: str) -> str:

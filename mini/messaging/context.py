@@ -4,10 +4,13 @@ from typing import Optional, Tuple
 from fastapi import HTTPException
 
 from mini.core.models.context import Context
-from mini.messaging.models import MessagingProviderEnum, MiniMessage
+from mini.core.models.message import MessagingProviderEnum, MiniMessage
 from mini.database.models import Agent, Room, Tables, User
 from mini.database.database import DatabaseManager
-from mini.database.users.service import UserService
+from mini.database.service.user_service import UserService
+from mini.messaging.provider import MessagingProvider, messaging_providers
+from mini.messaging.provider.bird.bird import BirdMessaging
+from mini.messaging.provider.instagram.instagram import InstagramMessaging
 
 
 class ContextFactory:
@@ -35,6 +38,43 @@ class ContextFactory:
             agent=agent,
             room=room,
         )
+
+    def get_messaging_provider_from_context(
+        self, context: Context, provider_name: MessagingProviderEnum
+    ) -> MessagingProvider:
+        """Returns a properly configured messaging provider class"""
+
+        messaging_provider = messaging_providers.get(provider_name)
+        if not messaging_provider:
+            raise ValueError(f"Invalid messaging provider: {provider_name}")
+
+        if isinstance(messaging_provider, BirdMessaging):
+
+            messaging_provider.set_receiver(context.agent.bird_channel_id)
+            messaging_provider.set_sender(context.user.phone_number)
+
+        elif isinstance(messaging_provider, InstagramMessaging):
+
+            account = self.database_manager.get_row(
+                Tables.IGACCOUNTS,
+                {Tables.IGACCOUNTS__agent_id: context.agent.id},
+            )
+
+            if not account:
+                raise ValueError(
+                    f"No Instagram account found for agent: {context.agent.id}"
+                )
+
+            # TODO: set a User's instagram account id
+            messaging_provider.set_sender = account.account_id
+            messaging_provider._access_token = account.access_token
+
+        else:
+            raise NotImplementedError
+
+        return messaging_provider
+
+    # TODO: GIVEN provider_name & room_id, get receiver-sender info
 
     def get_context_from_message(self, message: MiniMessage) -> Context:
 
