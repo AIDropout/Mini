@@ -35,6 +35,12 @@ class Container:
         self.rate_limiter: Optional[RateLimiter] = None
         self.memory_manager: Optional[MemoryManager] = None
         self.cancel_manager: Optional[CancelManager] = None
+        self.task_scheduler: Optional[TaskScheduler] = None
+
+    def get_task_scheduler(self):
+        if self.task_scheduler is None:
+            self.task_scheduler = TaskScheduler(db_url=config.SCHEDULER_DB_URL)
+        return self.task_scheduler
 
     def get_cancel_manager(self):
         if self.cancel_manager is None:

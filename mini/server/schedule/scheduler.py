@@ -38,6 +38,13 @@ class TaskScheduler:
         except Exception as e:
             logger.error("Failed to start scheduler: %s", e)
 
+    def close(self) -> None:
+        logger.info("🛌 Closing scheduler")
+        try:
+            self.scheduler.shutdown(wait=False)
+        except Exception as e:
+            logger.error("Failed to close scheduler: %s", e)
+
     def _add_job(self, func, trigger, **kwargs) -> str:
         job = self.scheduler.add_job(func, trigger, **kwargs)
         logger.info(

@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pyngrok import ngrok
 
 from config.config import config
+from config.container import container
 from mini.core.logger import get_logger
 from mini.dashboard import endpoint as dashboard_endpoint
 from mini.database.agents import endpoint as agents_endpoint
@@ -34,9 +35,9 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
-    redis_manager = RedisManager()
+    redis_manager = container.get_redis_manager()
     redis_manager.initialize()
-    task_scheduler = TaskScheduler(db_url=config.SCHEDULER_DB_URL)
+    task_scheduler = container.get_task_scheduler()
     task_scheduler.initialize()
 
     if config.ENVIRONMENT == "local":
@@ -55,10 +56,10 @@ async def lifespan(_: FastAPI):
 
     yield
 
-    task_scheduler.scheduler.shutdown(wait=False)
+    redis_manager.close()
+    task_scheduler.close()
     subprocess.run(["pkill", "-f", "celery"], check=False)
     ngrok.kill()
-    redis_manager.close()
 
 
 app = FastAPI(lifespan=lifespan)
