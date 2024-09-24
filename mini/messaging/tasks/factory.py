@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from mini.core.models.context import Context
 from mini.core.models.message import MessagingProviderEnum, MiniMessage
-from mini.core.models.task.chat import ProactiveTask, ResponseTask
+from mini.messaging.tasks.models import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Room, Tables, User
 from mini.database.service.user_service import UserService

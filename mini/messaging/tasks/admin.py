@@ -2,7 +2,7 @@
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.core.models.task.chat import ResponseTask
+from mini.messaging.tasks.models import ResponseTask
 from mini.database.database import DatabaseManager
 from mini.messaging.providers.discord import discord_manager
 from mini.database.models import Tables, Message

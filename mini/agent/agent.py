@@ -18,7 +18,7 @@ from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
 from mini.core.models.message import MiniMessage
-from mini.core.models.task.chat import ProactiveTask, ResponseTask
+from mini.messaging.tasks.models import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Message, Room, Tables, User
 from mini.messaging.providers.discord import discord_manager

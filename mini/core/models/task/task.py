@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Union
 from mini.core.models.context import Context
-from .chat import ChatTask, ResponseTask, ProactiveTask
+from ....messaging.tasks.models import ChatTask, ResponseTask, ProactiveTask
 
 
 class Task(BaseModel):
