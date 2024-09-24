@@ -1,14 +1,15 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Path, Body, Depends
+from fastapi import APIRouter, Body, Depends, Path
 
 from config.container import container
-from mini.core.logger import get_logger
 from mini.api.security import ApiKeyDep
+from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderEnum
-from mini.server.tasks.send_proactive import send_proactive
 from mini.database.models import Room
 from mini.database.service.room_service import RoomService
+from mini.server.celery.celery import check_celery_worker
+from mini.server.tasks.send_proactive import send_proactive
 
 RoomServiceDep = Annotated[RoomService, Depends(lambda: container.get_room_service())]
 
@@ -38,8 +39,15 @@ def proactive_endpoint(
     room_id: Annotated[str, Path(..., title="Room ID for proactive messaging")],
 ):
     """Endpoint for sending proactive messages."""
-    send_proactive.delay(room_id, MessagingProviderEnum.BIRD.value)
-    return {"status": "Success"}
+    try:
+        res = send_proactive(
+            room_id=room_id, provider_name=MessagingProviderEnum.BIRD.value
+        )
+        return {
+            "status": "Success" if res else "Error: Unable to send proactive message"
+        }
+    except Exception as e:
+        return {"status": "Error", "message": str(e)}
 
 
 # TODO: change this to celery task

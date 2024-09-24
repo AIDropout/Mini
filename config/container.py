@@ -2,6 +2,7 @@ from typing import Optional
 
 from config.config import config
 from mini.agent.modules.memory import MemoryManager
+from mini.agent.modules.proactive import ScheduleDispatch
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
@@ -36,6 +37,15 @@ class Container:
         self.cancel_manager: Optional[CancelManager] = None
         self.apscheduler: Optional[APScheduler] = None
         self.scheduler: Optional[Scheduler] = None
+        self.scheduler_dispatch: Optional[ScheduleDispatch] = None
+
+    def get_schedule_dispatch(self):
+        if self.scheduler_dispatch is None:
+            self.scheduler_dispatch = ScheduleDispatch(
+                database_manager=self.database_manager,
+                scheduler=self.get_scheduler(),
+            )
+        return self.scheduler_dispatch
 
     def get_apscheduler(self):
         if self.apscheduler is None:
@@ -185,7 +195,7 @@ class Container:
 
         return AgentService(
             database_manager=self.database_manager,
-            scheduler=self.get_scheduler(),
+            schedule_dispatch=self.get_schedule_dispatch(),
             cancel_manager=self.get_cancel_manager(),
             action_module=action_module,
             memory_module=memory_module,
