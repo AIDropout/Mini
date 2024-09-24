@@ -1,11 +1,11 @@
 import json
-from datetime import datetime, date
+from datetime import date, datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
-from mini.utils.utils import utc_now, generate_uuid
+from mini.utils.utils import generate_uuid, utc_now
 
 
 # TODO: MOVE ALL THESE TO RESPECTIVE FOLDERS IN DATABASE
@@ -56,6 +56,7 @@ class Tables(str, Enum):
     ROOMS__disabled_by_admin = "disabled_by_admin"
     ROOMS__last_msg_sent_at = "last_msg_sent_at"
     ROOMS__agent_last_msg_sent_at = "agent_last_msg_sent_at"
+    ROOMS__scheduled_send_id = "scheduled_send_id"
 
     MESSAGES = "messages"
     MESSAGES__id = "id"
@@ -158,6 +159,7 @@ class Room(BaseModel):
         default_factory=utc_now,
         description="Time of last message sent by agent",
     )
+    scheduled_send_id: Optional[str] = Field(default=None)
 
 
 class Message(BaseModel):

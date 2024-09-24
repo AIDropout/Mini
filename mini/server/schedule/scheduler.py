@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+
 import requests
 from pytz import timezone
 
@@ -14,10 +15,10 @@ class Scheduler:
         self.engine = scheduler
 
     @staticmethod
-    def job_func(
+    def send_proactive_message(
         room_id: str,
         api_key: str,
-        url: str = config.ngrok.get_url(),
+        url: str = config.RENDER_CONFIG.url,  # add ur ngrok here for local testing - like "https://d9eb-132-161-243-149.ngrok-free.app"
     ):
         logger.info("Running proactive message for room %s", room_id)
         url = f"{url}/rooms/{room_id}/proactive"
@@ -37,7 +38,7 @@ class Scheduler:
     def schedule_proactive_message(self, room_id: str, run_date: datetime) -> str:
         api_key = config.BACKEND_API_KEY
         job_id = self.engine.add_job(
-            Scheduler.job_func,
+            Scheduler.send_proactive_message,
             trigger="date",
             run_date=run_date,
             kwargs={"room_id": room_id, "api_key": api_key},
@@ -61,3 +62,6 @@ class Scheduler:
         run_date = datetime.now() + timedelta(minutes=minutes_from_now)
         job_id = self.engine.add_job(func, trigger="date", run_date=run_date, **kwargs)
         return job_id
+
+    def remove_job(self, job_id: str) -> bool:
+        return self.engine.remove_job(job_id)

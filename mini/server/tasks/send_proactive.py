@@ -1,17 +1,16 @@
 from celery import shared_task
 
 from config.container import container
-from mini.core.models.task.chat import ProactiveTask
 from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderEnum
+from mini.core.models.task.chat import ProactiveTask
 from mini.messaging.discord.discord import discord_manager
-
 
 logger = get_logger(__name__)
 
 
 @shared_task(bind=True, max_retries=2)
-def send_proactive(self, provider_name: str, room_id: str):
+def send_proactive(_, provider_name: str, room_id: str):
     task = None
     provider_name = MessagingProviderEnum(provider_name)
     context_factory = container.get_context_factory()
@@ -26,7 +25,7 @@ def send_proactive(self, provider_name: str, room_id: str):
             context=context,
             messaging_provider=messaging_provider,
         )
-        result = agent.process_chat_task(task)
+        return agent.process_chat_task(task)
 
     except Exception as e:
         # TODO: handle task removal
