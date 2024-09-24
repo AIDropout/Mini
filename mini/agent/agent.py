@@ -1,7 +1,6 @@
 import json
 from typing import Union
 
-from config.config import config
 from mini.agent.modules.sender import MessageSenderModule
 from mini.agent.modules.filter.filter import MessageFilterModule
 from mini.agent.modules.memory.service import MemoryModule
@@ -12,7 +11,6 @@ from mini.agent.modules.prompt import (
     ChatMessage,
     RoleplayPromptModule,
 )
-from mini.agent.modules.subscribe import SubscribeModule
 from mini.agent.modules.vision import VisionModule
 from mini.core.event_logger import event_logger as el
 from mini.core.exceptions import VisionError
@@ -33,7 +31,6 @@ class AgentService:
         cancel_manager: CancelManager,
         message_sender_module: MessageSenderModule,
         memory_module: MemoryModule,
-        subscribe_module: SubscribeModule,
         filter_module: MessageFilterModule,
         vision_module: VisionModule,
         prompt_module: BasePromptModule,
@@ -47,7 +44,6 @@ class AgentService:
         self.room: Room = None
         self.message_sender = message_sender_module
         self.memory = memory_module
-        self.subscribe = subscribe_module  # TODO: move this outside agent
         self.filter = filter_module
         self.vision = vision_module
         self.agent_prompt = AgentPromptModule(
@@ -69,7 +65,6 @@ class AgentService:
         for module in [
             self.memory,
             self.filter,
-            self.subscribe,
             self.message_sender,
             self.vision,
             self.agent_prompt,
@@ -82,8 +77,7 @@ class AgentService:
         self,
         task: Union[ResponseTask, ProactiveTask],
     ) -> bool:
-        """Processes a chat task and removes it from queue"""
-        # Configure modules
+        """Processes a chat task"""
         self._configure(task.context.agent, task.context.user, task.context.room)
         self.message_sender.set_messaging_provider(task.messaging_provider)
 
@@ -94,9 +88,6 @@ class AgentService:
             result = self._handle_proactive_task(task)
 
         self._update_proactive_message_schedule()
-
-        # Remove task
-        # self.cancel_manager.remove_task(task.context.room.id, task.id)
 
         return result
 
@@ -124,14 +115,8 @@ class AgentService:
                     f"RESPONDING TO: '{task.message.content}' in Room {self.room.id}"
                 )
 
-            # TODO: move this to admin service
-            if (
-                not self._should_continue_conversation()
-            ):  
-                return True
-
             response, roleplay = self._generate_response(task.message)
-            
+
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
             return self.message_sender.send_message(text=text_response)
@@ -140,11 +125,6 @@ class AgentService:
             msg = discord_manager.log_error(f"task_id={task.id}")
             el.log(msg)
             return False
-
-    def _should_continue_conversation(self) -> bool:
-        result = self.subscribe.should_continue_conversation()
-        self.logger.info(f"Room subscription status: {repr(result)}")
-        return result.continue_conversation
 
     def _generate_response(
         self, message: MiniMessage | None, is_proactive: bool = False

@@ -120,3 +120,15 @@ class RoomService:
         if not rooms:
             raise HTTPException(status_code=404, detail="Rooms not found")
         return rooms
+
+    def get_message_count_for_sender(self, room_id: str, sender_id: str) -> int:
+        """
+        Get the number of messages in the room using a direct count query.
+        """
+        return self.database_manager.count_rows(
+            table_name=Tables.MESSAGES,
+            conditions={
+                Tables.MESSAGES__room_id: room_id,
+                Tables.MESSAGES__sender_id: sender_id,
+            },
+        )

@@ -89,3 +89,15 @@ class MessageInsertError(Exception):
 
     def __str__(self):
         return f"MessageInsertError: {self.args[0]} (Room ID: {self.room_id}, Original error: {self.original_error})"
+
+
+class RoomDisabledByAdminError(Exception):
+    def __init__(self, room_id: str):
+        super().__init__(f"Room {room_id} disabled by admin. Canceling.")
+
+
+class CrossedMessageLimitError(Exception):
+    def __init__(self, room_id: str):
+        super().__init__(
+            f"User in room {room_id} has crossed the msg limit & isn't subscribed. Canceling."
+        )

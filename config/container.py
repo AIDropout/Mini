@@ -43,7 +43,10 @@ class Container:
 
     def get_messaging_admin_service(self):
         if self.messaging_admin_service is None:
-            self.messaging_admin_service = MessagingAdminService(self.database_manager)
+            self.messaging_admin_service = MessagingAdminService(
+                database_manager=self.database_manager,
+                room_service=self.get_room_service(),
+            )
         return self.messaging_admin_service
 
     def get_schedule_dispatch(self):
@@ -153,7 +156,6 @@ class Container:
         from mini.agent.modules.filter.filter import IntentConfig, MessageFilterModule
         from mini.agent.modules.memory.service import MemoryModule
         from mini.agent.modules.prompt import BasePromptModule
-        from mini.agent.modules.subscribe import SubscribeModule
         from mini.agent.modules.vision import VisionModule
         from mini.core.enums import ConfidenceLevel
 
@@ -168,10 +170,6 @@ class Container:
         memory_module = MemoryModule(
             database_manager=self.database_manager,
             memory_manager=memory_manager,
-        )
-        subscribe_module = SubscribeModule(
-            database_manager=self.database_manager,
-            message_sender_module=message_sender_module,
         )
 
         filter_module = MessageFilterModule.from_config(
@@ -206,7 +204,6 @@ class Container:
             cancel_manager=self.get_cancel_manager(),
             message_sender_module=message_sender_module,
             memory_module=memory_module,
-            subscribe_module=subscribe_module,
             filter_module=filter_module,
             vision_module=vision_module,
             prompt_module=prompt_module,

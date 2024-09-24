@@ -53,3 +53,4 @@ class AgentService:
         if not updated_agent:
             raise HTTPException(status_code=400, detail="Failed to update agent")
         return updated_agent
+
