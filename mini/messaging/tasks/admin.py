@@ -29,11 +29,14 @@ class MessagingAdminService:
         self._log_to_discord(task)
         return task
 
-    def _handle_disabled_room(self, task: ResponseTask):
+    def _handle_disabled_room(self, task: ResponseTask) -> None:
         if task.context.room.disabled_by_admin:
             raise RoomDisabledByAdminError(room_id=task.context.room.id)
 
-    def _handle_reset_phrase(self, task: ResponseTask):
+    def _handle_reset_phrase(self, task: ResponseTask) -> None:
+        """
+        Deletes a user if their message uses the trigger phrase.
+        """
         if task.message.content == config.SECRET_PHRASES.reset_user:
             self.database_manager.supabase.auth.admin.delete_user(task.context.user.id)
             self.database_manager.delete(
@@ -44,7 +47,7 @@ class MessagingAdminService:
             )
             return
 
-    def _insert_user_message(self, task: ResponseTask):
+    def _insert_user_message(self, task: ResponseTask) -> None:
         self.database_manager.insert(
             Tables.MESSAGES,
             Message(
@@ -54,21 +57,27 @@ class MessagingAdminService:
             ),
         )
 
-    def _log_to_discord(self, task: ResponseTask):
+    def _log_to_discord(self, task: ResponseTask) -> None:
+        """
+        Logs a user message to discord.
+        """
         if config.ENVIRONMENT == "production":
             discord_manager.log_message(
                 message=f"-# {task.context.user.phone_number} -> {task.context.agent.name}: {task.message.content}"
             )
 
-    def _handle_subscription_check(self, task: ResponseTask):
+    def _handle_subscription_check(self, task: ResponseTask) -> None:
+        """
+        User subscription logic. Sends a subscribe message if user has crossed the messaging limit.
+        """
+        if task.context.user.is_subscribed:
+            return
+
         agent_message_count = self.room_service.get_message_count_for_sender(
             task.context.room.id, task.context.agent.id
         )
 
-        if (
-            agent_message_count >= task.context.agent.free_msg_limit
-            and not task.context.user.is_subscribed
-        ):
+        if agent_message_count >= task.context.agent.free_msg_limit:
             if task.context.room.subscribe_msg_sent:
                 raise CrossedMessageLimitError(room_id=task.context.room.id)
             else:
