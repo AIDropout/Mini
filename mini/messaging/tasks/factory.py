@@ -5,22 +5,35 @@ from fastapi import HTTPException
 
 from mini.core.models.context import Context
 from mini.core.models.message import MessagingProviderEnum, MiniMessage
+from mini.core.models.task.chat import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Room, Tables, User
 from mini.database.service.user_service import UserService
-from mini.messaging import MessagingProvider, messaging_providers
-from mini.messaging.bird.bird import BirdMessaging
-from mini.messaging.instagram.instagram import InstagramMessaging
+from mini.messaging.providers import MessagingProvider, messaging_providers
+from mini.messaging.providers.bird import BirdMessaging
+from mini.messaging.providers.instagram import InstagramMessaging
 
 
-class ContextFactory:
+class ChatTaskFactory:
     def __init__(
         self, database_manager: DatabaseManager, user_service: UserService
     ) -> None:
         self.database_manager = database_manager
         self.user_service = user_service
 
-    def get_context_from_room_id(self, room_id) -> Context:
+    def build_proactive_task(
+        self, provider_name: MessagingProviderEnum, room_id: str
+    ) -> ProactiveTask:
+        context = self._get_context_from_room_id(room_id)
+        messaging_provider = self._get_messaging_provider_from_context(
+            context, provider_name
+        )
+        return ProactiveTask(
+            context=context,
+            messaging_provider=messaging_provider,
+        )
+
+    def _get_context_from_room_id(self, room_id) -> Context:
         room = self.database_manager.get_row(
             Tables.ROOMS, conditions={Tables.ROOMS__id: room_id}
         )
@@ -32,14 +45,13 @@ class ContextFactory:
             Tables.AGENTS,
             conditions={Tables.AGENTS__id: room.agent_id},
         )
-
         return Context(
             user=user,
             agent=agent,
             room=room,
         )
 
-    def get_messaging_provider_from_context(
+    def _get_messaging_provider_from_context(
         self, context: Context, provider_name: MessagingProviderEnum
     ) -> MessagingProvider:
         """Returns a properly configured messaging provider class"""
@@ -74,9 +86,25 @@ class ContextFactory:
 
         return messaging_provider
 
-    # TODO: GIVEN provider_name & room_id, get receiver-sender info
+    def build_response_task(
+        self, provider_name: MessagingProviderEnum, request_body: dict
+    ) -> ResponseTask:
+        messaging_provider = messaging_providers.get(provider_name)
+        if not messaging_provider:
+            raise ValueError(f"Unsupported message provider: {provider_name}")
+        message = messaging_provider.receive_message(request_body)
+        context = self._get_context_from_message(message)
 
-    def get_context_from_message(self, message: MiniMessage) -> Context:
+        from datetime import datetime, timedelta
+
+        return ResponseTask(
+            context=context,
+            messaging_provider=messaging_provider,
+            scheduled_for=datetime.now() + timedelta(seconds=0),
+            message=message,
+        )
+
+    def _get_context_from_message(self, message: MiniMessage) -> Context:
 
         user, agent = self._get_user_and_agent_from_db(message)
 

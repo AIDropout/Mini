@@ -8,8 +8,8 @@ from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderEnum
 from mini.database.models import Room
 from mini.database.service.room_service import RoomService
-from mini.server.celery.celery import check_celery_worker
-from mini.server.tasks.send_proactive import send_proactive
+from mini.messaging.tasks.tasks import send_proactive
+
 
 RoomServiceDep = Annotated[RoomService, Depends(lambda: container.get_room_service())]
 

@@ -13,8 +13,8 @@ from mini.core.models.message import (
     MiniMessage,
     MiniMessageMetadata,
 )
-from mini.messaging.base import ProviderBase
-from mini.messaging.bird.models import BirdRequest, ErrorCode, VerificationStatus
+from mini.messaging.providers.base import ProviderBase
+from mini.messaging.providers.bird.models import BirdRequest, ErrorCode, VerificationStatus
 from mini.utils.storage import get_file_store
 
 logger = get_logger(__name__)

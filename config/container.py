@@ -8,7 +8,7 @@ from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
 from mini.database.service.user_service import UserService
 from mini.llm import LLMService, Model
-from mini.messaging.context import ContextFactory
+from mini.messaging.tasks.factory import ChatTaskFactory
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.server.redis.cancel import CancelManager
 from mini.server.redis.redis import RedisManager
@@ -30,7 +30,7 @@ class Container:
         self.customer_manager = CustomerManager.from_config(config)
         self.subscription_manager = SubscriptionManager()
         self.user_service: Optional[UserService] = None
-        self._context_factory: Optional[ContextFactory] = None
+        self._chat_task_factory: Optional[ChatTaskFactory] = None
         self.redis_manager: Optional[RedisManager] = None
         self.rate_limiter: Optional[RateLimiter] = None
         self.memory_manager: Optional[MemoryManager] = None
@@ -89,13 +89,13 @@ class Container:
 
         return AgentService(database_manager=self.database_manager)
 
-    def get_context_factory(self) -> ContextFactory:
-        if self._context_factory is None:
-            self._context_factory = ContextFactory(
+    def get_chat_task_factory(self) -> ChatTaskFactory:
+        if self._chat_task_factory is None:
+            self._chat_task_factory = ChatTaskFactory(
                 database_manager=self.database_manager,
                 user_service=self.get_user_service(),
             )
-        return self._context_factory
+        return self._chat_task_factory
 
     def get_memory_manager(self):
         if self.memory_manager is None:
@@ -116,13 +116,13 @@ class Container:
         return self.memory_manager
 
     def get_verify_service(self):
-        from mini.messaging.bird.bird import BirdMessaging
-        from mini.messaging.bird.verification.service import VerifyService
+        from mini.messaging.providers.bird import BirdMessaging
+        from mini.messaging.providers.bird.verification.service import VerifyService
 
         return VerifyService()
 
     def get_room_service(self):
-        from mini.database.rooms_service import RoomService
+        from mini.database.service.room_service import RoomService
 
         return RoomService(
             database_manager=self.database_manager,
@@ -202,16 +202,6 @@ class Container:
             filter_module=filter_module,
             vision_module=vision_module,
             prompt_module=prompt_module,
-        )
-
-    def get_response_service(self):
-        from mini.messaging.response.service import ResponseService
-
-        return ResponseService(
-            database_manager=self.database_manager,
-            context_factory=self.get_context_factory(),
-            cancel_manager=self.get_cancel_manager(),
-            redis_manager=self.get_redis_manager(),
         )
 
 

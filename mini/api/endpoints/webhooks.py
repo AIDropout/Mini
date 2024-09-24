@@ -12,12 +12,12 @@ from mini.core.models.message import MessagingProviderEnum
 from fastapi import Depends
 
 from config.config import config
-from mini.messaging.bird.models import BirdRequest
-from mini.messaging.instagram.webhook import InstagramWebhookService
-from mini.messaging.instagram.dependencies import validate_instagram_webhook
-from mini.messaging.instagram.models import InstagramWebhook
+from mini.messaging.providers.bird.models import BirdRequest
+from mini.messaging.providers.instagram.webhook import InstagramWebhookService
+from mini.messaging.providers.instagram.dependencies import validate_instagram_webhook
+from mini.messaging.providers.instagram.models import InstagramWebhook
 from mini.database.database import DatabaseManager
-from mini.server.tasks.send_response import send_response
+from mini.messaging.tasks.tasks import send_response
 
 
 router = APIRouter(

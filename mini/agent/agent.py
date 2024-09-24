@@ -21,7 +21,7 @@ from mini.core.models.message import MiniMessage
 from mini.core.models.task.chat import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Message, Room, Tables, User
-from mini.messaging.discord.discord import discord_manager
+from mini.messaging.providers.discord import discord_manager
 from mini.server.redis.cancel import CancelManager
 from mini.utils.utils import utc_now
 

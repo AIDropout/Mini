@@ -15,8 +15,8 @@ from mini.core.models.message import (
     MiniMessageMetadata,
     MiniMessage,
 )
-from mini.messaging.base import ProviderBase
-from mini.messaging.telegram.models import (
+from mini.messaging.providers.base import ProviderBase
+from mini.messaging.providers.telegram.models import (
     TelegramMessage,
     _TelegramMessageDocument,
     _TelegramMessagePhoto,
@@ -25,7 +25,7 @@ from mini.messaging.telegram.models import (
 logger = get_logger(__name__)
 
 
-class TelegramManager(ProviderBase):
+class TelegramMessaging(ProviderBase):
     def __init__(self):
         """Initialize the Telegram Bot messaging service."""
         self._bot = telegram.Bot(token=config.TELEGRAM_BOT_TOKEN)

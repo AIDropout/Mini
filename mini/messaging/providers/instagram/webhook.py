@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 import json
 from mini.core.logger import get_logger
-from mini.messaging.instagram.models import InstagramWebhook, MessageEvent
-from mini.server.tasks.send_response import send_response
+from mini.messaging.providers.instagram.models import InstagramWebhook, MessageEvent
+from mini.messaging.tasks.tasks import send_response
 from mini.core.models.message import MessagingProviderEnum
 from mini.database.database import DatabaseManager
 from mini.database.models import Tables
@@ -16,7 +16,8 @@ class InstagramWebhookService:
         self.database_manager = database_manager
 
     def handle_webhook(
-        self, webhook: InstagramWebhook,
+        self,
+        webhook: InstagramWebhook,
     ):
         logger.info(webhook)
         for entry in webhook.entry:
@@ -24,7 +25,9 @@ class InstagramWebhookService:
                 if event.message:
                     if event.message.is_echo:
                         return  # Don't process echo
-                    send_response(MessagingProviderEnum.INSTAGRAM.value, event.model_dump_json())
+                    send_response(
+                        MessagingProviderEnum.INSTAGRAM.value, event.model_dump_json()
+                    )
                 elif event.read:
                     self._handle_read_receipt(event)
                 else:

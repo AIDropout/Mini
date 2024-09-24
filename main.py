@@ -16,8 +16,8 @@ from config.config import config
 from config.container import container
 from mini.api import router as api_router
 from mini.core.logger import get_logger
-from mini.messaging.bird.bird import BirdMessaging
-from mini.messaging.telegram.telegram import TelegramManager
+from mini.messaging.providers.bird import BirdMessaging
+from mini.messaging.providers.telegram import TelegramMessaging
 from mini.utils.utils import stop_existing_processes
 
 logger = get_logger(__name__)
@@ -95,7 +95,7 @@ async def configure_local_webhooks(local_url: str) -> None:
     if ngrok_connection.public_url is None:
         raise ValueError("Ngrok Public URL is None")
 
-    _telegram = TelegramManager()
+    _telegram = TelegramMessaging()
     _bird = BirdMessaging()
 
     _bird.set_sender(config.BIRD_DEV_CHANNEL_ID)

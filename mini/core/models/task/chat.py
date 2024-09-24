@@ -1,7 +1,7 @@
 from enum import Enum
 
 from mini.core.models.message import MiniMessage
-from mini.messaging import MessagingProvider
+from mini.messaging.providers import MessagingProvider
 
 from .base import BaseTask
 from datetime import datetime
