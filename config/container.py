@@ -8,6 +8,7 @@ from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
 from mini.database.service.user_service import UserService
 from mini.llm import LLMService, Model
+from mini.messaging.tasks.admin import MessagingAdminService
 from mini.messaging.tasks.factory import ChatTaskFactory
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.server.redis.cancel import CancelManager
@@ -37,7 +38,13 @@ class Container:
         self.cancel_manager: Optional[CancelManager] = None
         self.apscheduler: Optional[APScheduler] = None
         self.scheduler: Optional[Scheduler] = None
+        self.messaging_admin_service: Optional[MessagingAdminService] = None
         self.scheduler_dispatch: Optional[ScheduleDispatch] = None
+
+    def get_messaging_admin_service(self):
+        if self.messaging_admin_service is None:
+            self.messaging_admin_service = MessagingAdminService(self.database_manager)
+        return self.messaging_admin_service
 
     def get_schedule_dispatch(self):
         if self.scheduler_dispatch is None:
