@@ -2,7 +2,7 @@ import json
 from typing import Union
 
 from config.config import config
-from mini.agent.modules.action import ActionModule
+from mini.agent.modules.sender import MessageSenderModule
 from mini.agent.modules.filter.filter import MessageFilterModule
 from mini.agent.modules.memory.service import MemoryModule
 from mini.agent.modules.proactive.schedule_dispatch import ScheduleDispatch
@@ -20,10 +20,9 @@ from mini.core.logger import get_logger
 from mini.core.models.message import MiniMessage
 from mini.messaging.tasks.models import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
-from mini.database.models import Agent, Message, Room, Tables, User
+from mini.database.models import Agent, Room, User
 from mini.messaging.providers.discord import discord_manager
 from mini.server.redis.cancel import CancelManager
-from mini.utils.utils import utc_now
 
 
 class AgentService:
@@ -32,7 +31,7 @@ class AgentService:
         database_manager: DatabaseManager,
         schedule_dispatch: ScheduleDispatch,
         cancel_manager: CancelManager,
-        action_module: ActionModule,
+        message_sender_module: MessageSenderModule,
         memory_module: MemoryModule,
         subscribe_module: SubscribeModule,
         filter_module: MessageFilterModule,
@@ -46,9 +45,9 @@ class AgentService:
         self.agent: Agent = None
         self.user: User = None
         self.room: Room = None
-        self.action = action_module
+        self.message_sender = message_sender_module
         self.memory = memory_module
-        self.subscribe = subscribe_module # TODO: move this outside agent
+        self.subscribe = subscribe_module  # TODO: move this outside agent
         self.filter = filter_module
         self.vision = vision_module
         self.agent_prompt = AgentPromptModule(
@@ -71,7 +70,7 @@ class AgentService:
             self.memory,
             self.filter,
             self.subscribe,
-            self.action,
+            self.message_sender,
             self.vision,
             self.agent_prompt,
             self.roleplay_prompt,
@@ -86,7 +85,7 @@ class AgentService:
         """Processes a chat task and removes it from queue"""
         # Configure modules
         self._configure(task.context.agent, task.context.user, task.context.room)
-        self.action.set_messaging_provider(task.messaging_provider)
+        self.message_sender.set_messaging_provider(task.messaging_provider)
 
         # Handle each task type
         if isinstance(task, ResponseTask):
@@ -110,13 +109,7 @@ class AgentService:
 
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
-            success = self.action.send_message(text=text_response)
-            el.log(f"BIRD SMS SENT: {success}")
-
-            if success:
-                self._handle_successful_send(text_response)
-
-            return True
+            return self.message_sender.send_message(text=text_response)
         except Exception as e:
             msg = discord_manager.log_error(str(e))
             el.log(msg)
@@ -131,22 +124,18 @@ class AgentService:
                     f"RESPONDING TO: '{task.message.content}' in Room {self.room.id}"
                 )
 
-            if not self._should_continue_conversation():
+            # TODO: move this to admin service
+            if (
+                not self._should_continue_conversation()
+            ):  
                 return True
 
             response, roleplay = self._generate_response(task.message)
+            
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
-            # if self.cancel_manager.newer_message_found(self.room.id, task.id):
-            #     return False
+            return self.message_sender.send_message(text=text_response)
 
-            success = self.action.send_message(text=text_response)
-            el.log(f"BIRD SMS SENT: {success}")
-
-            if success:
-                self._handle_successful_send(text_response)
-
-            return True
         except Exception:
             msg = discord_manager.log_error(f"task_id={task.id}")
             el.log(msg)
@@ -178,7 +167,7 @@ class AgentService:
             )
             el.log(f"SYSTEM PROMPT FOR ROLEPLAY: {roleplay_system_prompt}")
 
-            roleplay_response_text = self.action.generate_message(
+            roleplay_response_text = self.message_sender.generate_message(
                 [], roleplay_system_prompt, self.roleplay_prompt.response_format
             )
             el.log(f"ROLEPLAY LLM RESPONSE: {roleplay_response_text}")
@@ -195,7 +184,7 @@ class AgentService:
         )
         el.log(f"SYSTEM PROMPT FOR AGENT: {agent_system_prompt}")
 
-        agent_response_text = self.action.generate_message(
+        agent_response_text = self.message_sender.generate_message(
             [], agent_system_prompt, self.agent_prompt.response_format
         )
         el.log(f"AGENT LLM RESPONSE: {agent_response_text}")
@@ -216,36 +205,6 @@ class AgentService:
                 "is not loading the images."
             )
         return message
-
-    def _handle_successful_send(self, final_message: str):
-        self._add_message_to_db(final_message)
-        self._log_to_discord(final_message)
-        self._update_room_last_message_time()
-
-    def _add_message_to_db(self, final_message: str):
-        self.database_manager.insert(
-            Tables.MESSAGES,
-            Message(
-                room_id=self.room.id,
-                sender_id=self.agent.id,
-                content=final_message,
-                log=el.get_logs(),
-            ),
-        )
-
-    def _log_to_discord(self, final_message: str):
-        if config.ENVIRONMENT == "production":
-            discord_manager.log_message(
-                message=f"-# {self.agent.name} -> {self.user.phone_number}: {final_message}",
-            )
-
-    def _update_room_last_message_time(self):
-        self.database_manager.update(
-            Tables.ROOMS,
-            {Tables.ROOMS__agent_last_msg_sent_at: utc_now()},
-            condition_key=Tables.ROOMS__id,
-            condition_value=self.room.id,
-        )
 
     def _update_proactive_message_schedule(self):
         self.schedule_dispatch.schedule_proactive_message()

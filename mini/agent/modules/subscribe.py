@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from config.config import config
-from mini.agent.modules.action import ActionModule
+from mini.agent.modules.sender import MessageSenderModule
 from mini.agent.modules.base import AgentModule
 from mini.agent.modules.memory.service import MemoryModule
 from mini.core.logger import get_logger
@@ -39,10 +39,10 @@ class SubscribeModule(AgentModule):
     def __init__(
         self,
         database_manager: DatabaseManager,
-        action_module: ActionModule,
+        message_sender_module: MessageSenderModule,
     ):
         super().__init__(database_manager)
-        self.action_module = action_module
+        self.message_sender_module = message_sender_module
 
     def should_continue_conversation(self) -> ConversationStatus:
         """
@@ -112,7 +112,7 @@ class SubscribeModule(AgentModule):
         )
 
         # Send the subscription message
-        self.action_module.send_message(text=subscribe_message)
+        self.message_sender_module.send_message(text=subscribe_message)
 
         # Store the subscription message
         self.database_manager.insert(

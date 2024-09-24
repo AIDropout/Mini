@@ -149,7 +149,7 @@ class Container:
 
     def get_agent_controller(self):
         from mini.agent.agent import AgentService
-        from mini.agent.modules.action import ActionModule
+        from mini.agent.modules.sender import MessageSenderModule
         from mini.agent.modules.filter.filter import IntentConfig, MessageFilterModule
         from mini.agent.modules.memory.service import MemoryModule
         from mini.agent.modules.prompt import BasePromptModule
@@ -157,10 +157,11 @@ class Container:
         from mini.agent.modules.vision import VisionModule
         from mini.core.enums import ConfidenceLevel
 
-        action_module = ActionModule(
+        message_sender_module = MessageSenderModule(
+            database_manager=self.database_manager,
             llm_manager=LLMService(
                 model=Model.from_model_name(config.ACTION_MANAGER_LLM)
-            )
+            ),
         )
 
         memory_manager = self.get_memory_manager()
@@ -170,7 +171,7 @@ class Container:
         )
         subscribe_module = SubscribeModule(
             database_manager=self.database_manager,
-            action_module=action_module,
+            message_sender_module=message_sender_module,
         )
 
         filter_module = MessageFilterModule.from_config(
@@ -203,7 +204,7 @@ class Container:
             database_manager=self.database_manager,
             schedule_dispatch=self.get_schedule_dispatch(),
             cancel_manager=self.get_cancel_manager(),
-            action_module=action_module,
+            message_sender_module=message_sender_module,
             memory_module=memory_module,
             subscribe_module=subscribe_module,
             filter_module=filter_module,

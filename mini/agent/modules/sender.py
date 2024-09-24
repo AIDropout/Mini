@@ -2,17 +2,24 @@ from typing import Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
 
+from config.config import config
 from mini.agent.modules.base import AgentModule
+from mini.core.event_logger import event_logger as el
 from mini.core.logger import get_logger
-from mini.database.models import Tables
+from mini.database.database import DatabaseManager
+from mini.database.models import Message, Tables
 from mini.llm import LLMService
 from mini.messaging.providers import MessagingProvider
+from mini.messaging.providers.discord import discord_manager
+from mini.utils.utils import utc_now
+
 
 logger = get_logger(__name__)
 
 
-class ActionModule(AgentModule):
-    def __init__(self, llm_manager: LLMService):
+class MessageSenderModule(AgentModule):
+    def __init__(self, database_manager: DatabaseManager, llm_manager: LLMService):
+        self.database_manager = database_manager
         self.llm_manager = llm_manager
         self.llm_manager.cost_tracking_callback = self._update_user_message_cost
         self.messaging_provider = None
@@ -48,16 +55,24 @@ class ActionModule(AgentModule):
             subject (Optional[str]): Optional subject for the message.
 
         Returns:
-            bool: Overall success status.
+            bool: Sent message.
         """
+        success: bool
         if (images is None or len(images) == 0) and (files is None or len(files) == 0):
-            # Text-only message: split and send in parts
-            return self._send_text_message(text)
+            success = self._send_text_message(text)
         else:
-            # Message with images or files: send everything at once
-            return self._send_media_message(text, images, files, subject)
+            success = self._send_media_message(text, images, files, subject)
+
+        # Store & log message
+        if success:
+            el.log(f"BIRD SMS SENT: {success}")
+            self._handle_successful_send(text)
+
+        return success
 
     def _send_text_message(self, text: str) -> bool:
+        # Text-only message: split and send in parts
+
         if not text:
             logger.warning("Attempted to send empty text message")
             return False
@@ -89,6 +104,7 @@ class ActionModule(AgentModule):
         files: Optional[List[Tuple[str, str]]],
         subject: Optional[str],
     ) -> bool:
+        # Message with images or files: send everything at once
         try:
             success, details = self.messaging_provider.send_message(
                 text=text, images=images, files=files, subject=subject
@@ -101,7 +117,7 @@ class ActionModule(AgentModule):
             logger.error(f"Error sending message: {str(e)}")
             return False
 
-    # @chris why is this not working?
+    # TODO: @chris why is this not working?
     def _update_user_message_cost(self, cost: float) -> None:
         update_data = {
             Tables.USERS__litellm_cost.value: self.user.litellm_cost + cost,
@@ -111,4 +127,34 @@ class ActionModule(AgentModule):
             update_data=update_data,
             condition_key=Tables.USERS__id,
             condition_value=self.user.id,
+        )
+
+    def _handle_successful_send(self, final_message: str):
+        self._add_message_to_db(final_message)
+        self._log_to_discord(final_message)
+        self._update_room_last_message_time()
+
+    def _add_message_to_db(self, final_message: str):
+        self.database_manager.insert(
+            Tables.MESSAGES,
+            Message(
+                room_id=self.room.id,
+                sender_id=self.agent.id,
+                content=final_message,
+                log=el.get_logs(),
+            ),
+        )
+
+    def _log_to_discord(self, final_message: str):
+        if config.ENVIRONMENT == "production":
+            discord_manager.log_message(
+                message=f"-# {self.agent.name} -> {self.user.phone_number}: {final_message}",
+            )
+
+    def _update_room_last_message_time(self):
+        self.database_manager.update(
+            Tables.ROOMS,
+            {Tables.ROOMS__agent_last_msg_sent_at: utc_now()},
+            condition_key=Tables.ROOMS__id,
+            condition_value=self.room.id,
         )
