@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 def get_or_create_contact_card(agent_id: str, database_manager: DatabaseManager) -> str:
     """
     Retrieves or creates a contact card (VCF file) for a given agent and returns its URL.
-    Fetches agent details and phone number from the database, generates VCF content,
+    Fetches agent details, phone number, and Instagram handle from the database, generates VCF content,
     and stores it in S3 if it doesn't exist or has changed. Raises ValueError if
     agent or channel is not found in the database.
     """
@@ -30,8 +30,13 @@ def get_or_create_contact_card(agent_id: str, database_manager: DatabaseManager)
         Tables.CHANNELS,
         {Tables.CHANNELS__id: agent.bird_channel_id},
     )
+
     if not channel:
         raise ValueError(f"Channel for agent {agent_id} not found")
+
+    ig_account = database_manager.get_row(
+        Tables.IGACCOUNTS, {Tables.IGACCOUNTS__agent_id: agent_id}
+    )
 
     # Create the new VCF content
     name_parts = agent.name.split(maxsplit=1)
@@ -48,8 +53,13 @@ ORG:{"mini"}
 PHOTO;ENCODING=BASE64;TYPE=JPEG:{base64_image}
 TEL;TYPE=CELL:{channel.phone_number}
 URL:{"https://textmini.com"}
-END:VCARD
 """
+
+    # Add Instagram link if ig_account exists and has a handle
+    if ig_account and ig_account.handle:
+        new_vcf_content += f"X-SOCIALPROFILE;TYPE=instagram:https://ig.me/m/{ig_account.handle}\n"
+
+    new_vcf_content += "END:VCARD\n"
 
     try:
         # Try to read the existing file
@@ -68,3 +78,9 @@ END:VCARD
 
     # Generate and return the URL for the file
     return fs.generate_presigned_url(file_path, "text/vcard")
+
+if __name__ == "__main__":
+    database_manager = DatabaseManager()
+    agent_id = "f49c9af0-929b-4fe1-9522-6fe4a325bdf5"
+    url = get_or_create_contact_card(agent_id, database_manager)
+    logger.info(url)

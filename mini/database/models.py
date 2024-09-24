@@ -89,6 +89,7 @@ class Tables(str, Enum):
     IGACCOUNTS__account_id = "account_id"
     IGACCOUNTS__access_token = "access_token"
     IGACCOUNTS__access_token_expiration = "access_token_expiration"
+    IGACCOUNTS__handle = "handle"
 
     def __str__(self) -> str:
         return self.value
@@ -206,6 +207,7 @@ class IGAccounts(BaseModel):
     account_id: str
     access_token: str
     access_token_expiration: date
+    handle: str
 
 
 TableModel = Union[

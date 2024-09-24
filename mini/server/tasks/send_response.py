@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 # TODO: Use a Bird request body
 @shared_task(bind=True, max_retries=2)
-def send_response(self, provider_name: str, request_body: dict):
+def send_response(self, provider_name: str, request_body: dict):        
     provider_name = MessagingProviderEnum(provider_name)
     context_factory = container.get_context_factory()
     database_manager = container.database_manager
@@ -27,17 +27,16 @@ def send_response(self, provider_name: str, request_body: dict):
     task = None
 
     try:
-        # Get correct provider class given provider name
+        # Build classes
         messaging_provider = messaging_providers.get(provider_name)
         if not messaging_provider:
             raise ValueError(f"Unsupported message provider: {provider_name}")
-
-        # Build message & context
         message = messaging_provider.receive_message(request_body)
         context = context_factory.get_context_from_message(message)
 
         # Handle return cases
         handle_return_cases(message, context, database_manager, messaging_provider)
+        insert_and_log_user_message(message, context, database_manager)
 
         # Create Response Task
         task = ResponseTask(
@@ -47,18 +46,14 @@ def send_response(self, provider_name: str, request_body: dict):
             message=message,
         )
 
-        # Handle logging
-        insert_and_log_user_message(message, context, database_manager)
-
         # if cancel_manager.newer_message_found(context.room.id, task.id):
         #     return
-
         result = agent.process_chat_task(task)
 
     except Exception as e:
         # if task.context.room.id and task.id:
         #     cancel_manager.remove_task(task.context.room.id, task.id)
-        msg = discord_manager.log_error(f"room_id={task.context.room.id}")
+        msg = discord_manager.log_error(f"error")
         logger.exception(msg)
 
 

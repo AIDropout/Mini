@@ -34,7 +34,8 @@ class InstagramMessaging(ProviderBase):
         """Sets id of sender"""
         self._sender_id = sender_id
 
-    def receive_message(self, event: MessageEvent) -> MiniMessage:
+    def receive_message(self, request_body: dict) -> MiniMessage:
+        event = MessageEvent.model_validate_json(request_body)
         """Turn a request body into a MiniMessage"""
         recipient_id = event.recipient.id  # Agent
         sender_id = event.sender.id  # User
@@ -51,9 +52,9 @@ class InstagramMessaging(ProviderBase):
             metadata=MiniMessageMetadata(
                 sender_id=self._sender_id, receiver_id=self._recipient_id
             ),
-            provider=MessagingProviderEnum.BIRD,
+            provider=MessagingProviderEnum.INSTAGRAM,
             type=MessageType.TEXT,  # TODO: Handle files
-            media_urls=None,
+            media_urls=[],
         )
 
     def send_message(self, text: str):

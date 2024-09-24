@@ -26,6 +26,12 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
+
+    redis_manager = container.get_redis_manager()
+    redis_manager.initialize()
+    apscheduler = container.get_apscheduler()
+    apscheduler.initialize()
+
     if config.is_local():
         # redis_manager.flush_all()
         subprocess.Popen(
@@ -39,10 +45,6 @@ async def lifespan(_: FastAPI):
                 "--loglevel=ERROR",
             ]
         )
-    redis_manager = container.get_redis_manager()
-    redis_manager.initialize()
-    apscheduler = container.get_apscheduler()
-    apscheduler.initialize()
 
     yield
 

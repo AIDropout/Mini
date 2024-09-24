@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 from mini.core.logger import get_logger
-from mini.server.celery.celery import celery_app
+from mini.server.celery import celery_app
 from mini.server.redis.redis import RedisManager
 
 logger = get_logger(__name__)
