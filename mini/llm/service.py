@@ -35,6 +35,7 @@ class LLMService:
         self.supports_vision = self._check_vision_support()
         self.cost_tracking_callback = cost_tracking_callback
         litellm.success_callback = [self._success_callback]
+        litellm.enable_json_schema_validation = True
 
     def _success_callback(
         self,
@@ -70,7 +71,7 @@ class LLMService:
     ) -> Union[str, Dict]:
         """Generate a response using the specified model."""
         prepared_messages = [{"role": "system", "content": system_prompt}]
-        
+
         if self.provider == Provider.ANTHROPIC:
             # Anthropic has system prompt be sent separately
             kwargs["system"] = system_prompt
@@ -82,11 +83,15 @@ class LLMService:
 
         if json_mode and self.supports_json:
             kwargs["response_format"] = {"type": "json_object"}
-        else:
-            litellm.enable_json_schema_validation = True
+        elif json_mode and not self.supports_json:
+            logger.warning("Model %s does not support JSON mode", self.model_name)
 
         if response_format and self.supports_json:
             kwargs["response_format"] = response_format
+        elif response_format and not self.supports_json:
+            logger.warning(
+                "Model %s does not support JSON response formatting", self.model_name
+            )
 
         completion_kwargs = {
             "api_key": self.api_key,

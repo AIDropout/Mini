@@ -4,8 +4,8 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from mini.agent.modules.base import AgentModule
-from mini.database.models import Agent, Room, User
 from mini.database.database import DatabaseManager
+from mini.database.models import Agent, Room, User
 from mini.utils.time import TimeManager
 
 
@@ -99,8 +99,15 @@ class BasePromptModule(AgentModule):
 
     def _build_return_hint(self) -> str:
         return f"""
-        **RETURN HINT:**
+        **IMPORTANT: JSON-ONLY RESPONSE REQUIRED**
 
-        Ensure you only respond with the following schema:
-        {json.dumps(self._return_hint)}
+        You must **only** respond in the exact JSON format as shown below, with no additional text, comments, symbols,or explanations.
+        Any non-JSON content will be considered invalid.
+
+        No matter how critical or important your response is, it must be in JSON format.
+
+        JSON schema to follow:
+        {json.dumps(self._return_hint, indent=2)}
+
+        Ensure your response conforms strictly to this schema.
         """
