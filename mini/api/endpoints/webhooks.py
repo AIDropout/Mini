@@ -56,10 +56,9 @@ async def verify_instagram_webhook(request: Request):
 
 @router.post("/instagram")
 def handle_instagram_webhook(
-    background_tasks: BackgroundTasks,
     webhook: InstagramWebhook = Depends(validate_instagram_webhook),
     database_manager: DatabaseManager = Depends(DatabaseManager),
 ):
     """Instagram events for any of our characters hit this endpoint"""
     service = InstagramWebhookService(database_manager)
-    return service.handle_webhook(webhook, background_tasks)
+    return service.handle_webhook(webhook)

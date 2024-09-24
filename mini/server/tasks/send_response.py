@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 # TODO: Use a Bird request body
 @shared_task(bind=True, max_retries=2)
-def send_response(self, provider_name: str, request_body: dict):
+def send_response(self, provider_name: str, request_body: dict):        
     provider_name = MessagingProviderEnum(provider_name)
     context_factory = container.get_context_factory()
     database_manager = container.database_manager
@@ -53,7 +53,7 @@ def send_response(self, provider_name: str, request_body: dict):
     except Exception as e:
         # if task.context.room.id and task.id:
         #     cancel_manager.remove_task(task.context.room.id, task.id)
-        msg = discord_manager.log_error(f"room_id={task.context.room.id}")
+        msg = discord_manager.log_error(f"error")
         logger.exception(msg)
 
 
