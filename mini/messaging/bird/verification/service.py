@@ -18,9 +18,12 @@ logger = get_logger(__name__)
 
 class VerifyService:
     def __init__(self):
-        self.bird_sms = messaging_provider = messaging_providers.get(
-            MessagingProviderEnum
-        )
+        self.bird_sms = messaging_providers.get(MessagingProviderEnum.BIRD)
+        if self.bird_sms is None:
+            logger.error("Bird messaging provider is not available.")
+            raise HTTPException(
+                status_code=500, detail="Bird messaging provider is not available."
+            )
 
     def send_verification(
         self, request: SendVerificationRequest
