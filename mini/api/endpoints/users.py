@@ -23,7 +23,7 @@ def create_user(
     api_key: ApiKeyDep,
 ) -> User:
     return user_service.create_user(
-        id=id, phone_number=phone_number, background_tasks=BackgroundTasks
+        id=id, phone_number=phone_number, background_tasks=background_tasks
     )
 
 
