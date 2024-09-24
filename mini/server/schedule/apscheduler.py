@@ -33,6 +33,7 @@ class APScheduler:
     def initialize(self) -> None:
         if self._initialized:
             logger.info("Reattempted initialization: APScheduler already initialized!")
+            return
         logger.info("🕰️ Starting scheduler")
         try:
             self.scheduler.start()
