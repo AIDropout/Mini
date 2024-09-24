@@ -70,6 +70,7 @@ app.include_router(api_router)
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     """Middleware to log HTTP requests and responses, with special handling for Stripe requests."""
+    config.BACKEND_URL = str(request.url)
     is_stripe_request = "Stripe" in request.headers.get("User-Agent", "")
 
     # Log the basic request info
@@ -93,7 +94,6 @@ async def configure_local_webhooks(local_url: str) -> None:
     logger.info("Ngrok public URL: %s", ngrok_connection.public_url)
     if ngrok_connection.public_url is None:
         raise ValueError("Ngrok Public URL is None")
-    config.BACKEND_URL.set_url(ngrok_connection.public_url)
 
     _telegram = TelegramManager()
     _bird = BirdMessaging()

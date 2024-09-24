@@ -1,5 +1,5 @@
 import yaml
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -102,21 +102,9 @@ class InstagramConfig(BaseSettings):
     api_version: str
     verify_token: str
 
-class BackendUrlConfig:
-    def __init__(self, url: str | None = None):
-        self.url = url
-
-    def set_url(self, url: str):
-        self.url = url
-
-    def get_url(self) -> str:
-        if self.url is None:
-            raise ValueError("Ngrok URL not set")
-        return self.url
-
 class Config(BaseSettings):
     ENVIRONMENT: str
-    BACKEND_URL: BackendUrlConfig
+    BACKEND_URL: str
     SCHEDULER_DB_URL: str
     BACKEND_API_KEY: str
     OPENAI_API_KEY: str
@@ -162,12 +150,6 @@ class Config(BaseSettings):
     SECRET_PHRASES: SecretPhrases
     DISCORD_CONFIG: DiscordConfig
     INSTAGRAM_CONFIG: InstagramConfig
-
-    @field_validator('BACKEND_URL', mode='before')
-    def parse_backend_url(cls, v):
-        if isinstance(v, str):
-            return BackendUrlConfig(v)
-        return v
 
     @classmethod
     def from_yaml(cls, file_path: str):
