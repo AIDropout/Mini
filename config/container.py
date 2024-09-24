@@ -164,7 +164,6 @@ class Container:
         subscribe_module = SubscribeModule(
             database_manager=self.database_manager,
             action_module=action_module,
-            memory_module=memory_module,
         )
 
         filter_module = MessageFilterModule.from_config(

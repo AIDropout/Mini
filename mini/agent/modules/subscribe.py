@@ -40,11 +40,9 @@ class SubscribeModule(AgentModule):
         self,
         database_manager: DatabaseManager,
         action_module: ActionModule,
-        memory_module: MemoryModule,
     ):
         super().__init__(database_manager)
         self.action_module = action_module
-        self.memory_module = memory_module
 
     def should_continue_conversation(self) -> ConversationStatus:
         """

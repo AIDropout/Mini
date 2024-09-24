@@ -48,7 +48,7 @@ class AgentService:
         self.room: Room = None
         self.action = action_module
         self.memory = memory_module
-        self.subscribe = subscribe_module
+        self.subscribe = subscribe_module # TODO: move this outside agent
         self.filter = filter_module
         self.vision = vision_module
         self.agent_prompt = AgentPromptModule(
