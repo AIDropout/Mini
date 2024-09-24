@@ -27,17 +27,16 @@ def send_response(self, provider_name: str, request_body: dict):
     task = None
 
     try:
-        # Get correct provider class given provider name
+        # Build classes
         messaging_provider = messaging_providers.get(provider_name)
         if not messaging_provider:
             raise ValueError(f"Unsupported message provider: {provider_name}")
-
-        # Build message & context
         message = messaging_provider.receive_message(request_body)
         context = context_factory.get_context_from_message(message)
 
         # Handle return cases
         handle_return_cases(message, context, database_manager, messaging_provider)
+        insert_and_log_user_message(message, context, database_manager)
 
         # Create Response Task
         task = ResponseTask(
@@ -47,12 +46,8 @@ def send_response(self, provider_name: str, request_body: dict):
             message=message,
         )
 
-        # Handle logging
-        insert_and_log_user_message(message, context, database_manager)
-
         # if cancel_manager.newer_message_found(context.room.id, task.id):
         #     return
-
         result = agent.process_chat_task(task)
 
     except Exception as e:
