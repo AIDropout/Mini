@@ -6,12 +6,10 @@ from pydantic import BaseModel, Field
 from mini.core.models.context import Context
 
 
-# Function for generating unique ID
 def generate_uuid() -> str:
     return str(uuid.uuid4())
 
 
-# Function for generating the current timestamp
 def get_current_time() -> datetime:
     return datetime.now()
 

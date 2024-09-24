@@ -1,18 +1,13 @@
-import uuid
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List
 
 from pydantic import BaseModel, Field
 
 
-# GENERAL
 class MessagingProviderEnum(Enum):
     TELEGRAM = "telegram"
     BIRD = "bird"
     INSTAGRAM = "instagram"
-
-    # def __str__(self):
-    #     return self.value
 
 
 class MessageType(Enum):
@@ -27,7 +22,6 @@ class MiniMessageMetadata(BaseModel):
     receiver_id: str
 
 
-# MINIMESSAGE
 class MiniMessage(BaseModel):
     content: str
     metadata: MiniMessageMetadata
