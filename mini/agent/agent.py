@@ -22,6 +22,8 @@ from mini.database.models import Agent, Room, User
 from mini.messaging.providers.discord import discord_manager
 from mini.server.redis.cancel import CancelManager
 
+logger = get_logger(__name__)
+
 
 class AgentService:
     def __init__(
@@ -34,51 +36,24 @@ class AgentService:
         filter_module: MessageFilterModule,
         vision_module: VisionModule,
         prompt_module: BasePromptModule,
+        agent_prompt_module: AgentPromptModule,
+        role_prompt_module: RoleplayPromptModule,
     ) -> None:
         self.database_manager = database_manager
         self.cancel_manager = cancel_manager
         self.schedule_dispatch = schedule_dispatch
-        self.logger = get_logger(__name__)
-        self.agent: Agent = None
-        self.user: User = None
-        self.room: Room = None
         self.message_sender = message_sender_module
         self.memory = memory_module
         self.filter = filter_module
         self.vision = vision_module
-        self.agent_prompt = AgentPromptModule(
-            database_manager=prompt_module.database_manager,
-            time_manager=prompt_module.time_manager,
-        )
-        self.roleplay_prompt = RoleplayPromptModule(
-            database_manager=prompt_module.database_manager,
-            time_manager=prompt_module.time_manager,
-        )
-
-    def _configure(
-        self,
-        agent: Agent,
-        user: User,
-        room: Room,
-    ) -> None:
-        self.agent, self.user, self.room = agent, user, room
-        for module in [
-            self.memory,
-            self.filter,
-            self.message_sender,
-            self.vision,
-            self.agent_prompt,
-            self.roleplay_prompt,
-            self.schedule_dispatch,
-        ]:
-            module.configure(room, agent, user)
+        self.agent_prompt = agent_prompt_module
+        self.roleplay_prompt = role_prompt_module
 
     def process_chat_task(
         self,
         task: Union[ResponseTask, ProactiveTask],
     ) -> bool:
         """Processes a chat task"""
-        self._configure(task.context.agent, task.context.user, task.context.room)
         self.message_sender.set_messaging_provider(task.messaging_provider)
 
         # Handle each task type
@@ -94,9 +69,7 @@ class AgentService:
     def _handle_proactive_task(self, task: ProactiveTask) -> bool:
         el.log("BUILDING PROACTIVE MESSAGE...")
         try:
-            response, roleplay = self._generate_response(
-                message=None, is_proactive=True
-            )
+            response, roleplay = self._generate_response(task)
 
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
@@ -112,10 +85,10 @@ class AgentService:
             if task.message.media_urls:
                 task = self._handle_image(task.message)
                 el.log(
-                    f"RESPONDING TO: '{task.message.content}' in Room {self.room.id}"
+                    f"RESPONDING TO: '{task.message.content}' in Room {task.context.room.id}"
                 )
 
-            response, roleplay = self._generate_response(task.message)
+            response, roleplay = self._generate_response(task)
 
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
@@ -127,7 +100,8 @@ class AgentService:
             return False
 
     def _generate_response(
-        self, message: MiniMessage | None, is_proactive: bool = False
+        self,
+        task: Union[ResponseTask, ProactiveTask],
     ) -> tuple[str, str]:
         all_recent_messages = self.memory.get_recent_messages(
             count=10  # TODO: Make this configurable?
@@ -141,7 +115,7 @@ class AgentService:
 
         # ROLEPLAY MESSAGE
         roleplay_response = ""
-        if self.agent.allow_roleplay:
+        if task.context.agent.allow_roleplay:
             roleplay_system_prompt = self.roleplay_prompt.build_prompt(
                 relevant_memories="", chat_history=chat_history
             )
@@ -160,7 +134,7 @@ class AgentService:
             relevant_memories="",
             chat_history=chat_history,
             roleplay=roleplay_response,
-            proactive_prompt=is_proactive,
+            proactive_prompt=isinstance(task, ProactiveTask),
         )
         el.log(f"SYSTEM PROMPT FOR AGENT: {agent_system_prompt}")
 

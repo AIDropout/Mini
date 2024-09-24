@@ -3,6 +3,7 @@ from typing import List
 from mini.agent.modules.base import AgentModule
 from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
+from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
 from mini.llm import LLMService
 
@@ -12,9 +13,15 @@ logger = get_logger(__name__)
 class VisionModule(AgentModule):
     SYSTEM_PROMPT = """You're a texting AI that analyzes images. Keep responses around 3 sentences. Start with a brief overall summary. Describe main elements: subjects, actions, setting, colors. Note unusual features or context if relevant. Be objective and accurate."""
 
-    def __init__(self, database_manager: DatabaseManager, llm_manager: LLMService):
-        super().__init__(database_manager)
+    def __init__(
+        self,
+        database_manager: DatabaseManager,
+        context: Context,
+        llm_manager: LLMService,
+    ):
+        super().__init__(database_manager, context)
         self.llm_manager = llm_manager
+        self.context = context
 
     def handle_images(self, urls: List[str]) -> str:
         """

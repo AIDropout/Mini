@@ -6,8 +6,10 @@ from pydantic import BaseModel
 from mini.agent.modules.base import AgentModule
 from mini.core.enums import ConfidenceLevel
 from mini.core.event_logger import event_logger as event_log
+from mini.core.models.context import Context
 from mini.core.exceptions import LLMResponseParsingError
 from mini.core.logger import get_logger
+from mini.database.database import DatabaseManager
 from mini.llm import LLMService
 
 logger = get_logger(__name__)
@@ -48,19 +50,24 @@ class MessageFilterModule(AgentModule):
 
     def __init__(
         self,
+        database_manager: DatabaseManager,
+        context: Context,
         is_enabled: bool,
         message_input_count: int,
         confidence_threshold: ConfidenceLevel,
         llm_service: LLMService,
     ):
+        super().__init__(database_manager, context)
         self.llm_service = llm_service
         self.is_enabled = is_enabled
         self.confidence_threshold = confidence_threshold
         self.message_input_count = message_input_count
 
     @classmethod
-    def from_config(cls, config: IntentConfig, llm_service: LLMService):
+    def from_config(cls, database_manager, context, config: IntentConfig, llm_service: LLMService):
         return cls(
+            database_manager=database_manager,
+            context=context,
             is_enabled=config.is_enabled,
             message_input_count=config.message_input_count,
             confidence_threshold=config.confidence_threshold,
@@ -88,7 +95,7 @@ class MessageFilterModule(AgentModule):
         )
 
         system_prompt = self.PROMPT_TEMPLATE.format(
-            persona_description=self.agent.prompt,
+            persona_description=self.context.agent.prompt,
             message_content=new_message,
             conversation_history=recent_messages,
             output_format=default_output_format,

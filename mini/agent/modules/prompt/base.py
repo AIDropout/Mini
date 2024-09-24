@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from mini.agent.modules.base import AgentModule
+from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Room, User
 from mini.utils.time import TimeManager
@@ -20,27 +21,15 @@ class BasePromptModule(AgentModule):
     def __init__(
         self,
         database_manager: DatabaseManager,
+        context: Context,
         time_manager: TimeManager,
     ) -> None:
-        super().__init__(database_manager)
+        super().__init__(database_manager, context)
         self.time_manager = time_manager
-        self.database_manager = database_manager
-
-        self._role = "not set yet"
-        self._rules = "not set yet"
-        self._moods = ["not set yet"]
-        self._is_subscribed = "not set yet"
+        self._role = context.agent.prompt_role
+        self._rules = context.agent.prompt_rules
+        self._moods = context.agent.prompt_moods
         self._return_hint = {}
-
-    def configure(self, room: Room, agent: Agent, user: User):
-        super().configure(room, agent, user)
-        self._load_data()
-
-    def _load_data(self) -> None:
-        self._role = self.agent.prompt_role
-        self._rules = self.agent.prompt_rules
-        self._moods = self.agent.prompt_moods
-        self._is_subscribed = self.user.is_subscribed
 
     def build_prompt(
         self,
@@ -59,7 +48,7 @@ class BasePromptModule(AgentModule):
         prepared: List[ChatMessage] = []
         for msg in chat_history:
             if msg.role == "assistant":
-                msg.role = self.agent.name
+                msg.role = self.context.agent.name
             if prepared and prepared[-1].role == msg.role == "user":
                 prepared[-1].content += f" | {msg.content}"
             else:

@@ -6,6 +6,7 @@ from config.config import config
 from mini.agent.modules.base import AgentModule
 from mini.core.event_logger import event_logger as el
 from mini.core.logger import get_logger
+from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
 from mini.database.models import Message, Tables
 from mini.llm import LLMService
@@ -18,8 +19,13 @@ logger = get_logger(__name__)
 
 
 class MessageSenderModule(AgentModule):
-    def __init__(self, database_manager: DatabaseManager, llm_manager: LLMService):
-        self.database_manager = database_manager
+    def __init__(
+        self,
+        database_manager: DatabaseManager,
+        context: Context,
+        llm_manager: LLMService,
+    ):
+        super().__init__(database_manager, context)
         self.llm_manager = llm_manager
         self.llm_manager.cost_tracking_callback = self._update_user_message_cost
         self.messaging_provider = None
@@ -120,13 +126,13 @@ class MessageSenderModule(AgentModule):
     # TODO: @chris why is this not working?
     def _update_user_message_cost(self, cost: float) -> None:
         update_data = {
-            Tables.USERS__litellm_cost.value: self.user.litellm_cost + cost,
+            Tables.USERS__litellm_cost.value: self.context.user.litellm_cost + cost,
         }
         self.database_manager.update(
             table_name=Tables.USERS,
             update_data=update_data,
             condition_key=Tables.USERS__id,
-            condition_value=self.user.id,
+            condition_value=self.context.user.id,
         )
 
     def _handle_successful_send(self, final_message: str):
@@ -138,8 +144,8 @@ class MessageSenderModule(AgentModule):
         self.database_manager.insert(
             Tables.MESSAGES,
             Message(
-                room_id=self.room.id,
-                sender_id=self.agent.id,
+                room_id=self.context.room.id,
+                sender_id=self.context.agent.id,
                 content=final_message,
                 log=el.get_logs(),
             ),
@@ -148,7 +154,7 @@ class MessageSenderModule(AgentModule):
     def _log_to_discord(self, final_message: str):
         if config.ENVIRONMENT == "production":
             discord_manager.log_message(
-                message=f"-# {self.agent.name} -> {self.user.phone_number}: {final_message}",
+                message=f"-# {self.context.agent.name} -> {self.context.user.phone_number}: {final_message}",
             )
 
     def _update_room_last_message_time(self):
@@ -156,5 +162,5 @@ class MessageSenderModule(AgentModule):
             Tables.ROOMS,
             {Tables.ROOMS__agent_last_msg_sent_at: utc_now()},
             condition_key=Tables.ROOMS__id,
-            condition_value=self.room.id,
+            condition_value=self.context.room.id,
         )

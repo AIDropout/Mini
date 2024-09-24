@@ -2,6 +2,7 @@ from typing import Dict, List
 
 from mini.agent.modules.base import AgentModule
 from mini.core.logger import get_logger
+from mini.core.models.context import Context
 from mini.agent.modules.memory.models import MemoryRecordSchema
 from mini.database.models import Tables
 from mini.database.database import DatabaseManager
@@ -14,18 +15,19 @@ class MemoryModule(AgentModule):
     def __init__(
         self,
         database_manager: DatabaseManager,
+        context: Context,
         memory_manager: MemoryManager,
     ):
-        super().__init__(database_manager)
+        super().__init__(database_manager, context)
         self.memory_manager = memory_manager
 
     def _set_user_and_agent_id(
         self, user_id: str | None = None, agent_id: str | None = None
     ):
         if user_id is None:
-            user_id = self.user.phone_number
+            user_id = self.context.user.phone_number
         if agent_id is None:
-            agent_id = self.agent.id
+            agent_id = self.context.agent.id
 
         logger.info(
             "Setting user_id (%s) and agent_id (%s) for memory manager",
@@ -110,14 +112,14 @@ class MemoryModule(AgentModule):
             max_rows=count,
             order_by=Tables.MESSAGES__created_at,
             order_desc=True,
-            conditions={Tables.MESSAGES__room_id: self.room.id},
+            conditions={Tables.MESSAGES__room_id: self.context.room.id},
         )
 
         messages.reverse()
 
         return [
             {
-                "role": "assistant" if msg.sender_id == self.agent.id else "user",
+                "role": "assistant" if msg.sender_id == self.context.agent.id else "user",
                 "content": msg.content,
             }
             for msg in messages

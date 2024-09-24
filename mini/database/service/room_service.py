@@ -17,12 +17,11 @@ class RoomService:
     def __init__(
         self,
         database_manager: DatabaseManager,
-        messaging_provider: BirdMessaging,
         customer_manager: CustomerManager,
         user_service: UserService,
     ):
         self.database_manager = database_manager
-        self.messaging_provider = messaging_provider
+        self.messaging_provider = BirdMessaging()
         self.customer_manager = customer_manager
         self.user_service = user_service
 

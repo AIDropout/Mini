@@ -2,8 +2,10 @@ from typing import List
 
 from pydantic import BaseModel
 
+from mini.core.models.context import Context
+from mini.database.database import DatabaseManager
 from mini.agent.modules.prompt.base import BasePromptModule, ChatMessage
-from mini.database.models import Agent, Room, User
+from mini.utils.time import TimeManager
 
 
 class ResponseFormat(BaseModel):
@@ -13,9 +15,17 @@ class ResponseFormat(BaseModel):
 
 
 class AgentPromptModule(BasePromptModule):
-    def configure(self, room: Room, agent: Agent, user: User):
-        super().configure(room, agent, user)
-        self._load_agent_data()
+    def __init__(
+        self,
+        database_manager: DatabaseManager,
+        context: Context,
+        time_manager: TimeManager,
+    ) -> None:
+        super().__init__(database_manager, context, time_manager)
+        self._role = context.agent.prompt_role
+        self._rules = context.agent.prompt_rules
+        self._moods = context.agent.prompt_moods
+        self._return_hint = {}
 
     @property
     def response_format(self):

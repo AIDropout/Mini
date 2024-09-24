@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from mini.agent.modules.base import AgentModule
 from mini.agent.modules.proactive.models import ScheduledMessageTemplate
 from mini.core.logger import get_logger
+from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
 from mini.database.models import Tables
 from mini.server.schedule.scheduler import Scheduler
@@ -16,16 +17,17 @@ class ScheduleDispatch(AgentModule):
     def __init__(
         self,
         database_manager: DatabaseManager,
+        context: Context,
         scheduler: Scheduler,
     ):
         """
         Initialize the ScheduleDispatch class with dead zone timings and the random hour range.
         """
-        super().__init__(database_manager)
+        super().__init__(database_manager, context)
         self.scheduler = scheduler
 
     def _remove_currently_scheduled_job(self) -> bool:
-        previous_schedule_id = self.room.scheduled_send_id
+        previous_schedule_id = self.context.room.scheduled_send_id
         if previous_schedule_id is not None:
             self.scheduler.remove_job(job_id=previous_schedule_id)
             return True
@@ -36,7 +38,7 @@ class ScheduleDispatch(AgentModule):
             Tables.ROOMS.value,
             update_data={Tables.ROOMS__scheduled_send_id: scheduled_send_id},
             condition_key=Tables.ROOMS__id,
-            condition_value=self.room.id,
+            condition_value=self.context.room.id,
         )
 
     def _schedule_from_current_events(self) -> ScheduledMessageTemplate:
@@ -130,7 +132,7 @@ class ScheduleDispatch(AgentModule):
 
         # Get the current time as an offset-aware datetime
         now = datetime.now(ZoneInfo("UTC"))  # Set your desired timezone
-        last_msg_time = self.room.last_msg_sent_at
+        last_msg_time = self.context.room.last_msg_sent_at
 
         # Ensure last_msg_time is offset-aware. If it's not, convert it accordingly.
         if last_msg_time.tzinfo is None:
@@ -183,7 +185,7 @@ class ScheduleDispatch(AgentModule):
         # 3. Schedule the proactive message for the determined time
         next_dispatch_time = scheduled_message_template.scheduled_time
         schedule_id = self.scheduler.schedule_proactive_message(
-            room_id=self.room.id, run_date=next_dispatch_time
+            room_id=self.context.room.id, run_date=next_dispatch_time
         )
         self._save_scheduled_job(scheduled_send_id=schedule_id)
 
