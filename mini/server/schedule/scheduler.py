@@ -16,9 +16,7 @@ class Scheduler:
 
     @staticmethod
     def send_proactive_message(
-        room_id: str,
-        api_key: str,
-        url: str = config.RENDER_CONFIG.url,  # add ur ngrok here for local testing - like "https://d9eb-132-161-243-149.ngrok-free.app"
+        room_id: str, api_key: str, url: str = config.BACKEND_URL
     ):
         logger.info("Running proactive message for room %s", room_id)
         url = f"{url}/rooms/{room_id}/proactive"

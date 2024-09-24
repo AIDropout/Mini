@@ -93,7 +93,7 @@ async def configure_local_webhooks(local_url: str) -> None:
     logger.info("Ngrok public URL: %s", ngrok_connection.public_url)
     if ngrok_connection.public_url is None:
         raise ValueError("Ngrok Public URL is None")
-    config.NGROK_CONFIG.set_url(ngrok_connection.public_url)
+    config.BACKEND_URL.set_url(ngrok_connection.public_url)
 
     _telegram = TelegramManager()
     _bird = BirdMessaging()

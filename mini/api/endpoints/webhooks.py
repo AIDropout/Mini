@@ -12,6 +12,7 @@ from mini.core.models.message import MessagingProviderEnum
 from fastapi import Depends
 
 from config.config import config
+from mini.messaging.bird.models import BirdRequest
 from mini.messaging.instagram.webhook import InstagramWebhookService
 from mini.messaging.instagram.dependencies import validate_instagram_webhook
 from mini.messaging.instagram.models import InstagramWebhook
@@ -28,11 +29,10 @@ logger = get_logger(__name__)
 
 @router.post("/bird")
 async def bird_webhook(
-    request: Request,
+    request: BirdRequest,
 ):
     """Endpoint hit by incoming user messages."""
-    request_body = await request.json()
-    send_response.delay(MessagingProviderEnum.BIRD.value, request_body)
+    send_response.delay(MessagingProviderEnum.BIRD.value, request.model_dump())
     return {"status": "Success"}
 
 
