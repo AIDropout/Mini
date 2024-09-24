@@ -31,9 +31,9 @@ def send_response(provider_name: str, request_body: dict):
             MessagingProviderEnum(provider_name), request_body
         )
 
-        admin_service.process_response_task(task)
+        processed_task = admin_service.process_response_task(task)
 
-        agent.process_chat_task(task)
+        agent.process_chat_task(processed_task)
 
     except Exception as e:
         msg = discord_manager.log_error(f"error")

@@ -14,11 +14,12 @@ class MessagingAdminService:
     def __init__(self, database_manager: DatabaseManager) -> None:
         self.database_manager = database_manager
 
-    def process_response_task(self, task: ResponseTask):
+    def process_response_task(self, task: ResponseTask) -> ResponseTask:
         self._handle_disabled_room(task)
         self._handle_reset_phrase(task)
         self._insert_user_message(task)
         self._log_to_discord(task)
+        return task
 
     def _handle_disabled_room(self, task: ResponseTask):
         if task.context.room.disabled_by_admin:
