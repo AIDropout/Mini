@@ -16,9 +16,9 @@ from config.config import config
 from config.container import container
 from mini.api import router as api_router
 from mini.core.logger import get_logger
-from mini.utils.utils import stop_existing_processes
 from mini.messaging.bird.bird import BirdMessaging
 from mini.messaging.telegram.telegram import TelegramManager
+from mini.utils.utils import stop_existing_processes
 
 logger = get_logger(__name__)
 
@@ -26,7 +26,7 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
-    if config.ENVIRONMENT == "local":
+    if config.is_local():
         # redis_manager.flush_all()
         subprocess.Popen(
             [
@@ -88,9 +88,10 @@ async def configure_local_webhooks(local_url: str) -> None:
     """Sets up an Ngrok public URL, and directs received Bird/Telegram messages to the URL"""
 
     ngrok_connection = ngrok.connect(addr=local_url, proto="http")
-    logger.info(f"Ngrok public URL: {ngrok_connection.public_url}")
-
-    config.ngrok.set_url(ngrok_connection.public_url)
+    logger.info("Ngrok public URL: %s", ngrok_connection.public_url)
+    if ngrok_connection.public_url is None:
+        raise ValueError("Ngrok Public URL is None")
+    config.NGROK_CONFIG.set_url(ngrok_connection.public_url)
 
     _telegram = TelegramManager()
     _bird = BirdMessaging()

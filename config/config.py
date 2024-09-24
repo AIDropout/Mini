@@ -103,20 +103,26 @@ class InstagramConfig(BaseSettings):
     verify_token: str
 
 
-
 class NgrokConfig:
-    url: str = None
+    url: str | None = None
 
     def set_url(self, url: str):
         self.url = url
 
     def get_url(self) -> str:
+        if self.url is None:
+            raise ValueError("Ngrok URL not set")
         return self.url
-    
+
+
+class RenderConfig(BaseSettings):
+    url: str
+
 
 class Config(BaseSettings):
-    ngrok: NgrokConfig = NgrokConfig()
     ENVIRONMENT: str
+    NGROK_CONFIG: NgrokConfig = NgrokConfig()
+    RENDER_CONFIG: RenderConfig
     SCHEDULER_DB_URL: str
     BACKEND_API_KEY: str
     OPENAI_API_KEY: str
@@ -168,6 +174,14 @@ class Config(BaseSettings):
         with open(file_path, "r") as file:
             yaml_data = yaml.safe_load(file)
         return cls(**yaml_data)
+
+    def is_local(self) -> bool:
+        """Returns True if the environment is local, otherwise False."""
+        return self.ENVIRONMENT == "local"
+
+    def is_production(self) -> bool:
+        """Returns True if the environment is production, otherwise False."""
+        return self.ENVIRONMENT == "prod"
 
 
 # Create config instance from YAML
