@@ -15,14 +15,6 @@ class MessagingProviderEnum(Enum):
     #     return self.value
 
 
-class ResponseTypeEnum(Enum):
-    PROACTIVE = "proactive"
-    RESPOND = "respond"
-
-    # def __str__(self):
-    #     return self.value
-
-
 class MessageType(Enum):
     TEXT = "text"
     FILE = "file"
