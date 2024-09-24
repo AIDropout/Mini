@@ -28,10 +28,15 @@ class APScheduler:
         )
         self.schedule_timezone = schedule_timezone
 
+        self._initialized = False
+
     def initialize(self) -> None:
+        if self._initialized:
+            logger.info("Reattempted initialization: APScheduler already initialized!")
         logger.info("🕰️ Starting scheduler")
         try:
             self.scheduler.start()
+            self._initialized = True
         except Exception as e:
             logger.error("Failed to start scheduler: %s", e)
 
@@ -39,17 +44,25 @@ class APScheduler:
         logger.info("🛌 Closing scheduler")
         try:
             self.scheduler.shutdown(wait=False)
+            self._initialized = False
         except Exception as e:
             logger.error("Failed to close scheduler: %s", e)
 
     def add_job(self, func, trigger, **kwargs) -> str:
+        if not self._initialized:
+            self.initialize()
         job = self.scheduler.add_job(func, trigger, **kwargs)
         logger.info(
-            f"🕥 Scheduled Job added: {job.id} with trigger: {trigger} and kwargs {kwargs}"
+            "🕥 Scheduled Job added: %s with trigger: %s and kwargs %s",
+            job.id,
+            trigger,
+            kwargs,
         )
         return job.id
 
     def remove_job(self, job_id: str) -> bool:
+        if not self._initialized:
+            self.initialize()
         try:
             self.scheduler.remove_job(job_id)
             logger.info("Scheduled Job removed: %s", job_id)
@@ -59,11 +72,15 @@ class APScheduler:
             return False
 
     def get_jobs(self):
+        if not self._initialized:
+            self.initialize()
         job_list = cast(list[Job], self.scheduler.get_jobs())
         logger.info("Current Scheduled Jobs: %s", job_list)
         return job_list
 
     def update_job(self, job_id: str, **kwargs) -> bool:
+        if not self._initialized:
+            self.initialize()
         try:
             job = cast(Job, self.scheduler.get_job(job_id))
             if job:
