@@ -55,10 +55,9 @@ class RoomService:
                 database_manager=self.database_manager
             )
 
-            # Send file
-            self.messaging_provider.send_message(
-                text=agent.first_message, files=[(file_url, "text/vcard")]
-            )
+            # First message w/ vcard
+            self.messaging_provider.send_message(text=agent.first_message)
+            self.messaging_provider.send_message(files=[(file_url, "text/vcard")])
 
             # Create a new room
             new_room = self.database_manager.insert(
