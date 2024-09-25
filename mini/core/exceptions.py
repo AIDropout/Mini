@@ -1,9 +1,3 @@
-class VisionError(Exception):
-    """Exception raised when errors occur with the vision module."""
-
-    pass
-
-
 class ServiceError(Exception):
     pass
 

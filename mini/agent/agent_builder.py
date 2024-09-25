@@ -11,7 +11,6 @@ from mini.agent.modules.prompt import (
     BasePromptModule,
     RoleplayPromptModule,
 )
-from mini.agent.modules.vision import VisionModule
 from mini.core.enums import ConfidenceLevel
 from mini.llm import LLMService, Model
 from mini.agent.modules.memory import MemoryManager
@@ -63,13 +62,6 @@ def build_agent(config: Config, context: Context) -> AgentService:
             ),
             llm_service=LLMService(
                 model=Model.from_model_name(config.ACTION_MANAGER_LLM)
-            ),
-        ),
-        vision_module=VisionModule(
-            database_manager=database_manager,
-            context=context,
-            llm_manager=LLMService(
-                model=Model.from_model_name(config.VISION_MANAGER_LLM)
             ),
         ),
         prompt_module=BasePromptModule(
