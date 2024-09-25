@@ -11,14 +11,10 @@ from mini.agent.modules.prompt import (
     ChatMessage,
     RoleplayPromptModule,
 )
-from mini.agent.modules.vision import VisionModule
 from mini.core.event_logger import event_logger as el
-from mini.core.exceptions import VisionError
 from mini.core.logger import get_logger
-from mini.core.models.message import MiniMessage
 from mini.messaging.tasks.models import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
-from mini.messaging.providers.discord import discord_manager
 
 logger = get_logger(__name__)
 
@@ -31,7 +27,6 @@ class AgentService:
         message_sender_module: MessageSenderModule,
         memory_module: MemoryModule,
         filter_module: MessageFilterModule,
-        vision_module: VisionModule,
         prompt_module: BasePromptModule,
         agent_prompt_module: AgentPromptModule,
         role_prompt_module: RoleplayPromptModule,
@@ -41,7 +36,6 @@ class AgentService:
         self.message_sender = message_sender_module
         self.memory = memory_module
         self.filter = filter_module
-        self.vision = vision_module
         self.agent_prompt = agent_prompt_module
         self.roleplay_prompt = role_prompt_module
 
@@ -67,34 +61,27 @@ class AgentService:
         self, task: ProactiveTask, check_cancellation: Callable[[], None]
     ) -> bool:
         el.log("BUILDING PROACTIVE MESSAGE...")
-        try:
-            response, roleplay = self._generate_response(task, check_cancellation)
-            text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
+        response, roleplay = self._generate_response(task, check_cancellation)
+        text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
-            check_cancellation()
+        check_cancellation()
 
-            return self.message_sender.send_message(
-                text=text_response, check_cancellation=check_cancellation
-            )
-        except Exception:
-            raise
+        return self.message_sender.send_message(
+            text=text_response, check_cancellation=check_cancellation
+        )
 
     def _handle_response_task(
         self, task: ResponseTask, check_cancellation: Callable[[], None]
     ) -> bool:
-        try:
-            check_cancellation()
+        check_cancellation()
 
-            response, roleplay = self._generate_response(task, check_cancellation)
+        response, roleplay = self._generate_response(task, check_cancellation)
 
-            text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
+        text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
-            check_cancellation()
+        check_cancellation()
 
-            return self.message_sender.send_message(text=text_response)
-
-        except Exception:
-            raise
+        return self.message_sender.send_message(text=text_response)
 
     def _generate_response(
         self,
@@ -151,17 +138,6 @@ class AgentService:
             self.filter.validate_message(task.recent_messages, response),
             roleplay_response,
         )
-
-    def _handle_image(self, message: MiniMessage) -> ResponseTask:
-        try:
-            description = self.vision.handle_images(message.media_urls)
-            message.content += f"\n\nUser sent an image: {description}"
-        except VisionError:
-            message.content += (
-                "\n\nUser sent an image, but due to some error your phone "
-                "is not loading the images."
-            )
-        return message
 
     def _update_proactive_message_schedule(self):
         self.schedule_dispatch.schedule_proactive_message()
