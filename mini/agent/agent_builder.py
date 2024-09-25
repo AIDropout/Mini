@@ -21,7 +21,6 @@ from mini.server.schedule.scheduler import Scheduler
 database_manager = container.database_manager
 time_manager = container.time_manager
 apscheduler = container.get_apscheduler()
-cancel_manager = container.get_cancel_manager()
 
 
 # TODO: Change all modules to not accept context. Instead, use the context property held by a task. And for each module function, simply accept a task object.
@@ -34,7 +33,6 @@ def build_agent(config: Config, context: Context) -> AgentService:
             context=context,
             scheduler=Scheduler(apscheduler),
         ),
-        cancel_manager=cancel_manager,
         message_sender_module=MessageSenderModule(
             database_manager=database_manager,
             context=context,

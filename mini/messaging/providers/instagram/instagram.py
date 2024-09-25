@@ -6,7 +6,7 @@ from config.config import config
 from mini.core.logger import get_logger, logger
 from mini.messaging.providers.instagram.models import MessageEvent
 from mini.core.models.message import (
-    MessagingProviderEnum,
+    MessagingProviderType,
     MiniMessage,
     MiniMessageMetadata,
     MessageType,
@@ -52,7 +52,7 @@ class InstagramMessaging(ProviderBase):
             metadata=MiniMessageMetadata(
                 sender_id=self._sender_id, receiver_id=self._recipient_id
             ),
-            provider=MessagingProviderEnum.INSTAGRAM,
+            provider=MessagingProviderType.INSTAGRAM,
             type=MessageType.TEXT,  # TODO: Handle files
             media_urls=[],
         )

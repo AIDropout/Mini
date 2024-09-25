@@ -4,7 +4,7 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
-class MessagingProviderEnum(Enum):
+class MessagingProviderType(Enum):
     TELEGRAM = "telegram"
     BIRD = "bird"
     INSTAGRAM = "instagram"
@@ -25,6 +25,6 @@ class MiniMessageMetadata(BaseModel):
 class MiniMessage(BaseModel):
     content: str
     metadata: MiniMessageMetadata
-    provider: MessagingProviderEnum
+    provider: MessagingProviderType
     type: MessageType
     media_urls: List[str] = Field(default_factory=list)

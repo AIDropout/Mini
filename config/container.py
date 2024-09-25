@@ -9,9 +9,8 @@ from mini.database.database import DatabaseManager
 from mini.database.service.user_service import UserService
 from mini.llm import LLMService, Model
 from mini.messaging.tasks.admin import MessagingAdminService
-from mini.messaging.tasks.factory import ChatTaskFactory
+from mini.messaging.tasks.factory import MessageTaskFactory
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
-from mini.server.redis.cancel import CancelManager
 from mini.server.redis.redis import RedisManager
 from mini.server.schedule.apscheduler import APScheduler
 from mini.server.schedule.scheduler import Scheduler
@@ -31,11 +30,10 @@ class Container:
         self.customer_manager = CustomerManager.from_config(config)
         self.subscription_manager = SubscriptionManager()
         self.user_service: Optional[UserService] = None
-        self._chat_task_factory: Optional[ChatTaskFactory] = None
+        self._message_task_factory: Optional[MessageTaskFactory] = None
         self.redis_manager: Optional[RedisManager] = None
         self.rate_limiter: Optional[RateLimiter] = None
         self.memory_manager: Optional[MemoryManager] = None
-        self.cancel_manager: Optional[CancelManager] = None
         self.apscheduler: Optional[APScheduler] = None
         self.scheduler: Optional[Scheduler] = None
         self.messaging_admin_service: Optional[MessagingAdminService] = None
@@ -67,11 +65,6 @@ class Container:
             self.scheduler = Scheduler(self.get_apscheduler())
         return self.scheduler
 
-    def get_cancel_manager(self):
-        if self.cancel_manager is None:
-            self.cancel_manager = CancelManager(redis_manager=self.get_redis_manager())
-        return self.cancel_manager
-
     def get_rate_limiter(self):
         if self.rate_limiter is None:
             self.rate_limiter = RateLimiter(
@@ -99,13 +92,13 @@ class Container:
 
         return AgentService(database_manager=self.database_manager)
 
-    def get_chat_task_factory(self) -> ChatTaskFactory:
-        if self._chat_task_factory is None:
-            self._chat_task_factory = ChatTaskFactory(
+    def get_message_task_factory(self) -> MessageTaskFactory:
+        if self._message_task_factory is None:
+            self._message_task_factory = MessageTaskFactory(
                 database_manager=self.database_manager,
                 user_service=self.get_user_service(),
             )
-        return self._chat_task_factory
+        return self._message_task_factory
 
     def get_memory_manager(self):
         if self.memory_manager is None:

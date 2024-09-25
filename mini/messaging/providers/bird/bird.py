@@ -9,12 +9,16 @@ from config.config import config
 from mini.core.logger import get_logger, logger
 from mini.core.models.message import (
     MessageType,
-    MessagingProviderEnum,
+    MessagingProviderType,
     MiniMessage,
     MiniMessageMetadata,
 )
 from mini.messaging.providers.base import ProviderBase
-from mini.messaging.providers.bird.models import BirdRequest, ErrorCode, VerificationStatus
+from mini.messaging.providers.bird.models import (
+    BirdRequest,
+    ErrorCode,
+    VerificationStatus,
+)
 from mini.utils.storage import get_file_store
 
 logger = get_logger(__name__)
@@ -91,7 +95,7 @@ class BirdMessaging(ProviderBase):
             metadata=MiniMessageMetadata(
                 sender_id=channel_id, receiver_id=phone_number
             ),
-            provider=MessagingProviderEnum.BIRD,
+            provider=MessagingProviderType.BIRD,
             type=message_type,
             media_urls=aws_media_urls,
         )

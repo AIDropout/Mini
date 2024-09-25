@@ -1,38 +1,38 @@
 from enum import Enum
+from typing import List, Dict
 
-from mini.core.models.message import MiniMessage
 from mini.messaging.providers import MessagingProvider
 
 from mini.core.models.base_task import BaseTask
 from datetime import datetime
 
 
-class ChatTaskType(Enum):
+class MessageTaskType(Enum):
     RESPONSE = "response"
     PROACTIVE = "proactive"
     REMIND = "remind"
 
 
-class ChatTask(BaseTask):
+class MessageTask(BaseTask):
     messaging_provider: MessagingProvider
+    recent_messages: List[Dict[str, str]]
 
     class Config:
         arbitrary_types_allowed = True
 
 
-class ResponseTask(ChatTask):
-    type: ChatTaskType = ChatTaskType.RESPONSE
+class ResponseTask(MessageTask):
+    type: MessageTaskType = MessageTaskType.RESPONSE
     scheduled_for: datetime
-    message: MiniMessage
     instructions: str = "You are texting someone."  # TODO: implement in prompt builder
 
 
-class ProactiveTask(ChatTask):
-    type: ChatTaskType = ChatTaskType.PROACTIVE
+class ProactiveTask(MessageTask):
+    type: MessageTaskType = MessageTaskType.PROACTIVE
     instructions: str = (
         "You are reaching out."  # TODO: Add time context (ex: "you last texted them last night") and implement
     )
 
 
-class RemindTask(ChatTask):
+class RemindTask(MessageTask):
     pass

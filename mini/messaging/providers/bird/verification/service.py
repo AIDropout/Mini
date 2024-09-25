@@ -2,7 +2,7 @@ from fastapi import HTTPException
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.core.models.message import MessagingProviderEnum
+from mini.core.models.message import MessagingProviderType
 from mini.messaging.providers.bird.verification.models import (
     ResendVerificationRequest,
     ResendVerificationResponse,
@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 class VerifyService:
     def __init__(self):
-        self.bird_sms = messaging_providers.get(MessagingProviderEnum.BIRD)
+        self.bird_sms = messaging_providers.get(MessagingProviderType.BIRD)
         if self.bird_sms is None:
             logger.error("Bird messaging provider is not available.")
             raise HTTPException(

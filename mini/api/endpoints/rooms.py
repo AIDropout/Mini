@@ -5,10 +5,11 @@ from fastapi import APIRouter, Body, Depends, Path
 from config.container import container
 from mini.api.security import ApiKeyDep
 from mini.core.logger import get_logger
-from mini.core.models.message import MessagingProviderEnum
+from mini.core.models.message import MessagingProviderType
 from mini.database.models import Room
 from mini.database.service.room_service import RoomService
-from mini.messaging.tasks.tasks import send_proactive
+from mini.messaging.tasks.tasks import send_message
+from mini.messaging.tasks.models import MessageTaskType
 
 
 RoomServiceDep = Annotated[RoomService, Depends(lambda: container.get_room_service())]
@@ -34,20 +35,17 @@ def create_room(
 
 
 @router.post("/{room_id}/proactive")
-def proactive_endpoint(
+async def proactive_endpoint(
     api_key: ApiKeyDep,
     room_id: Annotated[str, Path(..., title="Room ID for proactive messaging")],
 ):
     """Endpoint for sending proactive messages."""
-    try:
-        res = send_proactive(
-            room_id=room_id, provider_name=MessagingProviderEnum.BIRD.value
-        )
-        return {
-            "status": "Success" if res else "Error: Unable to send proactive message"
-        }
-    except Exception as e:
-        return {"status": "Error", "message": str(e)}
+    send_message.delay(
+        provider_name=MessagingProviderType.BIRD.value,
+        room_id=room_id,
+        type=MessageTaskType.PROACTIVE.value,
+    )
+    return {"status": "Success"}
 
 
 # TODO: change this to celery task

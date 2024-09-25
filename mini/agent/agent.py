@@ -1,5 +1,5 @@
 import json
-from typing import Union
+from typing import Union, Callable
 
 from mini.agent.modules.sender import MessageSenderModule
 from mini.agent.modules.filter.filter import MessageFilterModule
@@ -18,9 +18,7 @@ from mini.core.logger import get_logger
 from mini.core.models.message import MiniMessage
 from mini.messaging.tasks.models import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
-from mini.database.models import Agent, Room, User
 from mini.messaging.providers.discord import discord_manager
-from mini.server.redis.cancel import CancelManager
 
 logger = get_logger(__name__)
 
@@ -30,7 +28,6 @@ class AgentService:
         self,
         database_manager: DatabaseManager,
         schedule_dispatch: ScheduleDispatch,
-        cancel_manager: CancelManager,
         message_sender_module: MessageSenderModule,
         memory_module: MemoryModule,
         filter_module: MessageFilterModule,
@@ -40,7 +37,6 @@ class AgentService:
         role_prompt_module: RoleplayPromptModule,
     ) -> None:
         self.database_manager = database_manager
-        self.cancel_manager = cancel_manager
         self.schedule_dispatch = schedule_dispatch
         self.message_sender = message_sender_module
         self.memory = memory_module
@@ -49,68 +45,68 @@ class AgentService:
         self.agent_prompt = agent_prompt_module
         self.roleplay_prompt = role_prompt_module
 
-    def process_chat_task(
+    def process_message_task(
         self,
         task: Union[ResponseTask, ProactiveTask],
+        check_cancellation: Callable[[], None],
     ) -> bool:
         """Processes a chat task"""
         self.message_sender.set_messaging_provider(task.messaging_provider)
 
         # Handle each task type
         if isinstance(task, ResponseTask):
-            result = self._handle_response_task(task)
+            result = self._handle_response_task(task, check_cancellation)
         elif isinstance(task, ProactiveTask):
-            result = self._handle_proactive_task(task)
+            result = self._handle_proactive_task(task, check_cancellation)
 
         self._update_proactive_message_schedule()
 
         return result
 
-    def _handle_proactive_task(self, task: ProactiveTask) -> bool:
+    def _handle_proactive_task(
+        self, task: ProactiveTask, check_cancellation: Callable[[], None]
+    ) -> bool:
         el.log("BUILDING PROACTIVE MESSAGE...")
         try:
-            response, roleplay = self._generate_response(task)
-
+            response, roleplay = self._generate_response(task, check_cancellation)
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
 
-            return self.message_sender.send_message(text=text_response)
-        except Exception as e:
-            msg = discord_manager.log_error(str(e))
-            el.log(msg)
-            return False
+            check_cancellation()
 
-    def _handle_response_task(self, task: ResponseTask) -> bool:
-        el.log(f"MESSAGE: {task.message.content}")
+            return self.message_sender.send_message(
+                text=text_response, check_cancellation=check_cancellation
+            )
+        except Exception:
+            raise
+
+    def _handle_response_task(
+        self, task: ResponseTask, check_cancellation: Callable[[], None]
+    ) -> bool:
         try:
-            if task.message.media_urls:
-                task = self._handle_image(task.message)
-                el.log(
-                    f"RESPONDING TO: '{task.message.content}' in Room {task.context.room.id}"
-                )
+            check_cancellation()
 
-            response, roleplay = self._generate_response(task)
+            response, roleplay = self._generate_response(task, check_cancellation)
 
             text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
+
+            check_cancellation()
 
             return self.message_sender.send_message(text=text_response)
 
         except Exception:
-            msg = discord_manager.log_error(f"task_id={task.id}")
-            el.log(msg)
-            return False
+            raise
 
     def _generate_response(
         self,
         task: Union[ResponseTask, ProactiveTask],
+        check_cancellation: Callable[[], None],
     ) -> tuple[str, str]:
-        all_recent_messages = self.memory.get_recent_messages(
-            count=10  # TODO: Make this configurable?
-        )
-        el.log(f"RECENT MESSAGES PASSED TO AGENT: {all_recent_messages}")
+
+        el.log(f"RECENT MESSAGES PASSED TO AGENT: {task.recent_messages}")
 
         chat_history = [
             ChatMessage(role=msg["role"], content=msg["content"])
-            for msg in all_recent_messages
+            for msg in task.recent_messages
         ]
 
         # ROLEPLAY MESSAGE
@@ -120,6 +116,8 @@ class AgentService:
                 relevant_memories="", chat_history=chat_history
             )
             el.log(f"SYSTEM PROMPT FOR ROLEPLAY: {roleplay_system_prompt}")
+
+            check_cancellation()
 
             roleplay_response_text = self.message_sender.generate_message(
                 [], roleplay_system_prompt, self.roleplay_prompt.response_format
@@ -138,14 +136,19 @@ class AgentService:
         )
         el.log(f"SYSTEM PROMPT FOR AGENT: {agent_system_prompt}")
 
+        check_cancellation()
+
         agent_response_text = self.message_sender.generate_message(
             [], agent_system_prompt, self.agent_prompt.response_format
         )
         el.log(f"AGENT LLM RESPONSE: {agent_response_text}")
 
         response = json.loads(agent_response_text).get("best_response", "")
+
+        check_cancellation()
+
         return (
-            self.filter.validate_message(all_recent_messages, response),
+            self.filter.validate_message(task.recent_messages, response),
             roleplay_response,
         )
 

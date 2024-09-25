@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from time import time
 from typing import Any, Generator, Optional
-
+from mini.server.celery.celery import app
 from redis import ConnectionPool, Redis
 
 from config.config import config
@@ -35,13 +35,10 @@ class RedisManager:
             self.pool = None
             logger.info("Redis connection pool closed")
 
-    def set(self, key: str, value: Any, expiry: Optional[int] = None) -> None:
+    def set(self, key: str, value: Any) -> None:
         """Set a key-value pair in Redis, with an optional expiry time in seconds."""
         with self.get_connection() as client:
-            if expiry is not None:
-                client.setex(key, expiry, value)
-            else:
-                client.set(key, value)
+            client.set(key, value)
 
     def get(self, key: str) -> Any:
         """Get the value for a given key from Redis."""

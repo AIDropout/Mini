@@ -33,7 +33,6 @@ async def lifespan(_: FastAPI):
     apscheduler.initialize()
 
     if config.is_local():
-        # redis_manager.flush_all()
         subprocess.Popen(
             [
                 "celery",

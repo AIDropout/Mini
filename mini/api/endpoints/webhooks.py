@@ -5,19 +5,24 @@ from fastapi import (
     HTTPException,
     Depends,
     BackgroundTasks,
+    Depends,
+    Path
 )
-from mini.core.logger import get_logger
-from mini.core.models.message import MessagingProviderEnum
+from typing import Annotated
 
-from fastapi import Depends
 
 from config.config import config
+from config.container import container
+from mini.core.logger import get_logger
+from mini.core.models.message import MessagingProviderType
 from mini.messaging.providers.bird.models import BirdRequest
 from mini.messaging.providers.instagram.webhook import InstagramWebhookService
 from mini.messaging.providers.instagram.dependencies import validate_instagram_webhook
 from mini.messaging.providers.instagram.models import InstagramWebhook
+from mini.messaging.tasks.factory import MessageTaskFactory
+from mini.messaging.tasks.models import MessageTaskType
 from mini.database.database import DatabaseManager
-from mini.messaging.tasks.tasks import send_response
+from mini.messaging.tasks.tasks import send_message
 
 
 router = APIRouter(
@@ -25,15 +30,36 @@ router = APIRouter(
     tags=["webhooks"],
 )
 logger = get_logger(__name__)
+FactoryDep = Annotated[
+    MessageTaskFactory, Depends(lambda: container.get_message_task_factory())
+]
 
 
 @router.post("/bird")
-async def bird_webhook(
-    request: BirdRequest,
-):
+async def bird_webhook(request: BirdRequest, factory: FactoryDep):
     """Endpoint hit by incoming user messages."""
-    send_response.delay(MessagingProviderEnum.BIRD.value, request.model_dump())
+    room_id = factory.process_and_store_incoming_message(
+        MessagingProviderType.BIRD, request.model_dump()
+    )
+    send_message.delay(
+        provider_name=MessagingProviderType.BIRD.value,
+        room_id=room_id,
+        type=MessageTaskType.RESPONSE.value,
+    )
     return {"status": "Success"}
+
+
+# @router.post("/bird/{room_id}/proactive")
+# async def bird_webhook(
+#     room_id: Annotated[str, Path(..., title="Room ID for proactive messaging")],
+# ):
+#     """Endpoint hit by incoming user messages."""
+#     send_message.delay(
+#         provider_name=MessagingProviderType.BIRD.value,
+#         room_id=room_id,
+#         type=MessageTaskType.PROACTIVE.value,
+#     )
+#     return {"status": "Success"}
 
 
 @router.get("/instagram")
@@ -56,9 +82,10 @@ async def verify_instagram_webhook(request: Request):
 
 @router.post("/instagram")
 def handle_instagram_webhook(
+    factory: FactoryDep,
     webhook: InstagramWebhook = Depends(validate_instagram_webhook),
     database_manager: DatabaseManager = Depends(DatabaseManager),
 ):
     """Instagram events for any of our characters hit this endpoint"""
-    service = InstagramWebhookService(database_manager)
+    service = InstagramWebhookService(database_manager, factory)
     return service.handle_webhook(webhook)

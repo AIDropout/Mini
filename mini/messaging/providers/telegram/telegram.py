@@ -10,7 +10,7 @@ import telegram
 from config.config import config
 from mini.core.logger import get_logger
 from mini.core.models.message import (
-    MessagingProviderEnum,
+    MessagingProviderType,
     MessageType,
     MiniMessageMetadata,
     MiniMessage,
@@ -70,7 +70,7 @@ class TelegramMessaging(ProviderBase):
                 receiver_id=telegram_message.message.from_.id,
                 sender_id=telegram_message.message.chat.id,
             ),
-            provider=MessagingProviderEnum.TELEGRAM,
+            provider=MessagingProviderType.TELEGRAM,
             type=message_type,
         )
 

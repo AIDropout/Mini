@@ -1,37 +1,123 @@
 import uuid
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Dict
 
 from fastapi import HTTPException
 
+from config.config import config
+from mini.core.exceptions import RoomDisabledByAdminError, CrossedMessageLimitError
 from mini.core.models.context import Context
-from mini.core.models.message import MessagingProviderEnum, MiniMessage
-from mini.messaging.tasks.models import ProactiveTask, ResponseTask
+from mini.core.models.message import MessagingProviderType, MiniMessage
+from mini.messaging.tasks.models import ProactiveTask, ResponseTask, MessageTaskType
 from mini.database.database import DatabaseManager
-from mini.database.models import Agent, Room, Tables, User
+from mini.messaging.providers.discord import discord_manager
+from mini.database.models import Agent, Room, Tables, User, Message
 from mini.database.service.user_service import UserService
 from mini.messaging.providers import MessagingProvider, messaging_providers
 from mini.messaging.providers.bird import BirdMessaging
 from mini.messaging.providers.instagram import InstagramMessaging
 
 
-class ChatTaskFactory:
+class MessageTaskFactory:
     def __init__(
         self, database_manager: DatabaseManager, user_service: UserService
     ) -> None:
         self.database_manager = database_manager
         self.user_service = user_service
 
-    def build_proactive_task(
-        self, provider_name: MessagingProviderEnum, room_id: str
-    ) -> ProactiveTask:
+    def process_and_store_incoming_message(
+        self, provider_name: MessagingProviderType, request_body: dict
+    ):
+        """Used in response route"""
+        messaging_provider = messaging_providers.get(provider_name)
+        if not messaging_provider:
+            raise ValueError(f"Unsupported message provider: {provider_name}")
+        message = messaging_provider.receive_message(request_body)
+        context = self._get_context_from_message(message)
+
+        if context.room.disabled_by_admin:
+            raise RoomDisabledByAdminError(room_id=context.room.id)
+
+        if message.content == config.SECRET_PHRASES.reset_user:
+            self.database_manager.supabase.auth.admin.delete_user(context.user.id)
+            self.database_manager.delete(
+                Tables.USERS, {Tables.USERS__id: context.user.id}
+            )
+            messaging_provider.send_message(
+                text="Successfully deleted your user from Auth tables and Users table"
+            )
+            return
+
+        self.database_manager.insert(
+            Tables.MESSAGES,
+            Message(
+                room_id=context.room.id,
+                sender_id=context.user.id,
+                content=message.content,
+            ),
+        )
+        if config.ENVIRONMENT == "production":
+            discord_manager.log_message(
+                message=f"-# {context.user.phone_number} -> {context.agent.name}: {message.content}"
+            )
+        return context.room.id
+
+    def _get_recent_messages(
+        self, context: Context, count: int = 20
+    ) -> List[Dict[str, str]]:
+        """
+        Get the most recent messages for a given room ID.
+
+        Args:
+        - count (int): The number of recent messages to fetch. Defaults to 10.
+
+        Returns:
+        - List[Dict[str, str]]: A list of dictionaries with 'role' and 'content' keys.
+        """
+        messages = self.database_manager.get_multiple_rows(
+            table_name=Tables.MESSAGES,
+            max_rows=count,
+            order_by=Tables.MESSAGES__created_at,
+            order_desc=True,
+            conditions={Tables.MESSAGES__room_id: context.room.id},
+        )
+
+        messages.reverse()
+
+        return [
+            {
+                "role": "assistant" if msg.sender_id == context.agent.id else "user",
+                "content": msg.content,
+            }
+            for msg in messages
+        ]
+
+    def build_message_task(
+        self, provider_name: MessagingProviderType, room_id: str, type: MessageTaskType
+    ):
         context = self._get_context_from_room_id(room_id)
         messaging_provider = self._get_messaging_provider_from_context(
             context, provider_name
         )
-        return ProactiveTask(
-            context=context,
-            messaging_provider=messaging_provider,
-        )
+
+        recent_messages = self._get_recent_messages(context)
+
+        if type == MessageTaskType.RESPONSE:
+            from datetime import datetime, timedelta
+
+            return ResponseTask(
+                context=context,
+                messaging_provider=messaging_provider,
+                scheduled_for=datetime.now() + timedelta(seconds=0),
+                recent_messages=recent_messages,
+            )
+        elif type == MessageTaskType.PROACTIVE:
+            return ProactiveTask(
+                context=context,
+                messaging_provider=messaging_provider,
+                recent_messages=recent_messages,
+            )
+
+        pass
 
     def _get_context_from_room_id(self, room_id) -> Context:
         room = self.database_manager.get_row(
@@ -52,7 +138,7 @@ class ChatTaskFactory:
         )
 
     def _get_messaging_provider_from_context(
-        self, context: Context, provider_name: MessagingProviderEnum
+        self, context: Context, provider_name: MessagingProviderType
     ) -> MessagingProvider:
         """Returns a properly configured messaging provider class"""
 
@@ -86,24 +172,6 @@ class ChatTaskFactory:
 
         return messaging_provider
 
-    def build_response_task(
-        self, provider_name: MessagingProviderEnum, request_body: dict
-    ) -> ResponseTask:
-        messaging_provider = messaging_providers.get(provider_name)
-        if not messaging_provider:
-            raise ValueError(f"Unsupported message provider: {provider_name}")
-        message = messaging_provider.receive_message(request_body)
-        context = self._get_context_from_message(message)
-
-        from datetime import datetime, timedelta
-
-        return ResponseTask(
-            context=context,
-            messaging_provider=messaging_provider,
-            scheduled_for=datetime.now() + timedelta(seconds=0),
-            message=message,
-        )
-
     def _get_context_from_message(self, message: MiniMessage) -> Context:
 
         user, agent = self._get_user_and_agent_from_db(message)
@@ -115,7 +183,7 @@ class ChatTaskFactory:
                 ),  # If user verifies later, this will be replaced with Supabase Auth uuid
                 phone_number=(
                     message.metadata.receiver_id
-                    if message.provider == MessagingProviderEnum.BIRD
+                    if message.provider == MessagingProviderType.BIRD
                     else None
                 ),
             )
@@ -136,14 +204,14 @@ class ChatTaskFactory:
         user_id_col = None
         agent_id_col = None
 
-        if message.provider == MessagingProviderEnum.TELEGRAM:
+        if message.provider == MessagingProviderType.TELEGRAM:
             user_id_col = Tables.USERS__telegram_uid
             # not implemented:
             # agent_id_col = Tables.USERS__telegram_chat_id
-        elif message.provider == MessagingProviderEnum.BIRD:
+        elif message.provider == MessagingProviderType.BIRD:
             user_id_col = Tables.USERS__phone_number
             agent_id_col = Tables.AGENTS__bird_channel_id
-        elif message.provider == MessagingProviderEnum.INSTAGRAM:
+        elif message.provider == MessagingProviderType.INSTAGRAM:
             # user_id_col = Tables.USERS__ig_account # not implemented
             agent_id_col = Tables.IGACCOUNTS__account_id
 
