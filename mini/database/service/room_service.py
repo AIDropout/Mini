@@ -51,7 +51,8 @@ class RoomService:
             )
 
             file_url = get_or_create_contact_card(
-                agent_id=agent_id, db_manager=self.database_manager
+                agent_id=agent_id,
+                database_manager=self.database_manager
             )
 
             # Send file
