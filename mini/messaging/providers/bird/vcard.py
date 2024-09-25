@@ -1,3 +1,6 @@
+import re
+from urllib.parse import quote
+
 from mini.core.logger import get_logger
 from mini.database.models import Agent, Tables
 from mini.utils.storage import S3FileStore
@@ -5,7 +8,6 @@ from mini.utils.utils import encode_image_url_to_base64
 from mini.database.database import DatabaseManager
 
 logger = get_logger(__name__)
-
 
 def get_or_create_contact_card(agent_id: str, database_manager: DatabaseManager) -> str:
     """
@@ -16,7 +18,6 @@ def get_or_create_contact_card(agent_id: str, database_manager: DatabaseManager)
     """
 
     fs = S3FileStore()
-    file_path = f"vcf_files/{agent_id}.vcf"
 
     # Fetch the agent data
     agent = database_manager.get_row(
@@ -24,6 +25,10 @@ def get_or_create_contact_card(agent_id: str, database_manager: DatabaseManager)
     )
     if not agent:
         raise ValueError(f"Agent with id {agent_id} not found")
+
+    # Create a URL-safe filename from the agent's name
+    safe_name = re.sub(r'[^a-zA-Z0-9]+', '_', agent.name.lower())
+    file_path = f"vcf_files/{safe_name}.vcf"
 
     # Fetch the agent's phone number
     channel = database_manager.get_row(
