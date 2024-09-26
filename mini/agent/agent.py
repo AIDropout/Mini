@@ -47,41 +47,19 @@ class AgentService:
         """Processes a chat task"""
         self.message_sender.set_messaging_provider(task.messaging_provider)
 
-        # Handle each task type
-        if isinstance(task, ResponseTask):
-            result = self._handle_response_task(task, check_cancellation)
-        elif isinstance(task, ProactiveTask):
-            result = self._handle_proactive_task(task, check_cancellation)
+        check_cancellation()
+
+        response, roleplay = self._generate_response(task, check_cancellation)
+
+        text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
+
+        check_cancellation()
+
+        self.message_sender.send_message(text=text_response)
 
         self._update_proactive_message_schedule()
 
-        return result
-
-    def _handle_proactive_task(
-        self, task: ProactiveTask, check_cancellation: Callable[[], None]
-    ) -> bool:
-        el.log("BUILDING PROACTIVE MESSAGE...")
-        response, roleplay = self._generate_response(task, check_cancellation)
-        text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
-
-        check_cancellation()
-
-        return self.message_sender.send_message(
-            text=text_response
-        )
-
-    def _handle_response_task(
-        self, task: ResponseTask, check_cancellation: Callable[[], None]
-    ) -> bool:
-        check_cancellation()
-
-        response, roleplay = self._generate_response(task, check_cancellation)
-
-        text_response = f"**{roleplay}**\n\n{response}" if roleplay else response
-
-        check_cancellation()
-
-        return self.message_sender.send_message(text=text_response)
+        return True
 
     def _generate_response(
         self,

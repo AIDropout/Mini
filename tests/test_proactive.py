@@ -2,7 +2,7 @@ import requests
 from config.config import config
 
 # The ngrok URL you provided
-BASE_URL = "https://69e6-2601-644-4300-7120-985c-156d-e4e2-a17e.ngrok-free.app"
+BASE_URL = "https://app-kilu.onrender.com"
 
 # The room ID you want to test with
 ROOM_ID = "9754f461-d3b8-4d31-b1e0-c2114fd64ab1"
