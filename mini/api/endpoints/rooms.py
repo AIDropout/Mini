@@ -10,6 +10,7 @@ from mini.database.models import Room
 from mini.database.service.room_service import RoomService
 from mini.messaging.tasks.tasks import send_message
 from mini.messaging.tasks.models import MessageTaskType
+from mini.server.celery.celery import app
 
 
 RoomServiceDep = Annotated[RoomService, Depends(lambda: container.get_room_service())]
@@ -39,6 +40,7 @@ async def proactive_endpoint(
     api_key: ApiKeyDep,
     room_id: Annotated[str, Path(..., title="Room ID for proactive messaging")],
 ):
+    logger.info(app.tasks)
     """Endpoint for sending proactive messages."""
     send_message.delay(
         provider_name=MessagingProviderType.BIRD.value,
@@ -46,19 +48,3 @@ async def proactive_endpoint(
         type=MessageTaskType.PROACTIVE.value,
     )
     return {"status": "Success"}
-
-
-# TODO: change this to celery task
-# @router.post("/{room_id}/message")
-# def send_admin_message(
-#     room_id: Annotated[
-#         str, Path(..., title="Room ID of the page the user signed up to")
-#     ],
-#     message: Annotated[str, Body(..., title="Message to send to user")],
-#     dashboard_service: Annotated[
-#         DashboardService, Depends(lambda: container.get_dashboard_service())
-#     ],
-#     api_key: ApiKeyDep,
-# ):
-#     """Endpoint for sending messages from the admin dashboard."""
-#     dashboard_service.send_admin_message(room_id, message)

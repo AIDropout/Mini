@@ -19,6 +19,7 @@ class Scheduler:
         room_id: str, api_key: str, url: str = config.BACKEND_URL
     ):
         logger.info("Running proactive message for room %s", room_id)
+        
         url = f"{url}/rooms/{room_id}/proactive"
         try:
             headers = {"Authorization": f"Bearer {api_key}"}

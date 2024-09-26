@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from time import time
-from typing import Any, Generator, Optional
-from mini.server.celery.celery import app
+from typing import Any, Generator
 from redis import ConnectionPool, Redis
 
 from config.config import config

@@ -6,7 +6,7 @@ from fastapi import (
     Depends,
     BackgroundTasks,
     Depends,
-    Path
+    Path,
 )
 from typing import Annotated
 
@@ -23,6 +23,9 @@ from mini.messaging.tasks.factory import MessageTaskFactory
 from mini.messaging.tasks.models import MessageTaskType
 from mini.database.database import DatabaseManager
 from mini.messaging.tasks.tasks import send_message
+
+from mini.server.celery.celery import app
+
 
 
 router = APIRouter(
@@ -41,25 +44,14 @@ async def bird_webhook(request: BirdRequest, factory: FactoryDep):
     room_id = factory.process_and_store_incoming_message(
         MessagingProviderType.BIRD, request.model_dump()
     )
+    logger.info(app.tasks)
     send_message.delay(
         provider_name=MessagingProviderType.BIRD.value,
         room_id=room_id,
         type=MessageTaskType.RESPONSE.value,
     )
+
     return {"status": "Success"}
-
-
-# @router.post("/bird/{room_id}/proactive")
-# async def bird_webhook(
-#     room_id: Annotated[str, Path(..., title="Room ID for proactive messaging")],
-# ):
-#     """Endpoint hit by incoming user messages."""
-#     send_message.delay(
-#         provider_name=MessagingProviderType.BIRD.value,
-#         room_id=room_id,
-#         type=MessageTaskType.PROACTIVE.value,
-#     )
-#     return {"status": "Success"}
 
 
 @router.get("/instagram")

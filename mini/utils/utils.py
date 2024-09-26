@@ -1,4 +1,3 @@
-import asyncio
 import base64
 import re
 import subprocess
@@ -8,9 +7,7 @@ from zoneinfo import ZoneInfo
 import uuid
 
 import requests
-from pyngrok import ngrok
 
-from config.config import config
 from mini.core.logger import get_logger
 from mini.utils.storage import S3FileStore
 
@@ -33,7 +30,6 @@ def stop_existing_processes(port: int) -> None:
         logger.info("Stopped all server processes")
     except subprocess.CalledProcessError:
         logger.info(f"No processes found using port {port}")
-
 
 
 def encode_image_url_to_base64(image_url: str) -> str:

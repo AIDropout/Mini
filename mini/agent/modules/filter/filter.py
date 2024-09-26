@@ -95,7 +95,8 @@ class MessageFilterModule(AgentModule):
         )
 
         system_prompt = self.PROMPT_TEMPLATE.format(
-            persona_description=self.context.agent.prompt,
+            persona_description=self.context.agent.prompt_role, # TODO: append prompt rules
+
             message_content=new_message,
             conversation_history=recent_messages,
             output_format=default_output_format,

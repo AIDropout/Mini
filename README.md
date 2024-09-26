@@ -1,7 +1,3 @@
-#TODO:
-# 1. Change all wehook urls to /messages/bird
-# 2. Notify David of webhook rename (mainly /verifications)
-
 Ensure that [ngrok](https://ngrok.com/), and [uv](https://github.com/astral-sh/uv) are installed.
 
 Grab your ngrok auth token here (https://dashboard.ngrok.com/get-started/your-authtoken)
@@ -46,6 +42,10 @@ stripe trigger customer.subscription.deleted
 celery -A mini.server.celery.celery worker -n worker1@%h --concurrency=2 & gunicorn -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000 --timeout 120 -w 1
 ps aux | grep -E 'celery|gunicorn|python' | awk '{sum+=$6} END {print sum/1024 " MB"}'
 ps aux | grep -E 'celery|gunicorn|python' | grep -v grep | awk '{printf "%.2f MB - %s\n", $6/1024, $11}'
+
+celery -A mini.server.celery.celery flower
+export PYTHONPATH=$PYTHONPATH:/Users/chris/Desktop/mini
+
 
 pkill -f gunicorn
 pkill -f celery

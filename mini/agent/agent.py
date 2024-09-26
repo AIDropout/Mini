@@ -67,7 +67,7 @@ class AgentService:
         check_cancellation()
 
         return self.message_sender.send_message(
-            text=text_response, check_cancellation=check_cancellation
+            text=text_response
         )
 
     def _handle_response_task(

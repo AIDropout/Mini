@@ -103,7 +103,6 @@ class Agent(BaseModel):
     description: str
     first_message: str
     bird_channel_id: str
-    prompt: str
     free_msg_limit: int
     subscribe_msg: str
     default_proactivity: float = Field(

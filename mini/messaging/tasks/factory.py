@@ -4,7 +4,7 @@ from typing import Optional, Tuple, List, Dict
 from fastapi import HTTPException
 
 from config.config import config
-from mini.core.exceptions import RoomDisabledByAdminError, CrossedMessageLimitError
+from mini.core.exceptions import RoomDisabledByAdminError
 from mini.core.models.context import Context
 from mini.core.models.message import MessagingProviderType, MiniMessage
 from mini.messaging.tasks.models import ProactiveTask, ResponseTask, MessageTaskType
@@ -123,6 +123,8 @@ class MessageTaskFactory:
         room = self.database_manager.get_row(
             Tables.ROOMS, conditions={Tables.ROOMS__id: room_id}
         )
+        if not room:
+            raise ValueError(f"Room for {room_id} doesn't exist.")
         user = self.database_manager.get_row(
             Tables.USERS,
             conditions={Tables.USERS__id: room.user_id},
@@ -163,8 +165,8 @@ class MessageTaskFactory:
                     f"No Instagram account found for agent: {context.agent.id}"
                 )
 
-            # TODO: set a User's instagram account id
-            messaging_provider.set_sender = account.account_id
+            # TODO: set a User's instagram account id (set_receiver)
+            messaging_provider.set_sender(account.account_id)
             messaging_provider._access_token = account.access_token
 
         else:
