@@ -14,7 +14,6 @@ from mini.agent.modules.prompt import (
 from mini.core.event_logger import event_logger as el
 from mini.core.logger import get_logger
 from mini.messaging.tasks.models import ProactiveTask, ResponseTask
-from mini.database.database import DatabaseManager
 
 logger = get_logger(__name__)
 
@@ -22,7 +21,6 @@ logger = get_logger(__name__)
 class AgentService:
     def __init__(
         self,
-        database_manager: DatabaseManager,
         schedule_dispatch: ScheduleDispatch,
         message_sender_module: MessageSenderModule,
         memory_module: MemoryModule,
@@ -31,7 +29,6 @@ class AgentService:
         agent_prompt_module: AgentPromptModule,
         role_prompt_module: RoleplayPromptModule,
     ) -> None:
-        self.database_manager = database_manager
         self.schedule_dispatch = schedule_dispatch
         self.message_sender = message_sender_module
         self.memory = memory_module

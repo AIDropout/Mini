@@ -26,7 +26,6 @@ apscheduler = container.get_apscheduler()
 def build_agent(config: Config, context: Context) -> AgentService:
 
     return AgentService(
-        database_manager=database_manager,
         schedule_dispatch=ScheduleDispatch(
             database_manager=database_manager,
             context=context,
