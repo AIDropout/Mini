@@ -51,8 +51,7 @@ class RoomService:
             )
 
             file_url = get_or_create_contact_card(
-                agent_id=agent_id,
-                database_manager=self.database_manager
+                agent_id=agent_id, database_manager=self.database_manager
             )
 
             # First message w/ vcard
@@ -63,6 +62,14 @@ class RoomService:
             new_room = self.database_manager.insert(
                 table_name=Tables.ROOMS,
                 item=Room(user_id=user_id, agent_id=agent_id),
+            )
+
+            # Increment agent's room count
+            self.database_manager.update(
+                Tables.AGENTS.value,
+                update_data={Tables.AGENTS__room_count: agent.room_count + 1},
+                condition_key=Tables.AGENTS__id,
+                condition_value=agent_id,
             )
 
             # Log the initial message

@@ -27,6 +27,7 @@ class Tables(str, Enum):
     AGENTS__prompt_role = "prompt_role"
     AGENTS__prompt_rules = "prompt_rules"
     AGENTS__prompt_moods = "prompt_moods"
+    AGENTS__room_count = "room_count"
 
     CHANNELS = "channels"
     CHANNELS__id = "id"
@@ -116,6 +117,7 @@ class Agent(BaseModel):
     prompt_role: str
     prompt_rules: List[str]
     prompt_moods: List[str]
+    room_count: Optional[int]
 
 
 class Channel(BaseModel):
