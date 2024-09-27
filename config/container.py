@@ -8,8 +8,8 @@ from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
 from mini.database.service.user_service import UserService
 from mini.llm import LLMService, Model
-from mini.messaging.tasks.admin import MessagingAdminService
-from mini.messaging.tasks.factory import MessageTaskFactory
+from mini.messaging.paywall import PaywallService
+from mini.messaging.service import MessagingService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.server.redis.redis import RedisManager
 from mini.server.schedule.apscheduler import APScheduler
@@ -30,22 +30,22 @@ class Container:
         self.customer_manager = CustomerManager.from_config(config)
         self.subscription_manager = SubscriptionManager()
         self.user_service: Optional[UserService] = None
-        self._message_task_factory: Optional[MessageTaskFactory] = None
+        self.messaging_service: Optional[MessagingService] = None
         self.redis_manager: Optional[RedisManager] = None
         self.rate_limiter: Optional[RateLimiter] = None
         self.memory_manager: Optional[MemoryManager] = None
         self.apscheduler: Optional[APScheduler] = None
         self.scheduler: Optional[Scheduler] = None
-        self.messaging_admin_service: Optional[MessagingAdminService] = None
+        self.paywall_service: Optional[PaywallService] = None
         self.scheduler_dispatch: Optional[ScheduleDispatch] = None
 
-    def get_messaging_admin_service(self):
-        if self.messaging_admin_service is None:
-            self.messaging_admin_service = MessagingAdminService(
+    def get_paywall_service(self):
+        if self.paywall_service is None:
+            self.paywall_service = PaywallService(
                 database_manager=self.database_manager,
                 room_service=self.get_room_service(),
             )
-        return self.messaging_admin_service
+        return self.paywall_service
 
     def get_schedule_dispatch(self):
         if self.scheduler_dispatch is None:
@@ -92,13 +92,13 @@ class Container:
 
         return AgentService(database_manager=self.database_manager)
 
-    def get_message_task_factory(self) -> MessageTaskFactory:
-        if self._message_task_factory is None:
-            self._message_task_factory = MessageTaskFactory(
+    def get_messaging_service(self) -> MessagingService:
+        if self.messaging_service is None:
+            self.messaging_service = MessagingService(
                 database_manager=self.database_manager,
                 user_service=self.get_user_service(),
             )
-        return self._message_task_factory
+        return self.messaging_service
 
     def get_memory_manager(self):
         if self.memory_manager is None:

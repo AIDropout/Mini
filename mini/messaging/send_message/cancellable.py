@@ -9,6 +9,7 @@ from mini.server.redis.redis import RedisManager
 logger = get_logger(__name__)
 
 
+# TODO: make this store multiple tasks to a room, each with timestamp
 class CancellableTask(Task):
     _redis_manager = None
 
@@ -37,11 +38,11 @@ class CancellableTask(Task):
         if self.room_id is None:
             raise ValueError("Task not properly initialized. Call register_task first.")
         latest_task_id = self._redis_manager.get(f"latest_task:{self.room_id}")
-        
+
         # Decode the bytes to string if it's not None
         if latest_task_id is not None:
-            latest_task_id = latest_task_id.decode('utf-8')
-        
+            latest_task_id = latest_task_id.decode("utf-8")
+
         logger.info(
             f"🟢 latest task id: {latest_task_id} \n current task_id: {self.request.id}"
         )

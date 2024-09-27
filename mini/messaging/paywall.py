@@ -1,7 +1,7 @@
 from config.config import config
 from mini.core.exceptions import CrossedMessageLimitError
 from mini.core.logger import get_logger
-from mini.messaging.tasks.models import ResponseTask
+from mini.core.models.message_tasks import ResponseTask
 from mini.database.database import DatabaseManager
 from mini.database.service.room_service import RoomService
 from mini.database.models import Tables
@@ -9,9 +9,9 @@ from mini.database.models import Tables
 logger = get_logger(__name__)
 
 
-class MessagingAdminService:
+class PaywallService:
     """
-    Handles administrative tasks like special return cases, subscribe logic, and logging/storing to DB.
+    Handles paywall logic in messaging.
     """
 
     def __init__(

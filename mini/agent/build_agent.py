@@ -22,7 +22,6 @@ time_manager = container.time_manager
 apscheduler = container.get_apscheduler()
 
 
-# TODO: Change all modules to not accept context. Instead, use the context property held by a task. And for each module function, simply accept a task object.
 def build_agent(config: Config, context: Context) -> AgentService:
 
     return AgentService(

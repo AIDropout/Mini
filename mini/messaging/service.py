@@ -7,7 +7,7 @@ from config.config import config
 from mini.core.exceptions import RoomDisabledByAdminError
 from mini.core.models.context import Context
 from mini.core.models.message import MessagingProviderType, MiniMessage
-from mini.messaging.tasks.models import ProactiveTask, ResponseTask, MessageTaskType
+from mini.core.models.message_tasks import ProactiveTask, ResponseTask, MessageTaskType
 from mini.database.database import DatabaseManager
 from mini.messaging.providers.discord import discord_manager
 from mini.database.models import Agent, Room, Tables, User, Message
@@ -17,7 +17,9 @@ from mini.messaging.providers.bird import BirdMessaging
 from mini.messaging.providers.instagram import InstagramMessaging
 
 
-class MessageTaskFactory:
+class MessagingService:
+    """Central service that handles message storage and message task creation"""
+
     def __init__(
         self, database_manager: DatabaseManager, user_service: UserService
     ) -> None:

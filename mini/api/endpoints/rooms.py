@@ -8,8 +8,8 @@ from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderType
 from mini.database.models import Room
 from mini.database.service.room_service import RoomService
-from mini.messaging.tasks.tasks import send_message
-from mini.messaging.tasks.models import MessageTaskType
+from mini.messaging.send_message.send_message import send_message
+from mini.core.models.message_tasks import MessageTaskType
 from mini.server.celery.celery import app
 
 

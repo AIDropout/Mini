@@ -12,6 +12,7 @@ logger = get_logger(__name__)
 
 
 class APScheduler:
+    """Core scheduling class"""
     def __init__(self, db_url: str, schedule_timezone: str = "US/Central") -> None:
         self.db_url = db_url
         jobstores = {"default": SQLAlchemyJobStore(url=self.db_url)}
@@ -61,6 +62,22 @@ class APScheduler:
         )
         return job.id
 
+    def update_job(self, job_id: str, **kwargs) -> bool:
+        if not self._initialized:
+            self.initialize()
+        try:
+            job = cast(Job, self.scheduler.get_job(job_id))
+            if job:
+                job.modify(**kwargs)
+                logger.info("Scheduled Job updated: %s", job_id)
+                return True
+            else:
+                logger.warning("Scheduled Job not found: %s", job_id)
+                return False
+        except Exception as e:
+            logger.error("Failed to update Scheduled Job %s: %s", job_id, e)
+            return False
+        
     def remove_job(self, job_id: str) -> bool:
         if not self._initialized:
             self.initialize()
@@ -79,18 +96,3 @@ class APScheduler:
         logger.info("Current Scheduled Jobs: %s", job_list)
         return job_list
 
-    def update_job(self, job_id: str, **kwargs) -> bool:
-        if not self._initialized:
-            self.initialize()
-        try:
-            job = cast(Job, self.scheduler.get_job(job_id))
-            if job:
-                job.modify(**kwargs)
-                logger.info("Scheduled Job updated: %s", job_id)
-                return True
-            else:
-                logger.warning("Scheduled Job not found: %s", job_id)
-                return False
-        except Exception as e:
-            logger.error("Failed to update Scheduled Job %s: %s", job_id, e)
-            return False

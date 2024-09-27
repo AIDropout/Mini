@@ -2,9 +2,9 @@ from fastapi import APIRouter
 import json
 from mini.core.logger import get_logger
 from mini.messaging.providers.instagram.models import InstagramWebhook, MessageEvent
-from mini.messaging.tasks.tasks import send_message
-from mini.messaging.tasks.models import MessageTaskType
-from mini.messaging.tasks.factory import MessageTaskFactory
+from mini.messaging.send_message.send_message import send_message
+from mini.core.models.message_tasks import MessageTaskType
+from mini.messaging.service import MessagingService
 from mini.core.models.message import MessagingProviderType
 from mini.database.database import DatabaseManager
 from mini.database.models import Tables
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 
 class InstagramWebhookService:
-    def __init__(self, database_manager: DatabaseManager, factory: MessageTaskFactory):
+    def __init__(self, database_manager: DatabaseManager, factory: MessagingService):
         self.database_manager = database_manager
         self.factory = factory
 

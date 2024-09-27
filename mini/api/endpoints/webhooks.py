@@ -19,13 +19,12 @@ from mini.messaging.providers.bird.models import BirdRequest
 from mini.messaging.providers.instagram.webhook import InstagramWebhookService
 from mini.messaging.providers.instagram.dependencies import validate_instagram_webhook
 from mini.messaging.providers.instagram.models import InstagramWebhook
-from mini.messaging.tasks.factory import MessageTaskFactory
-from mini.messaging.tasks.models import MessageTaskType
+from mini.messaging.service import MessagingService
+from mini.core.models.message_tasks import MessageTaskType
 from mini.database.database import DatabaseManager
-from mini.messaging.tasks.tasks import send_message
+from mini.messaging.send_message.send_message import send_message
 
 from mini.server.celery.celery import app
-
 
 
 router = APIRouter(
@@ -34,7 +33,7 @@ router = APIRouter(
 )
 logger = get_logger(__name__)
 FactoryDep = Annotated[
-    MessageTaskFactory, Depends(lambda: container.get_message_task_factory())
+    MessagingService, Depends(lambda: container.get_messaging_service())
 ]
 
 

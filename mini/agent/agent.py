@@ -13,7 +13,7 @@ from mini.agent.modules.prompt import (
 )
 from mini.core.event_logger import event_logger as el
 from mini.core.logger import get_logger
-from mini.messaging.tasks.models import ProactiveTask, ResponseTask
+from mini.core.models.message_tasks import ProactiveTask, ResponseTask
 
 logger = get_logger(__name__)
 
