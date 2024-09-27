@@ -1,7 +1,7 @@
 """This file is IMPORTANT. For managing our bird webhooks."""
 
 import asyncio
-from mini.messaging.bird.bird import BirdMessaging
+from mini.messaging.providers.bird import BirdMessaging
 
 
 class WebhookManager:
@@ -44,7 +44,7 @@ class WebhookManager:
         try:
             self.bird_provider.set_sender(channel_id)
             await self.bird_provider.register_webhook(
-                "sms.inbound", "https://app-kilu.onrender.com/rooms/respond"
+                "sms.outbound", "https://e0dc-2601-644-4300-7120-e5d4-c12d-1fce-27fb.ngrok-free.app"
             )
             print(f"Webhook for event added successfully with Channel ID: {channel_id}")
         except Exception as e:

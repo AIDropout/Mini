@@ -27,14 +27,14 @@ logger = get_logger(__name__)
 class BirdMessaging(ProviderBase):
     def __init__(self):
         """Initialize Bird credentials."""
-        self._api_url = config.BIRD_API_URL
+        self._api_url = config.BIRD_CONFIG.api_url
         self._api_header = {
-            "Authorization": f"AccessKey {config.BIRD_API_KEY}",
+            "Authorization": f"AccessKey {config.BIRD_CONFIG.api_key}",
             "Content-Type": "application/json",
         }
-        self._signing_key = config.BIRD_SIGNING_KEY
-        self._organization_id = config.BIRD_ORGANIZATION_ID
-        self._workspace_id = config.BIRD_WORKSPACE_ID
+        self._signing_key = config.BIRD_CONFIG.signing_key
+        self._organization_id = config.BIRD_CONFIG.organization_id
+        self._workspace_id = config.BIRD_CONFIG.workspace_id
         self._user_phone = None
         self._channel_id = None
 

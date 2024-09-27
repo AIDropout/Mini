@@ -7,7 +7,7 @@ from mini.database.models import Agent, Tables
 from mini.database.database import DatabaseManager
 
 
-class AgentService:
+class AgentTableService:
     def __init__(self, database_manager: DatabaseManager):
         self.database_manager = database_manager
 
@@ -23,7 +23,7 @@ class AgentService:
         # Filter out agents with specific channel IDs
         excluded_channel_ids = [
             config.PHONE_OTP_CHANNEL_ID,
-            config.BIRD_DEV_CHANNEL_ID,
+            "946f4f9d-21c0-495e-b59d-5f3704deb11b",
             "5a075672-763c-51df-aba6-82eecdceab72"
         ]
         filtered_agents = [

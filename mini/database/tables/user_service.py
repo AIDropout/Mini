@@ -12,7 +12,7 @@ from mini.utils.utils import get_infostring
 from mini.payment.stripe.customer import CustomerManager
 
 
-class UserService:
+class UserTableService:
     def __init__(
         self, database_manager: DatabaseManager, customer_manager: CustomerManager
     ):

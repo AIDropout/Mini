@@ -15,7 +15,7 @@ T = TypeVar("T", bound=TableModel)
 
 class DatabaseManager:
     def __init__(self) -> None:
-        self.supabase = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
+        self.supabase = create_client(config.SUPABASE_CONFIG.url, config.SUPABASE_CONFIG.key)
 
     def insert(self, table_name: str, item: TableModel) -> TableModel:
         item_dict = item.model_dump()

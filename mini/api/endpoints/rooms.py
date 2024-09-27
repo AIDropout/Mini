@@ -7,13 +7,15 @@ from mini.api.security import ApiKeyDep
 from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderType
 from mini.database.models import Room
-from mini.database.service.room_service import RoomService
+from mini.database.tables.room_service import RoomTableService
 from mini.messaging.send_message.send_message import send_message
 from mini.core.models.message_tasks import MessageTaskType
 from mini.server.celery.celery import app
 
 
-RoomServiceDep = Annotated[RoomService, Depends(lambda: container.get_room_service())]
+RoomTableServiceDep = Annotated[
+    RoomTableService, Depends(lambda: container.get_room_service())
+]
 
 router = APIRouter(
     prefix="/rooms",
@@ -28,7 +30,7 @@ def create_room(
         str, Body(..., title="Agent ID of the page the user signed up to")
     ],
     user_id: Annotated[str, Body(..., title="The user's ID")],
-    room_service: RoomServiceDep,
+    room_service: RoomTableServiceDep,
     api_key: ApiKeyDep,
 ) -> Room:
     """Creates a room and sends the first message to the user"""

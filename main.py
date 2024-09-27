@@ -97,7 +97,7 @@ async def configure_local_webhooks(local_url: str) -> None:
     _telegram = TelegramMessaging()
     _bird = BirdMessaging()
 
-    _bird.set_sender(config.BIRD_DEV_CHANNEL_ID)
+    _bird.set_sender(config.DEV_CONFIG.bird_dev_channel_id)
 
     await asyncio.gather(
         # _telegram.register_webhook(webhook),

@@ -5,7 +5,7 @@ from config.container import container
 from mini.api.security import ApiKeyDep
 from mini.core.logger import get_logger
 from mini.database.models import Agent
-from mini.database.service.agent_service import AgentService
+from mini.database.tables.agent_service import AgentTableService
 
 router = APIRouter(
     prefix="/agents",
@@ -13,14 +13,14 @@ router = APIRouter(
 )
 logger = get_logger(__name__)
 
-AgentServiceDep = Annotated[
-    AgentService, Depends(lambda: container.get_agent_service())
+AgentTableServiceDep = Annotated[
+    AgentTableService, Depends(lambda: container.get_agent_service())
 ]
 
 
 @router.get("/", response_model=List[Agent])
 def get_agents(
-    agent_service: AgentServiceDep,
+    agent_service: AgentTableServiceDep,
     api_key: ApiKeyDep,
 ) -> List[Agent]:
     """Get all agents. Returns a list of Agents to be displayed on the production frontend"""
@@ -34,7 +34,7 @@ def update_agent(
         dict,
         Body(..., title="The fields to update. Only the updated fields are needed."),
     ],
-    agent_service: AgentServiceDep,
+    agent_service: AgentTableServiceDep,
     api_key: ApiKeyDep,
 ) -> Agent:
     return agent_service.update_agent(agent_id=agent_id, update_data=agent_update)

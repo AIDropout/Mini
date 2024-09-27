@@ -15,9 +15,9 @@ class Tables(str, Enum):
     AGENTS = "agents"
     AGENTS__id = "id"
     AGENTS__name = "name"
+    AGENTS__role = "role"
     AGENTS__description = "description"
     AGENTS__first_message = "first_message"
-    AGENTS_example_conversation = "example_conversation"
     AGENTS__bird_channel_id = "bird_channel_id"
     AGENTS__default_proactivity = "default_proactivity"
     AGENTS__free_msg_limit = "free_msg_limit"
@@ -101,6 +101,7 @@ class Agent(BaseModel):
 
     id: str = Field(default_factory=generate_uuid)
     name: str
+    role: str
     description: str
     first_message: str
     bird_channel_id: str

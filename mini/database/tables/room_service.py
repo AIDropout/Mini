@@ -7,23 +7,23 @@ from mini.database.models import Agent, Message, Room, Tables
 from mini.database.database import DatabaseManager
 from mini.messaging.providers.bird import BirdMessaging
 from mini.payment.stripe.customer import CustomerManager
-from mini.database.service.user_service import UserService
+from mini.database.tables.user_service import UserTableService
 from mini.messaging.providers.bird.vcard import get_or_create_contact_card
 
 logger = get_logger(__name__)
 
 
-class RoomService:
+class RoomTableService:
     def __init__(
         self,
         database_manager: DatabaseManager,
         customer_manager: CustomerManager,
-        user_service: UserService,
+        user_table_service: UserTableService,
     ):
         self.database_manager = database_manager
         self.messaging_provider = BirdMessaging()
         self.customer_manager = customer_manager
-        self.user_service = user_service
+        self.user_table_service = user_table_service
 
     def create_room(self, agent_id: str, user_id: str) -> Room:
         """Creates a new room & sends the first message"""
@@ -38,7 +38,7 @@ class RoomService:
 
             # Fetch the agent and user
             agent = self._get_agent(agent_id)
-            user = self.user_service.get_user(user_id)
+            user = self.user_table_service.get_user(user_id)
 
             # Send the first message
             self.messaging_provider.set_receiver(user.phone_number)

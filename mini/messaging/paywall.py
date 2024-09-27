@@ -3,7 +3,7 @@ from mini.core.exceptions import CrossedMessageLimitError
 from mini.core.logger import get_logger
 from mini.core.models.message_tasks import ResponseTask
 from mini.database.database import DatabaseManager
-from mini.database.service.room_service import RoomService
+from mini.database.tables.room_service import RoomTableService
 from mini.database.models import Tables
 
 logger = get_logger(__name__)
@@ -15,7 +15,7 @@ class PaywallService:
     """
 
     def __init__(
-        self, database_manager: DatabaseManager, room_service: RoomService
+        self, database_manager: DatabaseManager, room_service: RoomTableService
     ) -> None:
         self.database_manager = database_manager
         self.room_service = room_service

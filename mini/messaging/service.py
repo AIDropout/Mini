@@ -11,7 +11,7 @@ from mini.core.models.message_tasks import ProactiveTask, ResponseTask, MessageT
 from mini.database.database import DatabaseManager
 from mini.messaging.providers.discord import discord_manager
 from mini.database.models import Agent, Room, Tables, User, Message
-from mini.database.service.user_service import UserService
+from mini.database.tables.user_service import UserTableService
 from mini.messaging.providers import MessagingProvider, messaging_providers
 from mini.messaging.providers.bird import BirdMessaging
 from mini.messaging.providers.instagram import InstagramMessaging
@@ -21,10 +21,10 @@ class MessagingService:
     """Central service that handles message storage and message task creation"""
 
     def __init__(
-        self, database_manager: DatabaseManager, user_service: UserService
+        self, database_manager: DatabaseManager, user_table_service: UserTableService
     ) -> None:
         self.database_manager = database_manager
-        self.user_service = user_service
+        self.user_table_service = user_table_service
 
     def process_and_store_incoming_message(
         self, provider_name: MessagingProviderType, request_body: dict
@@ -181,7 +181,7 @@ class MessagingService:
         user, agent = self._get_user_and_agent_from_db(message)
 
         if user is None:
-            user = self.user_service.create_user(
+            user = self.user_table_service.create_user(
                 id=str(
                     uuid.uuid4()
                 ),  # If user verifies later, this will be replaced with Supabase Auth uuid
@@ -215,6 +215,9 @@ class MessagingService:
         elif message.provider == MessagingProviderType.BIRD:
             user_id_col = Tables.USERS__phone_number
             agent_id_col = Tables.AGENTS__bird_channel_id
+
+            # If bird channel id is equal to the dev channel ids, use the config room variable
+
         elif message.provider == MessagingProviderType.INSTAGRAM:
             # user_id_col = Tables.USERS__ig_account # not implemented
             agent_id_col = Tables.IGACCOUNTS__account_id

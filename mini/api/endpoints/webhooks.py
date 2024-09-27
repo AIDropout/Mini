@@ -38,7 +38,7 @@ FactoryDep = Annotated[
 
 
 @router.post("/bird")
-async def bird_webhook(request: BirdRequest, factory: FactoryDep):
+async def bird_inbound_webhook(request: BirdRequest, factory: FactoryDep):
     """Endpoint hit by incoming user messages."""
     room_id = factory.process_and_store_incoming_message(
         MessagingProviderType.BIRD, request.model_dump()
@@ -51,6 +51,10 @@ async def bird_webhook(request: BirdRequest, factory: FactoryDep):
     )
 
     return {"status": "Success"}
+
+@router.post("/bird/outbound")
+async def bird_outbound_webhook(request: BirdRequest):
+    logger.info(request)
 
 
 @router.get("/instagram")

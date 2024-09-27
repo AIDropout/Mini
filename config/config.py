@@ -102,25 +102,34 @@ class InstagramConfig(BaseSettings):
     api_version: str
     verify_token: str
 
+class DevConfig(BaseSettings):
+    enable_response_delay: bool
+    enable_celery_beat: bool
+    bird_dev_channel_id: bool
+
+class BirdConfig(BaseSettings):
+    api_url: str
+    api_key: str
+    organization_id: str
+    workspace_id: str
+    signing_key: str
+
+class SupabaseConfig(BaseSettings):
+    url: str
+    key: str
+
 class Config(BaseSettings):
     ENVIRONMENT: str
     BACKEND_URL: str
+    DEV_CONFIG: DevConfig
     SCHEDULER_DB_URL: str
     BACKEND_API_KEY: str
     OPENAI_API_KEY: str
     ANTHROPIC_API_KEY: str
     GROQ_API_KEY: str
     TELEGRAM_BOT_TOKEN: str
-    BIRD_API_URL: str = "https://api.bird.com"
-    BIRD_API_KEY: str
-    BIRD_ORGANIZATION_ID: str
-    BIRD_WORKSPACE_ID: str
-    BIRD_DEV_CHANNEL_ID: str
-    BIRD_SIGNING_KEY: str
-    SUPABASE_URL: str
-    SUPABASE_KEY: str
-    SUPABASE_PROMPTS_BUCKET_NAME: str
-    SUPABASE_AGENT_PROMPT_PATH: str
+    BIRD_CONFIG: BirdConfig
+    SUPABASE_CONFIG: SupabaseConfig
     GOOGLE_API_KEY: str
     GEMINI_API_KEY: str
     GOOGLE_CLIENT_ID: str
@@ -144,8 +153,6 @@ class Config(BaseSettings):
     MEMORY_LITELLM_CONFIG: MemoryLiteLLMConfig
     MEMORY_EMBEDDINGS_PROVIDER: str
     MEMORY_EMBEDDINGS_CONFIG: MemoryOpenAIConfig
-    ENABLE_RESPONSE_DELAY: bool
-    ENABLE_CELERY_BEAT: bool
     AWS_S3_CONFIG: AWSS3Config
     SECRET_PHRASES: SecretPhrases
     DISCORD_CONFIG: DiscordConfig

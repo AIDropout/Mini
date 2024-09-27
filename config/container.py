@@ -6,7 +6,7 @@ from mini.agent.modules.proactive import ScheduleDispatch
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
-from mini.database.service.user_service import UserService
+from mini.database.tables.user_service import UserTableService
 from mini.llm import LLMService, Model
 from mini.messaging.paywall import PaywallService
 from mini.messaging.service import MessagingService
@@ -29,7 +29,7 @@ class Container:
         self.checkout_manager = CheckoutManager()
         self.customer_manager = CustomerManager.from_config(config)
         self.subscription_manager = SubscriptionManager()
-        self.user_service: Optional[UserService] = None
+        self.user_table_service: Optional[UserTableService] = None
         self.messaging_service: Optional[MessagingService] = None
         self.redis_manager: Optional[RedisManager] = None
         self.rate_limiter: Optional[RateLimiter] = None
@@ -79,24 +79,24 @@ class Container:
 
         return self.redis_manager
 
-    def get_user_service(self):
-        if self.user_service is None:
-            self.user_service = UserService(
+    def get_user_table_service(self):
+        if self.user_table_service is None:
+            self.user_table_service = UserTableService(
                 database_manager=self.database_manager,
                 customer_manager=self.customer_manager,
             )
-        return self.user_service
+        return self.user_table_service
 
     def get_agent_service(self):
-        from mini.database.service.agent_service import AgentService
+        from mini.database.tables.agent_service import AgentTableService
 
-        return AgentService(database_manager=self.database_manager)
+        return AgentTableService(database_manager=self.database_manager)
 
     def get_messaging_service(self) -> MessagingService:
         if self.messaging_service is None:
             self.messaging_service = MessagingService(
                 database_manager=self.database_manager,
-                user_service=self.get_user_service(),
+                user_table_service=self.get_user_table_service(),
             )
         return self.messaging_service
 
@@ -125,12 +125,12 @@ class Container:
         return VerifyService()
 
     def get_room_service(self):
-        from mini.database.service.room_service import RoomService
+        from mini.database.tables.room_service import RoomTableService
 
-        return RoomService(
+        return RoomTableService(
             database_manager=self.database_manager,
             customer_manager=self.customer_manager,
-            user_service=self.get_user_service(),
+            user_table_service=self.get_user_table_service(),
         )
 
     def get_payment_service(self):
