@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
+from mini.core.models.message_tasks import MessageTaskType
+from mini.core.models.jobs import JobStatus
 from mini.utils.utils import generate_uuid, utc_now
 
 
@@ -74,15 +76,15 @@ class Tables(str, Enum):
     SUBSCRIPTIONS__user_id = "user_id"
     SUBSCRIPTIONS__status = "status"
 
-    SCHEDULE = "schedule"
-    SCHEDULE__id = "id"
-    SCHEDULE__room_id = "room_id"
-    SCHEDULE__message_id = "message_id"
-    SCHEDULE__created_at = "created_at"
-    SCHEDULE__scheduled_for = "scheduled_for"
-    SCHEDULE__type = "type"  # respond, remind, revive
-    SCHEDULE__info = "info"
-    SCHEDULE__complete = "complete"
+    JOBS = "jobs"
+    JOBS__id = "id"
+    JOBS__room_id = "room_id"
+    JOBS__created_at = "created_at"
+    JOBS__run_at = "scheduled_for"
+    JOBS__type = "type"
+    JOBS__data = "data"
+    JOBS__status = "status"
+    JOBS__log = "log"
 
     IGACCOUNTS = "ig_accounts"
     IGACCOUNTS__id = "id"
@@ -192,15 +194,15 @@ class Subscription(BaseModel):
     status: str
 
 
-class Schedule(BaseModel):
+class Job(BaseModel):
     id: str = Field(default_factory=generate_uuid)
     room_id: str
-    message_id: Optional[str]
     created_at: datetime = Field(default_factory=utc_now)
-    scheduled_for: str
-    type: Literal["respond", "remind", "revive"] = Field(default="respond")
-    task: Optional[str] = Field(default=None)
-    complete: bool = Field(default=False)
+    run_at: str
+    type: MessageTaskType = Field(default=MessageTaskType.RESPONSE)
+    data: Optional[str] = Field(default=None)
+    status: JobStatus = Field(default=JobStatus.SCHEDULED)
+    log: Optional[str]
 
 
 class IGAccounts(BaseModel):
@@ -212,16 +214,14 @@ class IGAccounts(BaseModel):
     handle: str
 
 
-TableModel = Union[
-    User, Agent, Channel, Room, Message, Schedule, Subscription, IGAccounts
-]
+TableModel = Union[User, Agent, Channel, Room, Message, Job, Subscription, IGAccounts]
 TABLE_MODEL_MAP = {
     Tables.USERS: User,
     Tables.AGENTS: Agent,
     Tables.CHANNELS: Channel,
     Tables.ROOMS: Room,
     Tables.MESSAGES: Message,
-    Tables.SCHEDULE: Schedule,
+    Tables.JOBS: Job,
     Tables.SUBSCRIPTIONS: Subscription,
     Tables.IGACCOUNTS: IGAccounts,
 }
