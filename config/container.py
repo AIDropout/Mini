@@ -22,7 +22,10 @@ logger = get_logger(__name__)
 class Container:
     def __init__(self):
         self.database_manager = DatabaseManager()
-        self.time_manager: TimeManager = TimeManager(
+        self.system_time_manager: TimeManager = TimeManager(
+            user_timezone=config.TIME_API.default_timezone
+        )
+        self.user_time_manager: TimeManager = TimeManager(
             # TODO: Save user's timezone on signup
             user_timezone=config.TIME_API.default_timezone
         )
@@ -37,7 +40,7 @@ class Container:
         self.apscheduler: Optional[APScheduler] = None
         self.scheduler: Optional[Scheduler] = None
         self.paywall_service: Optional[PaywallService] = None
-        self.scheduler_dispatch: Optional[ScheduleDispatch] = None
+        self.schedule_dispatch: Optional[ScheduleDispatch] = None
 
     def get_paywall_service(self):
         if self.paywall_service is None:
@@ -142,6 +145,37 @@ class Container:
             customer_manager=self.customer_manager,
             subscription_manager=self.subscription_manager,
         )
+
+        self.subscription_manager = SubscriptionManager()
+        self.user_table_service: Optional[UserTableService] = None
+        self.messaging_service: Optional[MessagingService] = None
+        self.redis_manager: Optional[RedisManager] = None
+        self.rate_limiter: Optional[RateLimiter] = None
+        self.memory_manager: Optional[MemoryManager] = None
+        self.apscheduler: Optional[APScheduler] = None
+        self.scheduler: Optional[Scheduler] = None
+        self.paywall_service: Optional[PaywallService] = None
+        self.scheduler_dispatch: Optional[ScheduleDispatch] = None
+
+    @property
+    def context(self):
+        return {
+            "database_manager": self.database_manager,
+            "system_time_manager": self.system_time_manager,
+            "user_time_manager": self.user_time_manager,
+            "checkout_manager": self.checkout_manager,
+            "customer_manager": self.customer_manager,
+            "subscription_manager": self.subscription_manager,
+            "user_table_service": self.get_user_table_service(),
+            "messaging_service": self.get_messaging_service(),
+            "redis_manager": self.get_redis_manager(),
+            "rate_limiter": self.get_rate_limiter(),
+            "memory_manager": self.get_memory_manager(),
+            "apscheduler": self.get_apscheduler(),
+            "scheduler": self.get_scheduler(),
+            "paywall_service": self.get_paywall_service(),
+            "schedule_dispatch": self.get_schedule_dispatch(),
+        }
 
 
 container = Container()  # Global instance of the container
