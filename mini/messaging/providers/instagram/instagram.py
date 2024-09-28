@@ -11,8 +11,6 @@ from mini.core.models.message import (
     MiniMessageMetadata,
     MessageType,
 )
-from mini.database.database import DatabaseManager
-from mini.database.models import Tables
 from mini.messaging.providers.base import ProviderBase
 
 logger = get_logger(__name__)

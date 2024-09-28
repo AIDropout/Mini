@@ -6,11 +6,7 @@ from mini.messaging.providers import MessagingProvider
 from mini.core.models.base_task import BaseTask
 from datetime import datetime
 
-
-class MessageTaskType(Enum):
-    RESPONSE = "response"
-    PROACTIVE = "proactive"
-    REMIND = "remind"
+from mini.core.enums import MessageTaskType
 
 
 class MessageTask(BaseTask):

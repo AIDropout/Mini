@@ -3,7 +3,7 @@ import json
 from mini.core.logger import get_logger
 from mini.messaging.providers.instagram.models import InstagramWebhook, MessageEvent
 from mini.messaging.send_message.send_message import send_message
-from mini.core.models.message_tasks import MessageTaskType
+from mini.core.enums import MessageTaskType
 from mini.messaging.service import MessagingService
 from mini.core.models.message import MessagingProviderType
 from mini.database.database import DatabaseManager
