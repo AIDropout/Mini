@@ -159,6 +159,31 @@ class Container:
 
     @property
     def context(self):
+        """
+        A dictionary of all the services and managers that are used
+        throughout the application.
+
+        This is a shortcut to access any of the services or managers
+        that are used in the application.
+
+        Returns:
+            A dictionary with the following keys:
+                - database_manager
+                - system_time_manager
+                - user_time_manager
+                - checkout_manager
+                - customer_manager
+                - subscription_manager
+                - user_table_service
+                - messaging_service
+                - redis_manager
+                - rate_limiter
+                - memory_manager
+                - apscheduler
+                - scheduler
+                - paywall_service
+                - schedule_dispatch
+        """
         return {
             "database_manager": self.database_manager,
             "system_time_manager": self.system_time_manager,
