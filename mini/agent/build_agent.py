@@ -1,24 +1,23 @@
-from config.container import container
 from config.config import Config
+from config.container import container
 from mini.agent.agent import AgentService
-from mini.core.models.context import Context
-from mini.agent.agent import AgentService
-from mini.agent.modules.sender import MessageSenderModule
 from mini.agent.modules.filter.filter import IntentConfig, MessageFilterModule
+from mini.agent.modules.memory import MemoryManager
 from mini.agent.modules.memory.service import MemoryModule
+from mini.agent.modules.proactive import ScheduleDispatch
 from mini.agent.modules.prompt import (
     AgentPromptModule,
     BasePromptModule,
     RoleplayPromptModule,
 )
+from mini.agent.modules.sender import MessageSenderModule
 from mini.core.enums import ConfidenceLevel
+from mini.core.models.context import Context
 from mini.llm import LLMService, Model
-from mini.agent.modules.memory import MemoryManager
-from mini.agent.modules.proactive import ScheduleDispatch
 from mini.server.schedule.scheduler import Scheduler
 
 database_manager = container.database_manager
-time_manager = container.time_manager
+user_time_manager = container.user_time_manager
 apscheduler = container.get_apscheduler()
 
 
@@ -43,7 +42,7 @@ def build_agent(config: Config, context: Context) -> AgentService:
             memory_manager=MemoryManager(
                 user_id=None,
                 agent_id=None,
-                time_manager=time_manager,
+                time_manager=user_time_manager,
                 llm_manager=LLMService(
                     model=Model.from_model_name(config.MEMORY_GENERAL_LLM)
                 ),
@@ -65,16 +64,16 @@ def build_agent(config: Config, context: Context) -> AgentService:
         prompt_module=BasePromptModule(
             database_manager=database_manager,
             context=context,
-            time_manager=time_manager,
+            time_manager=user_time_manager,
         ),
         agent_prompt_module=AgentPromptModule(
             database_manager=database_manager,
             context=context,
-            time_manager=time_manager,
+            time_manager=user_time_manager,
         ),
         role_prompt_module=RoleplayPromptModule(
             database_manager=database_manager,
             context=context,
-            time_manager=time_manager,
+            time_manager=user_time_manager,
         ),
     )

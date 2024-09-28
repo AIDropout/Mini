@@ -1,12 +1,9 @@
-from enum import Enum
-from typing import List, Dict
-
-from mini.messaging.providers import MessagingProvider
-
-from mini.core.models.base_task import BaseTask
 from datetime import datetime
+from typing import Dict, List
 
 from mini.core.enums import MessageTaskType
+from mini.core.models.base_task import BaseTask
+from mini.messaging.providers import MessagingProvider
 
 
 class MessageTask(BaseTask):

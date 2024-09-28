@@ -11,7 +11,9 @@ def generate_uuid() -> str:
 
 
 def get_current_time() -> datetime:
-    return datetime.now()
+    from config.container import container
+
+    return container.context.system_time_manager.get_user_datetime()
 
 
 class BaseTask(BaseModel):

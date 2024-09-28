@@ -70,10 +70,11 @@ class MemoryLiteLLMConfig(BaseSettings):
 
 
 class TimeApiConfig(BaseSettings):
-    url_from_timezone: str = "https://timeapi.io/api/time/current/zone?timeZone="
-    url_from_ip: str = "https://timeapi.io/api/time/current/ip?ipAddress="
-    url_available_timezones: str = "https://timeapi.io/api/timezone/availabletimezones"
-    default_timezone: str = "America/Chicago"
+    url_from_timezone: str
+    url_from_ip: str
+    url_available_timezones: str
+    default_timezone: str
+    system_timezone: str
 
 
 class AWSS3Config(BaseSettings):
@@ -102,10 +103,12 @@ class InstagramConfig(BaseSettings):
     api_version: str
     verify_token: str
 
+
 class DevConfig(BaseSettings):
     enable_response_delay: bool
     enable_celery_beat: bool
     bird_dev_channel_id: str
+
 
 class BirdConfig(BaseSettings):
     api_url: str
@@ -114,9 +117,11 @@ class BirdConfig(BaseSettings):
     workspace_id: str
     signing_key: str
 
+
 class SupabaseConfig(BaseSettings):
     url: str
     key: str
+
 
 class Config(BaseSettings):
     ENVIRONMENT: str
@@ -145,7 +150,7 @@ class Config(BaseSettings):
     STRIPE_CONFIG: StripeConfig
     PHONE_OTP_CHANNEL_ID: str
     FRONTEND_URL: str
-    TIME_API: TimeApiConfig = TimeApiConfig()
+    TIME_API: TimeApiConfig
     MEMORY_GENERAL_LLM: str
     MEMORY_VECTOR_STORE_PROVIDER: str
     MEMORY_QDRANT_CONFIG: MemoryQdrantConfig

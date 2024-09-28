@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Optional
 
 from config.config import config
@@ -23,7 +24,7 @@ class Container:
     def __init__(self):
         self.database_manager = DatabaseManager()
         self.system_time_manager: TimeManager = TimeManager(
-            user_timezone=config.TIME_API.default_timezone
+            user_timezone=config.TIME_API.system_timezone
         )
         self.user_time_manager: TimeManager = TimeManager(
             # TODO: Save user's timezone on signup
@@ -100,6 +101,7 @@ class Container:
             self.messaging_service = MessagingService(
                 database_manager=self.database_manager,
                 user_table_service=self.get_user_table_service(),
+                system_time_manager=self.system_time_manager,
             )
         return self.messaging_service
 
@@ -157,50 +159,50 @@ class Container:
         self.paywall_service: Optional[PaywallService] = None
         self.scheduler_dispatch: Optional[ScheduleDispatch] = None
 
+    @dataclass
+    class Context:
+        database_manager: DatabaseManager
+        system_time_manager: TimeManager
+        user_time_manager: TimeManager
+        checkout_manager: CheckoutManager
+        customer_manager: CustomerManager
+        subscription_manager: SubscriptionManager
+        user_table_service: Optional[UserTableService] = None
+        messaging_service: Optional[MessagingService] = None
+        redis_manager: Optional[RedisManager] = None
+        rate_limiter: Optional[RateLimiter] = None
+        memory_manager: Optional[MemoryManager] = None
+        apscheduler: Optional[APScheduler] = None
+        scheduler: Optional[Scheduler] = None
+        paywall_service: Optional[PaywallService] = None
+        schedule_dispatch: Optional[ScheduleDispatch] = None
+
     @property
     def context(self):
         """
-        A dictionary of all the services and managers that are used
+        A dataclass of all the services and managers that are used
         throughout the application.
 
         This is a shortcut to access any of the services or managers
         that are used in the application.
-
-        Returns:
-            A dictionary with the following keys:
-                - database_manager
-                - system_time_manager
-                - user_time_manager
-                - checkout_manager
-                - customer_manager
-                - subscription_manager
-                - user_table_service
-                - messaging_service
-                - redis_manager
-                - rate_limiter
-                - memory_manager
-                - apscheduler
-                - scheduler
-                - paywall_service
-                - schedule_dispatch
         """
-        return {
-            "database_manager": self.database_manager,
-            "system_time_manager": self.system_time_manager,
-            "user_time_manager": self.user_time_manager,
-            "checkout_manager": self.checkout_manager,
-            "customer_manager": self.customer_manager,
-            "subscription_manager": self.subscription_manager,
-            "user_table_service": self.get_user_table_service(),
-            "messaging_service": self.get_messaging_service(),
-            "redis_manager": self.get_redis_manager(),
-            "rate_limiter": self.get_rate_limiter(),
-            "memory_manager": self.get_memory_manager(),
-            "apscheduler": self.get_apscheduler(),
-            "scheduler": self.get_scheduler(),
-            "paywall_service": self.get_paywall_service(),
-            "schedule_dispatch": self.get_schedule_dispatch(),
-        }
+        return self.Context(
+            database_manager=self.database_manager,
+            system_time_manager=self.system_time_manager,
+            user_time_manager=self.user_time_manager,
+            checkout_manager=self.checkout_manager,
+            customer_manager=self.customer_manager,
+            subscription_manager=self.subscription_manager,
+            user_table_service=self.get_user_table_service(),
+            messaging_service=self.get_messaging_service(),
+            redis_manager=self.get_redis_manager(),
+            rate_limiter=self.get_rate_limiter(),
+            memory_manager=self.get_memory_manager(),
+            apscheduler=self.get_apscheduler(),
+            scheduler=self.get_scheduler(),
+            paywall_service=self.get_paywall_service(),
+            schedule_dispatch=self.get_schedule_dispatch(),
+        )
 
 
 container = Container()  # Global instance of the container

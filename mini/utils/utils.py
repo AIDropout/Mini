@@ -1,10 +1,10 @@
 import base64
 import re
 import subprocess
+import uuid
 from datetime import datetime, timezone
 from typing import Tuple
 from zoneinfo import ZoneInfo
-import uuid
 
 import requests
 

@@ -9,6 +9,7 @@ from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
 from mini.database.models import Tables
 from mini.server.schedule.scheduler import Scheduler
+from mini.utils.time import TimeManager
 
 logger = get_logger(__name__)
 
@@ -75,7 +76,7 @@ class ScheduleDispatch(AgentModule):
         dead_start: int,
         dead_end: int,
         random_int: int,
-        timezone: str = "America/Chicago",
+        timezone: str = "UTC",
     ):
         """
         Calculate a datetime a given number of hours from now, but if it's within the dead zone,
@@ -86,12 +87,12 @@ class ScheduleDispatch(AgentModule):
         - dead_start: Start of the dead zone (hour in 24-hour format).
         - dead_end: End of the dead zone (hour in 24-hour format).
         - random_int: Max additional hours after dead_end for randomization.
-        - timezone: Timezone string, defaults to CST (America/Chicago).
+        - timezone: Timezone string, defaults to UTC.
 
         Returns:
         - A datetime object either `hours_from_now` or adjusted based on the dead zone.
         """
-        current_time = datetime.now(ZoneInfo(timezone))
+        current_time = TimeManager(user_timezone=timezone).get_user_datetime()
         future_time = current_time + timedelta(hours=hours_from_now)
 
         # Extract hour and minute from the resulting time

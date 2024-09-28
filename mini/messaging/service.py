@@ -1,31 +1,37 @@
 import uuid
-from typing import Optional, Tuple, List, Dict
+from datetime import timedelta
+from typing import Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
 
 from config.config import config
+from mini.core.enums import MessageTaskType
 from mini.core.exceptions import RoomDisabledByAdminError
 from mini.core.models.context import Context
 from mini.core.models.message import MessagingProviderType, MiniMessage
 from mini.core.models.message_tasks import ProactiveTask, ResponseTask
-from mini.core.enums import MessageTaskType
 from mini.database.database import DatabaseManager
-from mini.messaging.providers.discord import discord_manager
-from mini.database.models import Agent, Room, Tables, User, Message
+from mini.database.models import Agent, Message, Room, Tables, User
 from mini.database.tables.user_service import UserTableService
 from mini.messaging.providers import MessagingProvider, messaging_providers
 from mini.messaging.providers.bird import BirdMessaging
+from mini.messaging.providers.discord import discord_manager
 from mini.messaging.providers.instagram import InstagramMessaging
+from mini.utils.time import TimeManager
 
 
 class MessagingService:
     """Central service that handles message storage and message task creation"""
 
     def __init__(
-        self, database_manager: DatabaseManager, user_table_service: UserTableService
+        self,
+        database_manager: DatabaseManager,
+        user_table_service: UserTableService,
+        system_time_manager: TimeManager,
     ) -> None:
         self.database_manager = database_manager
         self.user_table_service = user_table_service
+        self.system_time_manager = system_time_manager
 
     def process_and_store_incoming_message(
         self, provider_name: MessagingProviderType, request_body: dict
@@ -105,12 +111,12 @@ class MessagingService:
         recent_messages = self._get_recent_messages(context)
 
         if type == MessageTaskType.RESPONSE:
-            from datetime import datetime, timedelta
 
             return ResponseTask(
                 context=context,
                 messaging_provider=messaging_provider,
-                scheduled_for=datetime.now() + timedelta(seconds=0),
+                scheduled_for=self.system_time_manager.get_user_datetime()
+                + timedelta(seconds=0),
                 recent_messages=recent_messages,
             )
         elif type == MessageTaskType.PROACTIVE:
