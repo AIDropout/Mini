@@ -6,7 +6,7 @@ from config.container import container
 from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderType
 from mini.messaging.providers.discord import discord_manager
-from mini.core.models.message_tasks import MessageTaskType
+from mini.core.enums import MessageTaskType
 from mini.agent.build_agent import build_agent
 from mini.messaging.send_message.cancellable import CancellableTask
 

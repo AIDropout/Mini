@@ -9,7 +9,7 @@ from mini.core.models.message import MessagingProviderType
 from mini.database.models import Room
 from mini.database.tables.room_service import RoomTableService
 from mini.messaging.send_message.send_message import send_message
-from mini.core.models.message_tasks import MessageTaskType
+from mini.core.enums import MessageTaskType
 from mini.server.celery.celery import app
 
 

@@ -20,7 +20,7 @@ from mini.messaging.providers.instagram.webhook import InstagramWebhookService
 from mini.messaging.providers.instagram.dependencies import validate_instagram_webhook
 from mini.messaging.providers.instagram.models import InstagramWebhook
 from mini.messaging.service import MessagingService
-from mini.core.models.message_tasks import MessageTaskType
+from mini.core.enums import MessageTaskType
 from mini.database.database import DatabaseManager
 from mini.messaging.send_message.send_message import send_message
 

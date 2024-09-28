@@ -7,7 +7,8 @@ from config.config import config
 from mini.core.exceptions import RoomDisabledByAdminError
 from mini.core.models.context import Context
 from mini.core.models.message import MessagingProviderType, MiniMessage
-from mini.core.models.message_tasks import ProactiveTask, ResponseTask, MessageTaskType
+from mini.core.models.message_tasks import ProactiveTask, ResponseTask
+from mini.core.enums import MessageTaskType
 from mini.database.database import DatabaseManager
 from mini.messaging.providers.discord import discord_manager
 from mini.database.models import Agent, Room, Tables, User, Message

@@ -28,7 +28,7 @@ class JobTableService:
 
         self.database_manager.insert(Tables.JOBS, job)
 
-    def get_most_recent_job(self, room_id: str):
+    def get_most_recent_job(self, room_id: str) -> Job:
         pass
 
     def update_job_status(self, job_id: str, status: JobStatus) -> None:
