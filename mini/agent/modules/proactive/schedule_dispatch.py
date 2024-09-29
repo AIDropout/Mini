@@ -35,7 +35,9 @@ class ScheduleDispatch(AgentModule):
             Optional[str]: The scheduled dispatch time as a string, or None if no message is scheduled.
         """
         already_scheduled_time_diff = (
-            self.job_scheduler.get_next_scheduled_job_time_diff()
+            self.job_scheduler.get_next_scheduled_job_time_diff(
+                room_id=self.context.room.id
+            )
         )
         if already_scheduled_time_diff:
             logger.info(
