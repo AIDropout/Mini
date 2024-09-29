@@ -67,8 +67,7 @@ async def verify_instagram_webhook(request: Request):
 def handle_instagram_webhook(
     factory: FactoryDep,
     webhook: InstagramWebhook = Depends(validate_instagram_webhook),
-    database_manager: DatabaseManager = Depends(DatabaseManager),
 ):
     """Instagram events for any of our characters hit this endpoint"""
-    service = InstagramWebhookService(database_manager, factory)
+    service = InstagramWebhookService(factory)
     return service.handle_webhook(webhook)

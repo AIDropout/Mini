@@ -14,8 +14,7 @@ logger = get_logger(__name__)
 
 
 class InstagramWebhookService:
-    def __init__(self, database_manager: DatabaseManager, factory: MessagingService):
-        self.database_manager = database_manager
+    def __init__(self, factory: MessagingService):
         self.factory = factory
 
     def handle_webhook(
