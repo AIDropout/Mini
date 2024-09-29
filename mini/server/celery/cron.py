@@ -15,6 +15,7 @@ job_table_service = container.job_table_service
 
 @app.task
 def run_jobs():
+    logger.info("Running cron...")
 
     jobs = job_table_service.get_due_jobs(is_local=config.is_local())
 
