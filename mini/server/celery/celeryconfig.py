@@ -14,7 +14,7 @@ enable_utc = True
 beat_schedule = {
     "run-every-minute": {
         "task": "mini.server.celery.cron.run_jobs",
-        # "schedule": crontab(),
-        'schedule': timedelta(seconds=10),
+        # "schedule": crontab(), # Call every minute
+        'schedule': timedelta(seconds=10), # for debug
     },
 }
