@@ -14,10 +14,10 @@ from mini.agent.modules.sender import MessageSenderModule
 from mini.core.enums import ConfidenceLevel
 from mini.core.models.context import Context
 from mini.llm import LLMService, Model
-from mini.server.schedule.scheduler import Scheduler
 
 database_manager = container.database_manager
 user_time_manager = container.user_time_manager
+system_time_manager = container.system_time_manager
 
 
 def build_agent(config: Config, context: Context) -> AgentService:
@@ -25,11 +25,13 @@ def build_agent(config: Config, context: Context) -> AgentService:
     return AgentService(
         schedule_dispatch=ScheduleDispatch(
             database_manager=database_manager,
+            system_time_manager=system_time_manager,
             context=context,
             job_table_service=container.job_table_service,
         ),
         message_sender_module=MessageSenderModule(
             database_manager=database_manager,
+            system_time_manager=system_time_manager,
             context=context,
             llm_manager=LLMService(
                 model=Model.from_model_name(config.ACTION_MANAGER_LLM)
@@ -59,11 +61,6 @@ def build_agent(config: Config, context: Context) -> AgentService:
             llm_service=LLMService(
                 model=Model.from_model_name(config.ACTION_MANAGER_LLM)
             ),
-        ),
-        prompt_module=BasePromptModule(
-            database_manager=database_manager,
-            context=context,
-            time_manager=user_time_manager,
         ),
         agent_prompt_module=AgentPromptModule(
             database_manager=database_manager,

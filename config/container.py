@@ -5,19 +5,18 @@ from mini.agent.modules.memory import MemoryManager
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
-from mini.database.tables.user_service import UserTableService
 from mini.database.tables.agent_service import AgentTableService
 from mini.database.tables.job_service import JobTableService
+from mini.database.tables.room_service import RoomTableService
+from mini.database.tables.user_service import UserTableService
 from mini.llm import LLMService, Model
 from mini.messaging.paywall import PaywallService
+from mini.messaging.providers.bird.verification.service import VerifyService
 from mini.messaging.service import MessagingService
+from mini.payment.service import PaymentService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.server.redis.redis import RedisManager
 from mini.utils.time import TimeManager
-from mini.messaging.providers.bird.verification.service import VerifyService
-from mini.database.tables.room_service import RoomTableService
-from mini.payment.service import PaymentService
-
 
 logger = get_logger(__name__)
 
@@ -66,7 +65,7 @@ class Container:
     def job_table_service(self):
         return JobTableService(
             database_manager=self.database_manager,
-            time_manager=self.system_time_manager,
+            system_time_manager=self.system_time_manager,
         )
 
     # --- Other services: ---

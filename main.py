@@ -47,7 +47,6 @@ async def lifespan(_: FastAPI):
     yield
 
     redis_manager.close()
-    apscheduler.close()
     subprocess.run(["pkill", "-f", "celery"], check=False)
     ngrok.kill()
 

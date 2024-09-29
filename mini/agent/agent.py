@@ -1,7 +1,6 @@
 import json
-from typing import Union, Callable
+from typing import Callable, Union
 
-from mini.agent.modules.sender import MessageSenderModule
 from mini.agent.modules.filter.filter import MessageFilterModule
 from mini.agent.modules.memory.service import MemoryModule
 from mini.agent.modules.proactive.schedule_dispatch import ScheduleDispatch
@@ -11,6 +10,7 @@ from mini.agent.modules.prompt import (
     ChatMessage,
     RoleplayPromptModule,
 )
+from mini.agent.modules.sender import MessageSenderModule
 from mini.core.event_logger import event_logger as el
 from mini.core.logger import get_logger
 from mini.core.models.message_tasks import ProactiveTask, ResponseTask
@@ -25,7 +25,6 @@ class AgentService:
         message_sender_module: MessageSenderModule,
         memory_module: MemoryModule,
         filter_module: MessageFilterModule,
-        prompt_module: BasePromptModule,
         agent_prompt_module: AgentPromptModule,
         role_prompt_module: RoleplayPromptModule,
     ) -> None:

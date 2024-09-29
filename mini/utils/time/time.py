@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
+import pytz  # For timezone handling
 import requests
 from pydantic import BaseModel
 
@@ -55,6 +56,18 @@ class TimeManager:
     @property
     def timezone(self):
         return self.user_timezone
+
+    @staticmethod
+    def datetime_to_timestamp(dt: datetime, timespec="milliseconds") -> str:
+        """Converts a datetime object to an ISO 8601 formatted string."""
+        if timespec == "milliseconds":
+            iso_str = dt.isoformat(timespec="milliseconds")
+            if dt.utcoffset() == timedelta(0):  # If UTC
+                return iso_str.replace("+00:00", "Z")
+            else:
+                return iso_str
+        else:
+            raise ValueError("Invalid timespec value. Use 'milliseconds'.")
 
     def set_user_ip(self, ip_address: str) -> None:
         """Sets and caches the user's IP address and updates the user's timezone."""
@@ -115,20 +128,30 @@ class TimeManager:
         return self.fetch_current_time_data(self.user_timezone)
 
     def get_user_datetime(self) -> datetime:
-        """Returns the current user time as a datetime object."""
+        """Returns the current user time as a timezone-aware datetime object."""
         if not self.user_timezone:
             raise TimeManagerError("User's timezone is not set.")
+
         time_data = self.get_user_time_data()
-        return datetime(
-            year=time_data.year,
-            month=time_data.month,
-            day=time_data.day,
-            hour=time_data.hour,
-            minute=time_data.minute,
-            second=time_data.seconds,
-            microsecond=time_data.milliSeconds
-            * 1000,  # Convert milliseconds to microseconds
+        tz = pytz.timezone(time_data.timeZone)
+
+        return tz.localize(
+            datetime(
+                year=time_data.year,
+                month=time_data.month,
+                day=time_data.day,
+                hour=time_data.hour,
+                minute=time_data.minute,
+                second=time_data.seconds,
+                microsecond=time_data.milliSeconds
+                * 1000,  # Convert milliseconds to microseconds
+            )
         )
+
+    def get_user_timestamp(self, timespec="milliseconds") -> str:
+        """Returns the current user time as an ISO 8601 formatted string."""
+        current_datetime = self.get_user_datetime()
+        return self.datetime_to_timestamp(current_datetime, timespec)
 
     def current_readable_time(self) -> str:
         """Returns the current date and time as a readable string."""

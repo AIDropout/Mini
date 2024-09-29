@@ -12,8 +12,8 @@ from mini.database.models import Message, Tables
 from mini.llm import LLMService
 from mini.messaging.providers import MessagingProvider
 from mini.messaging.providers.discord import discord_manager
+from mini.utils.time import TimeManager
 from mini.utils.utils import utc_now
-
 
 logger = get_logger(__name__)
 
@@ -22,6 +22,7 @@ class MessageSenderModule(AgentModule):
     def __init__(
         self,
         database_manager: DatabaseManager,
+        system_time_manager: TimeManager,
         context: Context,
         llm_manager: LLMService,
     ):
@@ -29,6 +30,7 @@ class MessageSenderModule(AgentModule):
         self.llm_manager = llm_manager
         self.llm_manager.cost_tracking_callback = self._update_user_message_cost
         self.messaging_provider = None
+        self.system_time_manager = system_time_manager
 
     def set_messaging_provider(self, messaging_provider: MessagingProvider) -> None:
         self.messaging_provider = messaging_provider
@@ -158,9 +160,10 @@ class MessageSenderModule(AgentModule):
             )
 
     def _update_room_last_message_time(self):
+        time_stamp = self.system_time_manager.get_user_timestamp()
         self.database_manager.update(
             Tables.ROOMS,
-            {Tables.ROOMS__agent_last_msg_sent_at: utc_now()},
+            {Tables.ROOMS__agent_last_msg_sent_at: time_stamp},
             condition_key=Tables.ROOMS__id,
             condition_value=self.context.room.id,
         )
