@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 PaymentServiceDep = Annotated[
-    PaymentService, Depends(lambda: container.get_payment_service())
+    PaymentService, Depends(lambda: container.payment_service)
 ]
 
 

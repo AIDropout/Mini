@@ -14,7 +14,7 @@ from mini.server.celery.celery import app
 
 
 RoomTableServiceDep = Annotated[
-    RoomTableService, Depends(lambda: container.get_room_table_service())
+    RoomTableService, Depends(lambda: container.room_table_service)
 ]
 
 router = APIRouter(

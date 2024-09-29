@@ -14,7 +14,7 @@ router = APIRouter(
 logger = get_logger(__name__)
 
 AgentTableServiceDep = Annotated[
-    AgentTableService, Depends(lambda: container.get_agent_table_service())
+    AgentTableService, Depends(lambda: container.agent_table_service)
 ]
 
 

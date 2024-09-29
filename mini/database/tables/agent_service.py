@@ -157,7 +157,7 @@ URL:{"https://textmini.com"}
 if __name__ == "__main__":
     from config.container import container
 
-    service = container.get_agent_table_service()
+    service = container.agent_table_service
     agent_id = "f49c9af0-929b-4fe1-9522-6fe4a325bdf5"
     url = service.get_or_create_contact_card(agent_id)
     logger.info(url)

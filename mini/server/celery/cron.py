@@ -8,6 +8,8 @@ logger = get_logger(__name__)
 @app.task
 def run_jobs():
     logger.info("This task runs every minute")
+    job_service = container.job_table_service
+    job_service.get_due_jobs
 
     # get all incomplete jobs that are due
 

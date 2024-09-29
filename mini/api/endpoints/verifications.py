@@ -16,10 +16,8 @@ from mini.messaging.providers.bird.verification.service import VerifyService
 
 router = APIRouter(prefix="/verifications", tags=["verifications"])
 
-VerifyServiceDep = Annotated[
-    VerifyService, Depends(lambda: container.get_verify_service())
-]
-RateLimiterDep = Annotated[RateLimiter, Depends(lambda: container.get_rate_limiter())]
+VerifyServiceDep = Annotated[VerifyService, Depends(lambda: container.verify_service)]
+RateLimiterDep = Annotated[RateLimiter, Depends(lambda: container.rate_limiter)]
 
 
 @router.post("/send")

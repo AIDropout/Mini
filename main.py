@@ -27,9 +27,9 @@ logger = get_logger(__name__)
 async def lifespan(_: FastAPI):
     """Life cycle of FastAPI server."""
 
-    redis_manager = container.get_redis_manager()
+    redis_manager = container.redis_manager
     redis_manager.initialize()
-    apscheduler = container.get_apscheduler()
+    apscheduler = container.apscheduler
     apscheduler.initialize()
 
     if config.is_local():

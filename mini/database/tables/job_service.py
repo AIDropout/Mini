@@ -1,6 +1,8 @@
+from typing import List, Optional
+
 from mini.core.logger import get_logger
 from mini.database.models import Tables, Job
-from mini.core.models.jobs import JobStatus
+from mini.core.enums import JobStatus
 from mini.database.database import DatabaseManager
 
 logger = get_logger(__name__)
@@ -24,6 +26,14 @@ class JobTableService:
 
         self.database_manager.insert(Tables.JOBS, job)
 
+    def get_due_jobs(self) -> Optional[List[Job]]:
+        jobs = self.database_manager.get_multiple_rows(
+            table_name=Tables.JOBS,
+            order_by=Tables.JOBS__run_at,
+            conditions={Tables.JOBS__status: JobStatus.SCHEDULED.value},
+        )
+        return jobs
+
     def get_most_recent_job(self, room_id: str) -> Job:
         pass
 
@@ -31,7 +41,7 @@ class JobTableService:
         updated_job = self.database_manager.update(
             table_name=Tables.JOBS,
             update_data={
-                Tables.JOBS__status: status,
+                Tables.JOBS__status: status.value,
             },
             condition_key=Tables.JOBS__id,
             condition_value=job_id,

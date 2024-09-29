@@ -5,8 +5,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
-from mini.core.enums import MessageTaskType
-from mini.core.models.jobs import JobStatus
+from mini.core.enums import MessageTaskType, JobStatus
 from mini.utils.utils import generate_uuid, utc_now
 
 

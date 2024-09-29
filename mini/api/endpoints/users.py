@@ -10,7 +10,7 @@ from mini.database.tables.user_service import UserTableService
 router = APIRouter(prefix="/users", tags=["users"])
 
 UserTableServiceDep = Annotated[
-    UserTableService, Depends(lambda: container.get_user_table_service())
+    UserTableService, Depends(lambda: container.user_table_service)
 ]
 
 

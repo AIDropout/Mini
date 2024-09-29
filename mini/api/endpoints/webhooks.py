@@ -32,9 +32,7 @@ router = APIRouter(
     tags=["webhooks"],
 )
 logger = get_logger(__name__)
-FactoryDep = Annotated[
-    MessagingService, Depends(lambda: container.get_messaging_service())
-]
+FactoryDep = Annotated[MessagingService, Depends(lambda: container.messaging_service)]
 
 
 @router.post("/bird")
@@ -51,6 +49,7 @@ async def bird_inbound_webhook(request: BirdRequest, factory: FactoryDep):
     )
 
     return {"status": "Success"}
+
 
 @router.post("/bird/outbound")
 async def bird_outbound_webhook(request: BirdRequest):

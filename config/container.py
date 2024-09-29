@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Any
 
 from config.config import config
 from mini.agent.modules.memory import MemoryManager
@@ -9,6 +8,7 @@ from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
 from mini.database.tables.user_service import UserTableService
 from mini.database.tables.agent_service import AgentTableService
+from mini.database.tables.job_service import JobTableService
 from mini.llm import LLMService, Model
 from mini.messaging.paywall import PaywallService
 from mini.messaging.service import MessagingService
@@ -38,97 +38,109 @@ class Container:
         self.customer_manager = CustomerManager.from_config(config)
         self.subscription_manager = SubscriptionManager()
 
+    # --- Table services: ---
+    @property
     @lru_cache()
-    def __getattr__(self, name: str) -> Any:
-        method_name = f"get_{name}"
-        if hasattr(self, method_name):
-            return getattr(self, method_name)()
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )
-
-    @lru_cache
-    def get_paywall_service(self):
-        return PaywallService(
-            database_manager=self.database_manager,
-            room_service=self.get_room_table_service(),
-        )
-
-    @lru_cache
-    def get_schedule_dispatch(self):
-        return ScheduleDispatch(
-            database_manager=self.database_manager,
-            scheduler=self.get_scheduler(),
-        )
-
-    @lru_cache
-    def get_apscheduler(self):
-        return APScheduler(db_url=config.SCHEDULER_DB_URL)
-
-    @lru_cache
-    def get_scheduler(self):
-        return Scheduler(self.get_apscheduler(), self.system_time_manager)
-
-    @lru_cache
-    def get_rate_limiter(self):
-        return RateLimiter(
-            redis_manager=self.get_redis_manager(), max_calls=20, period=300
-        )
-
-    @lru_cache()
-    def get_redis_manager(self):
-        return RedisManager()
-
-    @lru_cache()
-    def get_user_table_service(self):
+    def user_table_service(self):
         return UserTableService(
             database_manager=self.database_manager,
             customer_manager=self.customer_manager,
         )
 
+    @property
     @lru_cache()
-    def get_agent_table_service(self):
+    def agent_table_service(self):
         return AgentTableService(database_manager=self.database_manager)
 
+    @property
     @lru_cache()
-    def get_messaging_service(self):
+    def room_table_service(self):
+        return RoomTableService(
+            database_manager=self.database_manager,
+            customer_manager=self.customer_manager,
+            user_table_service=self.user_table_service,
+            agent_table_service=self.agent_table_service,
+        )
+
+    @property
+    @lru_cache()
+    def job_table_service(self):
+        return JobTableService(
+            database_manager=self.database_manager,
+        )
+
+    # --- Other services: ---
+    @property
+    @lru_cache
+    def paywall_service(self):
+        return PaywallService(
+            database_manager=self.database_manager,
+            room_service=self.room_table_service,
+        )
+
+    @property
+    @lru_cache
+    def schedule_dispatch(self):
+        return ScheduleDispatch(
+            database_manager=self.database_manager,
+            scheduler=self.scheduler,
+        )
+
+    @property
+    @lru_cache
+    def apscheduler(self):
+        return APScheduler(db_url=config.SCHEDULER_DB_URL)
+
+    @property
+    @lru_cache
+    def scheduler(self):
+        return Scheduler(self.apscheduler, self.system_time_manager)
+
+    @property
+    @lru_cache
+    def rate_limiter(self):
+        return RateLimiter(redis_manager=self.redis_manager, max_calls=20, period=300)
+
+    @property
+    @lru_cache()
+    def redis_manager(self):
+        return RedisManager()
+
+    @property
+    @lru_cache()
+    def messaging_service(self):
         return MessagingService(
             database_manager=self.database_manager,
-            user_table_service=self.get_user_table_service,
+            user_table_service=self.user_table_service,
             system_time_manager=self.system_time_manager,
         )
 
+    @property
     @lru_cache()
-    def get_memory_manager(self):
+    def memory_manager(self):
         return MemoryManager(
             user_id=None,
             agent_id=None,
             time_manager=self.system_time_manager,
-            llm_manager=self.get_llm_service(),
+            llm_manager=self.llm_service,
             memory_save_delay=5,
         )
 
+    @property
     @lru_cache()
-    def get_llm_service(self):
+    def llm_service(self):
         return LLMService(
             model=Model.from_model_name(config.MEMORY_GENERAL_LLM),
         )
 
+    @property
     @lru_cache()
-    def get_verify_service(self):
+    def verify_service(self):
         return VerifyService()
 
+    @property
     @lru_cache()
-    def get_room_table_service(self):
-        return RoomTableService(
-            database_manager=self.database_manager,
-            customer_manager=self.customer_manager,
-            user_table_service=self.get_user_table_service(),
-            agent_table_service=self.get_agent_table_service(),
-        )
-
-    @lru_cache()
-    def get_payment_service(self):
+    def payment_service(self):
         return PaymentService(
             database_manager=self.database_manager,
             checkout_manager=self.checkout_manager,
