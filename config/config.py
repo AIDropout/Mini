@@ -69,7 +69,7 @@ class MemoryLiteLLMConfig(BaseSettings):
     api_key: str
 
 
-class TimeApiConfig(BaseSettings):
+class TimeConfig(BaseSettings):
     url_from_timezone: str
     url_from_ip: str
     url_available_timezones: str
@@ -127,6 +127,7 @@ class Config(BaseSettings):
     ENVIRONMENT: str
     BACKEND_URL: str
     DEV_CONFIG: DevConfig
+    TIME_CONFIG: TimeConfig
     SCHEDULER_DB_URL: str
     BACKEND_API_KEY: str
     OPENAI_API_KEY: str
@@ -150,7 +151,6 @@ class Config(BaseSettings):
     STRIPE_CONFIG: StripeConfig
     PHONE_OTP_CHANNEL_ID: str
     FRONTEND_URL: str
-    TIME_API: TimeApiConfig
     MEMORY_GENERAL_LLM: str
     MEMORY_VECTOR_STORE_PROVIDER: str
     MEMORY_QDRANT_CONFIG: MemoryQdrantConfig

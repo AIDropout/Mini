@@ -24,11 +24,11 @@ class Container:
     def __init__(self):
         self.database_manager = DatabaseManager()
         self.system_time_manager: TimeManager = TimeManager(
-            user_timezone=config.TIME_API.system_timezone
+            user_timezone=config.TIME_CONFIG.system_timezone
         )
         self.user_time_manager: TimeManager = TimeManager(
             # TODO: Save user's timezone on signup
-            user_timezone=config.TIME_API.default_timezone
+            user_timezone=config.TIME_CONFIG.default_timezone
         )
         self.checkout_manager = CheckoutManager()
         self.customer_manager = CustomerManager.from_config(config)
@@ -147,17 +147,6 @@ class Container:
             customer_manager=self.customer_manager,
             subscription_manager=self.subscription_manager,
         )
-
-        self.subscription_manager = SubscriptionManager()
-        self.user_table_service: Optional[UserTableService] = None
-        self.messaging_service: Optional[MessagingService] = None
-        self.redis_manager: Optional[RedisManager] = None
-        self.rate_limiter: Optional[RateLimiter] = None
-        self.memory_manager: Optional[MemoryManager] = None
-        self.apscheduler: Optional[APScheduler] = None
-        self.scheduler: Optional[Scheduler] = None
-        self.paywall_service: Optional[PaywallService] = None
-        self.scheduler_dispatch: Optional[ScheduleDispatch] = None
 
     @dataclass
     class Context:

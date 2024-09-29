@@ -35,10 +35,10 @@ class TimeManager:
         self, user_ip: str | None = None, user_timezone: str | None = None
     ) -> None:
         self.timeout = 10
-        self.default_timezone = config.TIME_API.default_timezone
-        self.api_url_timezone = config.TIME_API.url_from_timezone
-        self.api_url_timezones = config.TIME_API.url_available_timezones
-        self.api_url_ip = config.TIME_API.url_from_ip
+        self.default_timezone = config.TIME_CONFIG.default_timezone
+        self.api_url_timezone = config.TIME_CONFIG.url_from_timezone
+        self.api_url_timezones = config.TIME_CONFIG.url_available_timezones
+        self.api_url_ip = config.TIME_CONFIG.url_from_ip
 
         self.available_timezones = self.fetch_available_timezones()
 
