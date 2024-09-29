@@ -1,5 +1,7 @@
+from datetime import timedelta
+
 import yaml
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -21,6 +23,37 @@ class PromptRulesConfig(BaseSettings):
     post_subscription_prompt: str
 
     style_guidelines: dict
+
+
+class ProactiveConfig(BaseSettings):
+    short_proactive_message_delay: timedelta = Field(default=timedelta(hours=6))
+    medium_proactive_message_delay: timedelta = Field(default=timedelta(hours=18))
+    long_proactive_message_delay: timedelta = Field(default=timedelta(hours=48))
+    dead_zone_start: int = Field(default=23)
+    dead_zone_end: int = Field(default=8)
+    random_hour_range: int = Field(default=3)
+
+    @field_validator(
+        "short_proactive_message_delay",
+        "medium_proactive_message_delay",
+        "long_proactive_message_delay",
+        mode="before",
+    )
+    @classmethod
+    def parse_timedelta(cls, value):
+        """Converts a string or int representing a timedelta to a timedelta object."""
+        if isinstance(value, str):
+            number, unit = value.split()
+            number = int(number)
+            if unit in ("day", "days"):
+                return timedelta(days=number)
+            elif unit in ("hour", "hours"):
+                return timedelta(hours=number)
+            elif unit in ("minute", "minutes"):
+                return timedelta(minutes=number)
+            else:
+                raise ValueError(f"Unsupported time unit: {unit}")
+        return value
 
 
 class PromptPersonalityConfig(BaseSettings):
@@ -162,6 +195,7 @@ class Config(BaseSettings):
     SECRET_PHRASES: SecretPhrases
     DISCORD_CONFIG: DiscordConfig
     INSTAGRAM_CONFIG: InstagramConfig
+    PROACTIVE_CONFIG: ProactiveConfig
 
     @classmethod
     def from_yaml(cls, file_path: str):
