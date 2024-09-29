@@ -93,17 +93,6 @@ class Container:
 
     @property
     @lru_cache()
-    def memory_manager(self):
-        return MemoryManager(
-            user_id=None,
-            agent_id=None,
-            time_manager=self.system_time_manager,
-            llm_manager=self.llm_service,
-            memory_save_delay=5,
-        )
-
-    @property
-    @lru_cache()
     def llm_service(self):
         return LLMService(
             model=Model.from_model_name(config.MEMORY_GENERAL_LLM),
