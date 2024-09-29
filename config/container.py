@@ -37,6 +37,8 @@ class Container:
         self.checkout_manager = CheckoutManager()
         self.customer_manager = CustomerManager.from_config(config)
         self.subscription_manager = SubscriptionManager()
+        self.verify_service = VerifyService()
+        self.redis_manager = RedisManager()
 
     # --- Table services: ---
     @property
@@ -67,6 +69,7 @@ class Container:
     def job_table_service(self):
         return JobTableService(
             database_manager=self.database_manager,
+            time_manager=self.system_time_manager,
         )
 
     # --- Other services: ---
@@ -103,11 +106,6 @@ class Container:
 
     @property
     @lru_cache()
-    def redis_manager(self):
-        return RedisManager()
-
-    @property
-    @lru_cache()
     def messaging_service(self):
         return MessagingService(
             database_manager=self.database_manager,
@@ -132,11 +130,6 @@ class Container:
         return LLMService(
             model=Model.from_model_name(config.MEMORY_GENERAL_LLM),
         )
-
-    @property
-    @lru_cache()
-    def verify_service(self):
-        return VerifyService()
 
     @property
     @lru_cache()

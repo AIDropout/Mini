@@ -4,16 +4,16 @@ from mini.core.logger import get_logger
 from mini.database.models import Tables, Job
 from mini.core.enums import JobStatus
 from mini.database.database import DatabaseManager
+from mini.utils.time import TimeManager
+
 
 logger = get_logger(__name__)
 
 
 class JobTableService:
-    def __init__(
-        self,
-        database_manager: DatabaseManager,
-    ):
+    def __init__(self, database_manager: DatabaseManager, time_manager: TimeManager):
         self.database_manager = database_manager
+        self.time_manager = time_manager
 
     def create_job(
         self,
@@ -27,12 +27,22 @@ class JobTableService:
         self.database_manager.insert(Tables.JOBS, job)
 
     def get_due_jobs(self) -> Optional[List[Job]]:
-        jobs = self.database_manager.get_multiple_rows(
-            table_name=Tables.JOBS,
-            order_by=Tables.JOBS__run_at,
-            conditions={Tables.JOBS__status: JobStatus.SCHEDULED.value},
+        """
+        Get scheduled jobs that are due
+        """
+        current_time = self.time_manager.get_user_datetime()
+
+        logger.info(JobStatus.SCHEDULED.value)
+
+
+        "2024-09-29 03:47:42+00"
+        jobs = self.database_manager.query(
+            Tables.JOBS,
+            (Tables.JOBS__status, JobStatus.SCHEDULED.value),
+            (Tables.JOBS__scheduled_for, "<=", current_time.isoformat()),
         )
-        return jobs
+
+        return sorted(jobs, key=lambda job: job.scheduled_for)
 
     def get_most_recent_job(self, room_id: str) -> Job:
         pass
@@ -57,5 +67,16 @@ class JobTableService:
             condition_value=job_id,
         )
 
-    def remove_job(self, job_id: str) -> None:
+    def remove_jobs_from_room(self, room_id: str) -> None:
+        """
+        Would be used if a user deletes account or doesn't want to be texted anymore.
+        """
         pass
+
+
+if __name__ == "__main__":
+    from config.container import container
+
+    service = container.job_table_service
+    jobs = service.get_due_jobs()
+    logger.info(jobs)

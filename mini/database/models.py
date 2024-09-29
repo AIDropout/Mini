@@ -79,7 +79,7 @@ class Tables(str, Enum):
     JOBS__id = "id"
     JOBS__room_id = "room_id"
     JOBS__created_at = "created_at"
-    JOBS__run_at = "scheduled_for"
+    JOBS__scheduled_for = "scheduled_for"
     JOBS__type = "type"
     JOBS__data = "data"
     JOBS__status = "status"
@@ -197,7 +197,7 @@ class Job(BaseModel):
     id: str = Field(default_factory=generate_uuid)
     room_id: str
     created_at: datetime = Field(default_factory=utc_now)
-    run_at: str
+    scheduled_for: str
     type: MessageTaskType = Field(default=MessageTaskType.RESPONSE)
     data: Optional[str] = Field(default=None)
     status: JobStatus = Field(default=JobStatus.SCHEDULED)
