@@ -1,31 +1,20 @@
-from fastapi import (
-    APIRouter,
-    Request,
-    Response,
-    HTTPException,
-    Depends,
-    BackgroundTasks,
-    Depends,
-    Path,
-)
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from config.config import config
 from config.container import container
+from mini.core.enums import MessageTaskType
 from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderType
+from mini.database.database import DatabaseManager
 from mini.messaging.providers.bird.models import BirdRequest
-from mini.messaging.providers.instagram.webhook import InstagramWebhookService
 from mini.messaging.providers.instagram.dependencies import validate_instagram_webhook
 from mini.messaging.providers.instagram.models import InstagramWebhook
-from mini.messaging.service import MessagingService
-from mini.core.enums import MessageTaskType
-from mini.database.database import DatabaseManager
+from mini.messaging.providers.instagram.webhook import InstagramWebhookService
 from mini.messaging.send_message.send_message import send_message
-
+from mini.messaging.service import MessagingService
 from mini.server.celery.celery import app
-
 
 router = APIRouter(
     prefix="/webhooks",

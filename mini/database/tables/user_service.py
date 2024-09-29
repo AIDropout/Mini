@@ -1,15 +1,15 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from fastapi import HTTPException, BackgroundTasks
+from fastapi import BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
 
 from config.config import config
-from mini.database.models import Room, Tables, User
 from mini.database.database import DatabaseManager
+from mini.database.models import Room, Tables, User
 from mini.messaging.providers.discord import discord_manager
-from mini.utils.utils import get_infostring
 from mini.payment.stripe.customer import CustomerManager
+from mini.utils.utils import get_infostring
 
 
 class UserTableService:
@@ -20,7 +20,7 @@ class UserTableService:
         self.customer_manager = customer_manager
 
     def create_user(
-        self, id: str, phone_number: str, background_tasks: BackgroundTasks
+        self, id: str, phone_number: str, background_tasks: Optional[BackgroundTasks]
     ) -> User:
         try:
             customer = self.customer_manager.create_customer(phone=phone_number)
@@ -31,7 +31,7 @@ class UserTableService:
             if new_user is None:
                 raise HTTPException(status_code=500, detail="Failed to create user")
 
-            if config.ENVIRONMENT == "production":
+            if background_tasks and config.ENVIRONMENT == "production":
                 background_tasks.add_task(
                     discord_manager.log_website_activity,
                     f"-# **New signup**: {phone_number} {get_infostring()}",

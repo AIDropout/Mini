@@ -1,8 +1,8 @@
-from mini.server.celery.celery import app
+from config.container import container
 from mini.core.logger import get_logger
 from mini.core.models.message import MessagingProviderType
-from config.container import container
 from mini.messaging.send_message.send_message import send_message
+from mini.server.celery.celery import app
 
 logger = get_logger(__name__)
 
@@ -18,8 +18,6 @@ def run_jobs():
         send_message.delay(
             provider_name=MessagingProviderType.BIRD.value,
             room_id=job.room_id,
-            type=job.type.value,
-            job_id = job.id
+            type=job.type,
+            job_id=job.id,
         )
-
-

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
-from mini.core.enums import MessageTaskType, JobStatus
+from mini.core.enums import JobStatus, MessageTaskType
 from mini.utils.utils import generate_uuid, utc_now
 
 
@@ -198,9 +198,9 @@ class Job(BaseModel):
     room_id: str
     created_at: datetime = Field(default_factory=utc_now)
     scheduled_for: str
-    type: MessageTaskType = Field(default=MessageTaskType.RESPONSE)
+    type: str = Field(default=MessageTaskType.RESPONSE.value)
     data: Optional[str] = Field(default=None)
-    status: JobStatus = Field(default=JobStatus.SCHEDULED)
+    status: str = Field(default=JobStatus.SCHEDULED.value)
     log: Optional[str]
 
 

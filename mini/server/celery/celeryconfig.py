@@ -1,6 +1,8 @@
-from config.config import config
-from celery.schedules import crontab
 from datetime import timedelta
+
+from celery.schedules import crontab
+
+from config.config import config
 
 broker_url = config.REDIS_URL
 result_backend = config.REDIS_URL
@@ -15,6 +17,6 @@ beat_schedule = {
     "run-every-minute": {
         "task": "mini.server.celery.cron.run_jobs",
         # "schedule": crontab(), # Call every minute
-        'schedule': timedelta(seconds=10), # for debug
+        "schedule": timedelta(seconds=5),  # for debug
     },
 }

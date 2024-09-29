@@ -1,13 +1,12 @@
 import random
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import timedelta
 
 from mini.agent.modules.base import AgentModule
 from mini.agent.modules.proactive.models import ScheduledMessageTemplate
+from mini.core.enums import JobStatus, MessageTaskType
 from mini.core.logger import get_logger
 from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
-from mini.database.models import Tables
 from mini.database.tables.job_service import JobTableService
 from mini.utils.time import TimeManager
 
@@ -18,32 +17,24 @@ class ScheduleDispatch(AgentModule):
     def __init__(
         self,
         database_manager: DatabaseManager,
-        context: Context,
         job_table_service: JobTableService,
+        system_time_manager: TimeManager,
+        context: Context,
     ):
         """
         Initialize the ScheduleDispatch class with dead zone timings and the random hour range.
         """
         super().__init__(database_manager, context)
         self.job_table_service = job_table_service
+        self.system_time_manager = system_time_manager
 
-
-    # TODO: EDIT ALL THE FOLLOWING:
-
-    def _remove_currently_scheduled_job(self) -> bool:
-        # self.job_table_service.remove_jobs_from_room(context.room.id)
-        previous_schedule_id = self.context.room.scheduled_send_id
-        if previous_schedule_id is not None:
-            self.scheduler.remove_job(job_id=previous_schedule_id)
-            return True
-        return False
-
-    def _save_scheduled_job(self, scheduled_send_id: str):
-        self.database_manager.update(
-            Tables.ROOMS.value,
-            update_data={Tables.ROOMS__scheduled_send_id: scheduled_send_id},
-            condition_key=Tables.ROOMS__id,
-            condition_value=self.context.room.id,
+    def _save_scheduled_job(self, room_id: str, scheduled_time: str, save_log: str):
+        self.job_table_service.create_job(
+            room_id=room_id,
+            scheduled_for=scheduled_time,
+            status=JobStatus.SCHEDULED,
+            job_type=MessageTaskType.PROACTIVE,
+            log=save_log,
         )
 
     def _schedule_from_current_events(self) -> ScheduledMessageTemplate:
@@ -130,41 +121,31 @@ class ScheduleDispatch(AgentModule):
         - If the user has been inactive for more than 7 days, do not send a proactive message.
         """
 
-        # 1. Remove any previously scheduled proactive message to avoid conflicts
-        is_removed = self._remove_currently_scheduled_job()
-        if is_removed:
-            logger.info("Removed previously scheduled proactive message")
+        due_jobs = self.job_table_service.get_upcoming_jobs()
 
-        # Get the current time as an offset-aware datetime
-        now = datetime.now(ZoneInfo("UTC"))  # Set your desired timezone
+        if due_jobs and due_jobs[0].status in (JobStatus.SCHEDULED.value):
+            logger.info("⏳ Proactive message is already scheduled. Skipping.")
+            return
+
+        now = self.system_time_manager.get_user_datetime()
         last_msg_time = self.context.room.last_msg_sent_at
-
-        # Ensure last_msg_time is offset-aware. If it's not, convert it accordingly.
-        if last_msg_time.tzinfo is None:
-            logger.warning(
-                "last_msg_time is naive, converting to offset-aware using America/Chicago"
-            )
-            last_msg_time = last_msg_time.replace(tzinfo=ZoneInfo("America/Chicago"))
-
-        # Calculate the time difference
+        logger.warning("%s, %s", last_msg_time, now)
         time_diff = now - last_msg_time
-        days_diff = time_diff.days
+        rounded_minutes_diff = round(time_diff.total_seconds() / 60, 2)
+        log = f"User was active {rounded_minutes_diff} minutes ago."
 
         # 2. Determine when to send the proactive message based on user activity
-
         # Less than 1 day since the last message: Low risk of disengagement
         # Send a soft reminder in 6 hours to maintain engagement
         if time_diff < timedelta(days=1):
             scheduled_message_template = self._schedule_from_time(hours_from_now=7)
-            logger.info(
-                "User was recently active, scheduling a soft reminder in 6 hours."
-            )
+            log += "User was recently active, scheduling a soft reminder in 6 hours."
 
         # Between 1 and 3 days: Moderate risk of disengagement
         # Send a follow-up message in 24-48 hours to keep the user engaged
         elif time_diff < timedelta(days=3):
             scheduled_message_template = self._schedule_from_time(hours_from_now=48)
-            logger.info(
+            log += (
                 "User moderately inactive, scheduling a follow-up message in 48 hours."
             )
 
@@ -172,9 +153,7 @@ class ScheduleDispatch(AgentModule):
         # Send a more proactive message in 72 hours (3 days) to re-engage the user
         elif time_diff < timedelta(days=7):
             scheduled_message_template = self._schedule_from_time(hours_from_now=72)
-            logger.info(
-                "User highly inactive, scheduling a proactive re-engagement in 72 hours."
-            )
+            log += "User highly inactive, scheduling a proactive re-engagement in 72 hours."
 
         # More than 7 days: Consider the user inactive
         # Do not schedule a proactive message to avoid overwhelming the user
@@ -183,16 +162,21 @@ class ScheduleDispatch(AgentModule):
                 "Inactive user detected. Not scheduling proactive message. "
                 "User has not been active for %s hours (%s days)",
                 time_diff.total_seconds() // 3600,
-                days_diff,
+                time_diff.days,
             )
             return None
 
         # 3. Schedule the proactive message for the determined time
         next_dispatch_time = scheduled_message_template.scheduled_time
-        schedule_id = self.scheduler.schedule_proactive_message(
-            room_id=self.context.room.id, run_date=next_dispatch_time
-        )
-        self._save_scheduled_job(scheduled_send_id=schedule_id)
+        scheduled_timestamp = TimeManager.datetime_to_timestamp(next_dispatch_time)
 
-        logger.info("Proactive message is scheduled to send at: %s", next_dispatch_time)
+        logger.info(
+            "⏳ scheduling proactive (scheduled at: %s): %s", scheduled_timestamp, log
+        )
+        self._save_scheduled_job(
+            room_id=self.context.room.id,
+            scheduled_time=scheduled_timestamp,
+            save_log=log,
+        )
+
         return next_dispatch_time
