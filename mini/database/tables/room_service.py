@@ -8,7 +8,7 @@ from mini.database.database import DatabaseManager
 from mini.messaging.providers.bird import BirdMessaging
 from mini.payment.stripe.customer import CustomerManager
 from mini.database.tables.user_service import UserTableService
-from mini.messaging.providers.bird.vcard import get_or_create_contact_card
+from mini.database.tables.agent_service import AgentTableService
 
 logger = get_logger(__name__)
 
@@ -19,11 +19,13 @@ class RoomTableService:
         database_manager: DatabaseManager,
         customer_manager: CustomerManager,
         user_table_service: UserTableService,
+        agent_table_service: AgentTableService,
     ):
         self.database_manager = database_manager
         self.messaging_provider = BirdMessaging()
         self.customer_manager = customer_manager
         self.user_table_service = user_table_service
+        self.agent_table_service = agent_table_service
 
     def create_room(self, agent_id: str, user_id: str) -> Room:
         """Creates a new room & sends the first message"""
@@ -37,7 +39,7 @@ class RoomTableService:
                 )
 
             # Fetch the agent and user
-            agent = self._get_agent(agent_id)
+            agent = self.agent_table_service.get_agent(agent_id)
             user = self.user_table_service.get_user(user_id)
 
             # Send the first message
@@ -50,9 +52,7 @@ class RoomTableService:
                 {Tables.CHANNELS__id: agent.bird_channel_id},
             )
 
-            file_url = get_or_create_contact_card(
-                agent_id=agent_id, database_manager=self.database_manager
-            )
+            file_url = self.agent_table_service.get_or_create_contact_card(agent_id)
 
             # First message w/ vcard
             self.messaging_provider.send_message(text=agent.first_message)
@@ -103,17 +103,6 @@ class RoomTableService:
         if raise_error and not room:
             raise HTTPException(status_code=404, detail="Room not found")
         return room
-
-    def _get_agent(self, agent_id: str) -> Agent:
-        """Retrieves an agent by id"""
-
-        agent = self.database_manager.get_row(
-            Tables.AGENTS, conditions={Tables.AGENTS__id: agent_id}
-        )
-
-        if not agent:
-            raise HTTPException(status_code=404, detail="Agent not found")
-        return agent
 
     def get_user_rooms(self, user_id: str) -> Optional[List[Room]]:
         rooms = self.database_manager.get_multiple_rows(

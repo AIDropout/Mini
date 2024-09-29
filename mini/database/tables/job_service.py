@@ -1,7 +1,3 @@
-from typing import List, Optional
-
-from fastapi import HTTPException
-
 from mini.core.logger import get_logger
 from mini.database.models import Tables, Job
 from mini.core.models.jobs import JobStatus

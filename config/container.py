@@ -47,7 +47,7 @@ class Container:
         if self.paywall_service is None:
             self.paywall_service = PaywallService(
                 database_manager=self.database_manager,
-                room_service=self.get_room_service(),
+                room_service=self.get_room_table_service(),
             )
         return self.paywall_service
 
@@ -91,7 +91,7 @@ class Container:
             )
         return self.user_table_service
 
-    def get_agent_service(self):
+    def get_agent_table_service(self):
         from mini.database.tables.agent_service import AgentTableService
 
         return AgentTableService(database_manager=self.database_manager)
@@ -116,7 +116,7 @@ class Container:
             self.memory_manager = MemoryManager(
                 user_id=None,
                 agent_id=None,
-                time_manager=self.time_manager,
+                time_manager=self.system_time_manager,
                 llm_manager=lazy_init_llm(),
                 memory_save_delay=5,
             )
@@ -129,13 +129,14 @@ class Container:
 
         return VerifyService()
 
-    def get_room_service(self):
+    def get_room_table_service(self):
         from mini.database.tables.room_service import RoomTableService
 
         return RoomTableService(
             database_manager=self.database_manager,
             customer_manager=self.customer_manager,
             user_table_service=self.get_user_table_service(),
+            agent_table_service=self.get_agent_table_service(),
         )
 
     def get_payment_service(self):
