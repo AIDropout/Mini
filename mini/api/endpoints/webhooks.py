@@ -1,5 +1,5 @@
 from typing import Annotated
-
+import random
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from config.config import config
@@ -31,10 +31,18 @@ async def bird_inbound_webhook(request: BirdRequest, factory: FactoryDep):
         MessagingProviderType.BIRD, request.model_dump()
     )
     logger.info(app.tasks)
-    send_message.delay(
-        provider_name=MessagingProviderType.BIRD.value,
-        room_id=room_id,
-        type=MessageTaskType.RESPONSE.value,
+
+    # Generate a random delay between 3 and 20 seconds
+    delay = random.randint(3, 20)
+
+    # Schedule the message sending with the random delay
+    send_message.apply_async(
+        kwargs={
+            "provider_name": MessagingProviderType.BIRD.value,
+            "room_id": room_id,
+            "type": MessageTaskType.RESPONSE.value,
+        },
+        countdown=delay,
     )
 
     return {"status": "Success"}
