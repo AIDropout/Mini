@@ -27,7 +27,7 @@ def build_agent(config: Config, context: Context) -> AgentService:
         schedule_dispatch=ScheduleDispatch(
             database_manager=database_manager,
             context=context,
-            scheduler=Scheduler(apscheduler),
+            scheduler=container.get_scheduler()
         ),
         message_sender_module=MessageSenderModule(
             database_manager=database_manager,

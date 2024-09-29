@@ -8,5 +8,7 @@ logger = get_logger(__name__)
 @app.task
 def run_jobs():
     logger.info("This task runs every minute")
-    # cron_service = container.get_cron_service()
-    # cron_service.refresh_rooms()
+
+    # get all incomplete jobs that are due
+
+    # add them to send message
