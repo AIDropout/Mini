@@ -1,6 +1,7 @@
 # Temporary
 temp.py
 z.py
+/temp
 
 # Ignore compiled Python bytecode files
 *.pyc
