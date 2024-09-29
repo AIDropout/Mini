@@ -8,7 +8,7 @@ from mini.core.logger import get_logger
 from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
 from mini.database.models import Tables
-from mini.server.schedule.scheduler import Scheduler
+from mini.database.tables.job_service import JobTableService
 from mini.utils.time import TimeManager
 
 logger = get_logger(__name__)
@@ -19,15 +19,19 @@ class ScheduleDispatch(AgentModule):
         self,
         database_manager: DatabaseManager,
         context: Context,
-        scheduler: Scheduler,
+        job_table_service: JobTableService,
     ):
         """
         Initialize the ScheduleDispatch class with dead zone timings and the random hour range.
         """
         super().__init__(database_manager, context)
-        self.scheduler = scheduler
+        self.job_table_service = job_table_service
+
+
+    # TODO: EDIT ALL THE FOLLOWING:
 
     def _remove_currently_scheduled_job(self) -> bool:
+        # self.job_table_service.remove_jobs_from_room(context.room.id)
         previous_schedule_id = self.context.room.scheduled_send_id
         if previous_schedule_id is not None:
             self.scheduler.remove_job(job_id=previous_schedule_id)

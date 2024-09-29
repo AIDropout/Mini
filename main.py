@@ -29,8 +29,6 @@ async def lifespan(_: FastAPI):
 
     redis_manager = container.redis_manager
     redis_manager.initialize()
-    apscheduler = container.apscheduler
-    apscheduler.initialize()
 
     if config.is_local():
         subprocess.Popen(

@@ -18,7 +18,6 @@ from mini.server.schedule.scheduler import Scheduler
 
 database_manager = container.database_manager
 user_time_manager = container.user_time_manager
-apscheduler = container.apscheduler
 
 
 def build_agent(config: Config, context: Context) -> AgentService:
@@ -27,7 +26,7 @@ def build_agent(config: Config, context: Context) -> AgentService:
         schedule_dispatch=ScheduleDispatch(
             database_manager=database_manager,
             context=context,
-            scheduler=container.scheduler,
+            job_table_service=container.job_table_service,
         ),
         message_sender_module=MessageSenderModule(
             database_manager=database_manager,

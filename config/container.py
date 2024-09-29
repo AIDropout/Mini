@@ -2,7 +2,6 @@ from functools import lru_cache
 
 from config.config import config
 from mini.agent.modules.memory import MemoryManager
-from mini.agent.modules.proactive import ScheduleDispatch
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
@@ -14,8 +13,6 @@ from mini.messaging.paywall import PaywallService
 from mini.messaging.service import MessagingService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.server.redis.redis import RedisManager
-from mini.server.schedule.apscheduler import APScheduler
-from mini.server.schedule.scheduler import Scheduler
 from mini.utils.time import TimeManager
 from mini.messaging.providers.bird.verification.service import VerifyService
 from mini.database.tables.room_service import RoomTableService
@@ -80,24 +77,6 @@ class Container:
             database_manager=self.database_manager,
             room_service=self.room_table_service,
         )
-
-    @property
-    @lru_cache
-    def schedule_dispatch(self):
-        return ScheduleDispatch(
-            database_manager=self.database_manager,
-            scheduler=self.scheduler,
-        )
-
-    @property
-    @lru_cache
-    def apscheduler(self):
-        return APScheduler(db_url=config.SCHEDULER_DB_URL)
-
-    @property
-    @lru_cache
-    def scheduler(self):
-        return Scheduler(self.apscheduler, self.system_time_manager)
 
     @property
     @lru_cache

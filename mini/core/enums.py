@@ -12,9 +12,9 @@ class ConfidenceLevel(str, Enum):
 
 
 class MessageTaskType(Enum):
-    RESPONSE = "response"
-    PROACTIVE = "proactive"
-    REMIND = "remind"
+    RESPONSE = "Response"
+    PROACTIVE = "Proactive"
+    REMIND = "Remind"
 
 
 class JobStatus(Enum):

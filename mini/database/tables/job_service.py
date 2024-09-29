@@ -32,8 +32,6 @@ class JobTableService:
         """
         current_time = self.time_manager.get_user_datetime()
 
-
-        "2024-09-29 03:47:42+00"
         jobs = self.database_manager.query(
             Tables.JOBS,
             (Tables.JOBS__status, JobStatus.SCHEDULED.value),
