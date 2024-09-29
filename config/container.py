@@ -9,6 +9,7 @@ from mini.database.tables.agent_service import AgentTableService
 from mini.database.tables.job_service import JobTableService
 from mini.database.tables.room_service import RoomTableService
 from mini.database.tables.user_service import UserTableService
+from mini.database.tables.subscriptions_service import SubscriptionTableService
 from mini.llm import LLMService, Model
 from mini.messaging.paywall import PaywallService
 from mini.messaging.providers.bird.verification.service import VerifyService
@@ -68,6 +69,13 @@ class Container:
             system_time_manager=self.system_time_manager,
         )
 
+    @property
+    @lru_cache()
+    def subscription_table_service(self):
+        return SubscriptionTableService(
+            database_manager=self.database_manager,
+        )
+
     # --- Other services: ---
     @property
     @lru_cache
@@ -102,10 +110,11 @@ class Container:
     @lru_cache()
     def payment_service(self):
         return PaymentService(
-            database_manager=self.database_manager,
             checkout_manager=self.checkout_manager,
             customer_manager=self.customer_manager,
             subscription_manager=self.subscription_manager,
+            subscription_table_service=self.subscription_table_service,
+            user_table_service=self.user_table_service,
         )
 
 

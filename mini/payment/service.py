@@ -1,10 +1,10 @@
 import stripe
-from fastapi import HTTPException
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.database.models import Subscription, Tables
-from mini.database.database import DatabaseManager
+from mini.database.models import Tables
+from mini.database.tables.subscriptions_service import SubscriptionTableService
+from mini.database.tables.user_service import UserTableService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.messaging.providers.discord import discord_manager
 
@@ -15,30 +15,22 @@ logger = get_logger(__name__)
 class PaymentService:
     def __init__(
         self,
-        database_manager: DatabaseManager,
         checkout_manager: CheckoutManager,
         customer_manager: CustomerManager,
         subscription_manager: SubscriptionManager,
+        subscription_table_service: SubscriptionTableService,
+        user_table_service: UserTableService,
     ):
-        self.database_manager = database_manager
         self._checkout_manager = checkout_manager
         self._customer_manager = customer_manager
         self._subscription_manager = subscription_manager
+        self.subscription_table_service = subscription_table_service
+        self.user_table_service = user_table_service
 
     def create_checkout_session(self, user_id: str, tier: str):
-        user = self.database_manager.get_row(
-            Tables.USERS,
-            {Tables.USERS__id: user_id},
-        )
-
-        if not user:
-            raise HTTPException(
-                status_code=404, detail=f"User with id {user_id} not found"
-            )
-
+        user = self.user_table_service.get_user(user_id)
         phone_number = user.phone_number
         customer_id = user.customer_id
-
         response = self._checkout_manager.create_checkout_session(
             user_id,
             phone_number,
@@ -49,10 +41,7 @@ class PaymentService:
         return {"url": response.url}
 
     def get_portal_link(self, user_id: str):
-        user = self.database_manager.get_row(
-            Tables.USERS,
-            {Tables.USERS__id: user_id},
-        )
+        user = self.user_table_service.get_user(user_id)
         customer_id = user.customer_id
         response = self._customer_manager.get_portal_link(customer_id)
         return {"url": response.url}
@@ -101,20 +90,13 @@ class PaymentService:
                 subscription_id
             )
 
-            self.database_manager.insert(
-                table_name=Tables.SUBSCRIPTIONS,
-                item=Subscription(
-                    id=subscription.id,
-                    user_id=user_id,
-                    status=subscription.status,
-                ),
+            self.subscription_table_service.add_subscription(
+                subscription.id, user_id, subscription.status
             )
 
-            self.database_manager.update(
-                Tables.USERS,
-                {Tables.USERS__is_subscribed: True},
-                condition_key=Tables.USERS__id,
-                condition_value=user_id,
+            self.user_table_service.update_user(
+                user_id=user_id,
+                update_data={Tables.USERS__is_subscribed: True},
             )
 
             if config.ENVIRONMENT == "production":
@@ -131,19 +113,18 @@ class PaymentService:
         logger.debug(f"Handling customer.subscription.deleted event")
         try:
             # user_id = subscription.metadata.get("user_id", None)
-            updated_subscription = self.database_manager.update(
-                table_name=Tables.SUBSCRIPTIONS,
-                update_data={Tables.SUBSCRIPTIONS__status: subscription.status},
-                condition_key=Tables.SUBSCRIPTIONS__id,
-                condition_value=subscription.id,
+
+            updated_subscription = (
+                self.subscription_table_service.update_subscription_status(
+                    subscription.id, subscription.status
+                )
             )
 
-            self.database_manager.update(
-                table_name=Tables.USERS,
+            self.user_table_service.update_user(
+                user_id=updated_subscription.user_id,
                 update_data={Tables.USERS__is_subscribed: False},
-                condition_key=Tables.USERS__id,
-                condition_value=updated_subscription.user_id,
             )
+
         except Exception as e:
             logger.error(f"Error retrieving subscription information: {e}")
             raise e
