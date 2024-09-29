@@ -26,6 +26,7 @@ class PromptRulesConfig(BaseSettings):
 
 
 class ProactiveConfig(BaseSettings):
+    cron_interval: int = Field(default=60)
     short_proactive_message_delay: timedelta = Field(default=timedelta(hours=6))
     medium_proactive_message_delay: timedelta = Field(default=timedelta(hours=18))
     long_proactive_message_delay: timedelta = Field(default=timedelta(hours=48))

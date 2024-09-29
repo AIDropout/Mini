@@ -69,7 +69,6 @@ class JobTableService:
         pass
 
     def update_job_status(self, job_id: str, status: JobStatus) -> None:
-
         updated_job = self.database_manager.update(
             table_name=Tables.JOBS,
             update_data={
@@ -78,8 +77,6 @@ class JobTableService:
             condition_key=Tables.JOBS__id,
             condition_value=job_id,
         )
-        logger.info(f"RESULT 🔴🔴🔴")
-        logger.info(updated_job)
 
     def update_job_log(self, job_id: str, log: str) -> None:
         updated_job = self.database_manager.update(

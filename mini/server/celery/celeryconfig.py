@@ -1,7 +1,4 @@
 from datetime import timedelta
-
-from celery.schedules import crontab
-
 from config.config import config
 
 broker_url = config.REDIS_URL
@@ -12,11 +9,9 @@ result_serializer = "json"
 accept_content = ["json"]
 timezone = "UTC"
 enable_utc = True
-
 beat_schedule = {
-    "run-every-minute": {
+    "run-every-x-seconds": {
         "task": "mini.server.celery.cron.run_jobs",
-        # "schedule": crontab(), # Call every minute
-        "schedule": timedelta(seconds=5),  # for debug
+        "schedule": timedelta(seconds=config.PROACTIVE_CONFIG.cron_interval),
     },
 }
