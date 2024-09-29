@@ -26,7 +26,7 @@ class JobScheduler:
         self.job_table_service = job_table_service
         self.system_time_manager = system_time_manager
 
-    def get_next_scheduled_job_time_diff(self) -> Optional[timedelta]:
+    def get_next_scheduled_job_time_diff(self, room_id: str) -> Optional[timedelta]:
         """
         Get the time difference until the next scheduled job.
 
@@ -34,7 +34,7 @@ class JobScheduler:
             Optional[timedelta]: The time difference between now and the next scheduled job
                                 if one exists, None otherwise.
         """
-        due_jobs = self.job_table_service.get_upcoming_jobs()
+        due_jobs = self.job_table_service.get_upcoming_jobs_for_room(room_id=room_id)
 
         if due_jobs and due_jobs[0]:
             scheduled_time = datetime.fromisoformat(due_jobs[0].scheduled_for)

@@ -32,7 +32,7 @@ class JobTableService:
             scheduled_for=scheduled_for,
             status=status.value,
             log=log,
-            is_local=config.is_local()
+            is_local=config.is_local(),
         )
 
         return self.database_manager.insert(Tables.JOBS, job)
@@ -43,13 +43,10 @@ class JobTableService:
         conditions = [
             (Tables.JOBS__status, JobStatus.SCHEDULED.value),
             (Tables.JOBS__scheduled_for, "<=", current_time.isoformat()),
-            (Tables.JOBS__is_local, is_local)
+            (Tables.JOBS__is_local, is_local),
         ]
 
-        jobs = self.database_manager.query(
-            Tables.JOBS,
-            *conditions
-        )
+        jobs = self.database_manager.query(Tables.JOBS, *conditions)
 
         return sorted(cast(List[Job], jobs), key=lambda job: job.scheduled_for)
 
@@ -61,6 +58,22 @@ class JobTableService:
 
         jobs = self.database_manager.query(
             Tables.JOBS,
+            (Tables.JOBS__status, JobStatus.SCHEDULED.value),
+            (Tables.JOBS__scheduled_for, ">=", current_time.isoformat()),
+        )
+
+        jobs = cast(List[Job], jobs)
+        return sorted(jobs, key=lambda job: job.scheduled_for)
+
+    def get_upcoming_jobs_for_room(self, room_id: str) -> Optional[List[Job]]:
+        """
+        Get scheduled jobs that are upcoming
+        """
+        current_time = self.system_time_manager.get_user_datetime()
+
+        jobs = self.database_manager.query(
+            Tables.JOBS,
+            (Tables.JOBS__room_id, room_id),
             (Tables.JOBS__status, JobStatus.SCHEDULED.value),
             (Tables.JOBS__scheduled_for, ">=", current_time.isoformat()),
         )
