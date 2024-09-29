@@ -36,9 +36,6 @@ class AgentPromptModule(BasePromptModule):
 
         self._return_hint = response_format.model_dump()
 
-    def _response_moods(self) -> list[str]:
-        return [f"insert {mood} message" for mood in self._moods]
-
     def _build_role(self) -> str:
         return self._role
 
@@ -52,8 +49,7 @@ class AgentPromptModule(BasePromptModule):
         """
 
     def _build_moods(self) -> str:
-        moods = "\n".join(self._response_moods())
-
+        moods = "\n".join(self._moods)
         return f"""
         **MOODS:**
 
