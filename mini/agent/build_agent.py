@@ -5,11 +5,7 @@ from mini.agent.modules.filter.filter import IntentConfig, MessageFilterModule
 from mini.agent.modules.memory import MemoryManager
 from mini.agent.modules.memory.service import MemoryModule
 from mini.agent.modules.proactive import ScheduleDispatch
-from mini.agent.modules.prompt import (
-    AgentPromptModule,
-    BasePromptModule,
-    RoleplayPromptModule,
-)
+from mini.agent.modules.prompt import AgentPromptModule, RoleplayPromptModule
 from mini.agent.modules.sender import MessageSenderModule
 from mini.core.enums import ConfidenceLevel
 from mini.core.models.context import Context
