@@ -15,7 +15,9 @@ T = TypeVar("T", bound=TableModel)
 
 class DatabaseManager:
     def __init__(self) -> None:
-        self.supabase = create_client(config.SUPABASE_CONFIG.url, config.SUPABASE_CONFIG.key)
+        self.supabase = create_client(
+            config.SUPABASE_CONFIG.url, config.SUPABASE_CONFIG.key
+        )
 
     def insert(self, table_name: str, item: TableModel) -> TableModel:
         item_dict = item.model_dump()
@@ -121,7 +123,11 @@ class DatabaseManager:
         return len(result.data) > 0
 
     def query(
-        self, table_name: str, *conditions: Union[Tuple[str, str], Tuple[str, str, str]]
+        self,
+        table_name: str,
+        *conditions: Union[
+            Tuple[str, str], Tuple[str, str, str], Tuple[str, str, Tuple]
+        ],
     ) -> List[TableModel]:
         query = self.supabase.table(table_name).select("*")
         for condition in conditions:
@@ -140,6 +146,13 @@ class DatabaseManager:
                     query = query.lte(key, value)
                 elif op == "!=":
                     query = query.neq(key, value)
+                elif op.upper() == "IN":
+                    if isinstance(value, (list, tuple)):
+                        query = query.in_(key, value)
+                    else:
+                        logger.warning(
+                            f"IN condition expects a list or tuple, got {type(value)}"
+                        )
                 else:
                     query = query.eq(key, value)
             else:

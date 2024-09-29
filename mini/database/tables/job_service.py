@@ -1,5 +1,6 @@
 from typing import List, Optional, cast
 
+from config.config import config
 from mini.core.enums import JobStatus, MessageTaskType
 from mini.core.logger import get_logger
 from mini.database.database import DatabaseManager
@@ -31,24 +32,26 @@ class JobTableService:
             scheduled_for=scheduled_for,
             status=status.value,
             log=log,
+            is_local=config.is_local()
         )
 
         return self.database_manager.insert(Tables.JOBS, job)
 
-    def get_due_jobs(self) -> Optional[List[Job]]:
-        """
-        Get scheduled jobs that are due
-        """
+    def get_due_jobs(self, is_local: bool = False) -> List[Job]:
         current_time = self.system_time_manager.get_user_datetime()
+
+        conditions = [
+            (Tables.JOBS__status, JobStatus.SCHEDULED.value),
+            (Tables.JOBS__scheduled_for, "<=", current_time.isoformat()),
+            (Tables.JOBS__is_local, is_local)
+        ]
 
         jobs = self.database_manager.query(
             Tables.JOBS,
-            (Tables.JOBS__status, JobStatus.SCHEDULED.value),
-            (Tables.JOBS__scheduled_for, "<=", current_time.isoformat()),
+            *conditions
         )
 
-        jobs = cast(List[Job], jobs)
-        return sorted(jobs, key=lambda job: job.scheduled_for)
+        return sorted(cast(List[Job], jobs), key=lambda job: job.scheduled_for)
 
     def get_upcoming_jobs(self) -> Optional[List[Job]]:
         """
@@ -69,6 +72,7 @@ class JobTableService:
         pass
 
     def update_job_status(self, job_id: str, status: JobStatus) -> None:
+        logger.info(status.value)
         updated_job = self.database_manager.update(
             table_name=Tables.JOBS,
             update_data={

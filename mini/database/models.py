@@ -84,6 +84,7 @@ class Tables(str, Enum):
     JOBS__data = "data"
     JOBS__status = "status"
     JOBS__log = "log"
+    JOBS__is_local = "is_local"
 
     IGACCOUNTS = "ig_accounts"
     IGACCOUNTS__id = "id"
@@ -202,6 +203,7 @@ class Job(BaseModel):
     data: Optional[str] = Field(default=None)
     status: str = Field(default=JobStatus.SCHEDULED.value)
     log: Optional[str]
+    is_local: bool = Field(default=False)
 
 
 class IGAccounts(BaseModel):
