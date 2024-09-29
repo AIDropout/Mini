@@ -91,8 +91,8 @@ class AgentPromptModule(BasePromptModule):
             self._build_rules(),
             self._build_metadata(relevant_memories=relevant_memories),
             self._build_chat_history(chat_history),
-            # self._build_roleplay(roleplay),
-            # self._build_return_hint(),
+            self._build_roleplay(roleplay),
+            self._build_return_hint(),
         ]
 
         if proactive_prompt:
