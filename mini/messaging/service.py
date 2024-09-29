@@ -56,6 +56,14 @@ class MessagingService:
             )
             return
 
+        time_stamp = self.system_time_manager.get_user_timestamp()
+        self.database_manager.update(
+            Tables.ROOMS,
+            {Tables.ROOMS__last_msg_sent_at: time_stamp},
+            condition_key=Tables.ROOMS__id,
+            condition_value=context.room.id,
+        )
+
         self.database_manager.insert(
             Tables.MESSAGES,
             Message(
