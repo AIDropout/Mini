@@ -2,16 +2,14 @@ from typing import List
 
 from pydantic import BaseModel
 
+from mini.agent.modules.prompt.base import BasePromptModule, ChatMessage
 from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
-from mini.agent.modules.prompt.base import BasePromptModule, ChatMessage
 from mini.utils.time import TimeManager
 
 
 class ResponseFormat(BaseModel):
-    responses: List[str]
     best_response: str
-    reasoning: str
 
 
 class AgentPromptModule(BasePromptModule):
@@ -33,9 +31,7 @@ class AgentPromptModule(BasePromptModule):
 
     def _load_agent_data(self) -> None:
         response_format = ResponseFormat(
-            responses=self._response_moods(),
-            best_response="insert the best response here",
-            reasoning="adjectives describing reasoning for the best response",
+            best_response="insert your best response here, be creative, move the conversation forward, be natural",
         )
 
         self._return_hint = response_format.model_dump()
@@ -53,6 +49,16 @@ class AgentPromptModule(BasePromptModule):
 
         Keep the following in mind:
         {rules}
+        """
+
+    def _build_moods(self) -> str:
+        moods = "\n".join(self._response_moods())
+
+        return f"""
+        **MOODS:**
+
+        Here is a list of moods you can be in:
+        {moods}
         """
 
     def _build_roleplay(self, roleplay: str | None) -> str:
@@ -89,10 +95,11 @@ class AgentPromptModule(BasePromptModule):
         prompt = [
             self._build_role(),
             self._build_rules(),
+            self._build_moods(),
             self._build_metadata(relevant_memories=relevant_memories),
-            self._build_chat_history(chat_history),
-            # self._build_roleplay(roleplay),
-            # self._build_return_hint(),
+            # self._build_chat_history(chat_history),
+            self._build_roleplay(roleplay),
+            self._build_return_hint(),
         ]
 
         if proactive_prompt:

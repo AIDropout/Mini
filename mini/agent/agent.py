@@ -6,7 +6,6 @@ from mini.agent.modules.memory.service import MemoryModule
 from mini.agent.modules.proactive.schedule_dispatch import ScheduleDispatch
 from mini.agent.modules.prompt import (
     AgentPromptModule,
-    BasePromptModule,
     ChatMessage,
     RoleplayPromptModule,
 )
@@ -91,7 +90,7 @@ class AgentService:
         # AGENT MESSAGE
         agent_system_prompt = self.agent_prompt.build_prompt(
             relevant_memories="",
-            chat_history=chat_history,
+            chat_history=[],
             roleplay=roleplay_response,
             proactive_prompt=isinstance(task, ProactiveTask),
         )
@@ -100,7 +99,7 @@ class AgentService:
         check_cancellation()
 
         agent_response_text = self.message_sender.generate_message(
-            [], agent_system_prompt, self.agent_prompt.response_format
+            task.recent_messages, agent_system_prompt, self.agent_prompt.response_format
         )
         el.log(f"AGENT LLM RESPONSE: {agent_response_text}")
 
