@@ -46,6 +46,10 @@ class MessagingService:
         if context.room.disabled_by_admin:
             raise RoomDisabledByAdminError(room_id=context.room.id)
 
+        if message.content == "STOP": # TODO: handle other keywords
+            # TODO: cancel all scheduled jobs / make room disabled
+            return 
+
         if message.content == config.SECRET_PHRASES.reset_user:
             self.database_manager.supabase.auth.admin.delete_user(context.user.id)
             self.database_manager.delete(
