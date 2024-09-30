@@ -58,6 +58,26 @@ class TimeManager:
         return self.user_timezone
 
     @staticmethod
+    def timedelta_to_description(time_delta: timedelta) -> str:
+        """Converts a time delta to a human-readable description. Example: '1 hour, 30 minutes'"""
+        total_seconds = int(time_delta.total_seconds())
+        days, remainder = divmod(total_seconds, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        parts = []
+        if days > 0:
+            parts.append(f"{days} day{'s' if days != 1 else ''}")
+        if hours > 0:
+            parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+        if minutes > 0:
+            parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+        if seconds > 0:
+            parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
+
+        return ", ".join(parts) if parts else "0 seconds"
+
+    @staticmethod
     def datetime_to_timestamp(dt: datetime, timespec="milliseconds") -> str:
         """Converts a datetime object to an ISO 8601 formatted string."""
         if timespec == "milliseconds":

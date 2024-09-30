@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from pydantic import BaseModel
@@ -74,9 +75,8 @@ class AgentPromptModule(BasePromptModule):
         return """
         **REMINDER:**
 
-        It has been a while since the user has sent you a message.
         Ensure that you build a message that is not necessarily just a continuation of the previous message.
-        Try to strike up a new conversation.
+        Try to strike up a new conversation. Maybe ask about a previous conversation, or add something new about yourself.
         """
 
     def build_prompt(
@@ -85,14 +85,21 @@ class AgentPromptModule(BasePromptModule):
         relevant_memories: str | None = None,
         roleplay: str | None = None,
         proactive_prompt: bool | None = False,
+        last_user_message_time: datetime | None = None,
+        last_agent_message_time: datetime | None = None,
     ) -> str:
+
         self._load_agent_data()
 
         prompt = [
             self._build_role(),
             self._build_rules(),
             self._build_moods(),
-            self._build_metadata(relevant_memories=relevant_memories),
+            self._build_metadata(
+                last_agent_message_time=last_agent_message_time,
+                last_user_message_time=last_user_message_time,
+                relevant_memories=relevant_memories,
+            ),
             # self._build_chat_history(chat_history),
             self._build_roleplay(roleplay),
             self._build_return_hint(),

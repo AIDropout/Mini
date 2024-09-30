@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -6,7 +7,6 @@ from pydantic import BaseModel, Field
 from mini.agent.modules.base import AgentModule
 from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
-from mini.database.models import Agent, Room, User
 from mini.utils.time import TimeManager
 
 
@@ -73,7 +73,26 @@ class BasePromptModule(AgentModule):
         {chat_history_str}
         """
 
-    def _build_metadata(self, relevant_memories: str | None = None) -> str:
+    def _build_metadata(
+        self,
+        last_user_message_time: datetime | None = None,
+        last_agent_message_time: datetime | None = None,
+        relevant_memories: str | None = None,
+    ) -> str:
+        now = self.time_manager.get_user_datetime()
+        since_agent_msg = None
+        since_user_msg = None
+
+        if last_user_message_time:
+            since_user_msg = self.time_manager.timedelta_to_description(
+                now - last_user_message_time
+            )
+
+        if last_agent_message_time:
+            since_agent_msg = self.time_manager.timedelta_to_description(
+                now - last_agent_message_time
+            )
+
         memories = (
             f"\n- Here are relevant memories: \n{relevant_memories}"
             if relevant_memories
@@ -83,7 +102,9 @@ class BasePromptModule(AgentModule):
         return f"""
         **METADATA:**
 
-        - Time: {self.time_manager.current_readable_time()}{memories}
+        - Currnet time: {self.time_manager.current_readable_time()}
+        - User last messaged you at: {since_user_msg} ago
+        - You last messaged user at: {since_agent_msg} ago{memories}
         """
 
     def _build_return_hint(self) -> str:

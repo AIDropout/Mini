@@ -93,6 +93,8 @@ class AgentService:
             chat_history=[],
             roleplay=roleplay_response,
             proactive_prompt=isinstance(task, ProactiveTask),
+            last_agent_message_time=task.context.room.agent_last_msg_sent_at,
+            last_user_message_time=task.context.room.last_msg_sent_at,
         )
         el.log(f"SYSTEM PROMPT FOR AGENT: {agent_system_prompt}")
 
