@@ -138,12 +138,12 @@ class MessageSenderModule(AgentModule):
         )
 
     def _handle_successful_send(self, final_message: str):
-        self._add_message_to_db(final_message)
-        self._log_to_discord(final_message)
+        message = self._add_message_to_db(final_message)
+        self._log_to_discord(final_message, message.id)
         self._update_room_last_message_time()
 
     def _add_message_to_db(self, final_message: str):
-        self.database_manager.insert(
+        message = self.database_manager.insert(
             Tables.MESSAGES,
             Message(
                 room_id=self.context.room.id,
@@ -152,11 +152,12 @@ class MessageSenderModule(AgentModule):
                 log=el.get_logs(),
             ),
         )
+        return message
 
-    def _log_to_discord(self, final_message: str):
+    def _log_to_discord(self, final_message: str, message_id: str):
         if config.ENVIRONMENT == "production":
             discord_manager.log_message(
-                message=f"-# {self.context.agent.name} -> {self.context.user.phone_number}: {final_message}",
+                message=f"-# {self.context.agent.name} -> {self.context.user.phone_number}: {final_message} ({message_id})",
             )
 
     def _update_room_last_message_time(self):
