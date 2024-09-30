@@ -9,7 +9,7 @@ from mini.database.tables.agent_service import AgentTableService
 from mini.database.tables.job_service import JobTableService
 from mini.database.tables.room_service import RoomTableService
 from mini.database.tables.user_service import UserTableService
-from mini.database.tables.subscriptions_service import SubscriptionTableService
+from mini.database.tables.subscription_service import SubscriptionTableService
 from mini.llm import LLMService, Model
 from mini.messaging.paywall import PaywallService
 from mini.messaging.providers.bird.verification.service import VerifyService
@@ -74,6 +74,9 @@ class Container:
     def subscription_table_service(self):
         return SubscriptionTableService(
             database_manager=self.database_manager,
+            customer_manager=self.customer_manager,
+            user_table_service=self.user_table_service,
+            agent_table_service=self.agent_table_service,
         )
 
     # --- Other services: ---

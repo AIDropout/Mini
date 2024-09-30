@@ -3,7 +3,7 @@ import stripe
 from config.config import config
 from mini.core.logger import get_logger
 from mini.database.models import Tables
-from mini.database.tables.subscriptions_service import SubscriptionTableService
+from mini.database.tables.subscription_service import SubscriptionTableService
 from mini.database.tables.user_service import UserTableService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.messaging.providers.discord import discord_manager

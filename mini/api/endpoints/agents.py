@@ -8,7 +8,6 @@ from mini.database.models import Agent
 from mini.database.tables.agent_service import AgentTableService
 
 router = APIRouter(
-    prefix="/agents",
     tags=["agents"],
 )
 logger = get_logger(__name__)
@@ -18,7 +17,7 @@ AgentTableServiceDep = Annotated[
 ]
 
 
-@router.get("/", response_model=List[Agent])
+@router.get("/agents", response_model=List[Agent])
 def get_agents(
     agent_service: AgentTableServiceDep,
     api_key: ApiKeyDep,
@@ -27,7 +26,7 @@ def get_agents(
     return agent_service.get_agents()
 
 
-@router.patch("/{agent_id}", response_model=Agent)
+@router.patch("/agents/{agent_id}", response_model=Agent)
 def update_agent(
     agent_id: Annotated[str, Path(..., title="The ID of the agent to update")],
     agent_update: Annotated[
