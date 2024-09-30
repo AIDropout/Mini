@@ -70,12 +70,12 @@ class LLMService:
         **kwargs,
     ) -> Union[str, Dict]:
         """Generate a response using the specified model."""
-        prepared_messages = [{"role": "system", "content": system_prompt}]
+        prepared_messages = self._prepare_messages(messages)
 
         if self.provider == Provider.ANTHROPIC:
-            # Anthropic has system prompt be sent separately
+            # Anthropic requires system prompt to be sent separately
             kwargs["system"] = system_prompt
-            # Anthropic requires first message to be of rule user
+            # Ensure first message is user content (Anthropic-specific requirement)
             if not prepared_messages or prepared_messages[0]["role"] != "user":
                 prepared_messages.insert(0, {"role": "user", "content": "-"})
         else:
