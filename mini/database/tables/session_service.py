@@ -31,11 +31,13 @@ class SessionTableService:
         Returns active session, or a new one if no active session
         - This + "update_active_session" is called when a user or agent sends a message
         """
-        return self.get_active_session(room_id) or self.start_session(room_id)
+        return self._get_active_session(room_id) or self._start_session(room_id)
 
-    def get_active_session(self, room_id: str) -> Session:
+    def _get_active_session(self, room_id: str) -> Session:
         """
         Get latest active session
+
+        TODO: change to when last_updated is most recent
         """
         return self.database_manager.get_row(
             table_name=Tables.SESSIONS,
@@ -45,7 +47,7 @@ class SessionTableService:
             },
         )
 
-    def start_session(self, room_id: str) -> Session:
+    def _start_session(self, room_id: str) -> Session:
         """
         Starts a session.
         """
@@ -54,6 +56,7 @@ class SessionTableService:
     def update_active_session(self, session: Session) -> Session:
         """
         Increment session message count and update last msg timestamp
+        - Called when a message is sent
         """
         timestamp = self.system_time_manager.get_user_datetime()
         return self.database_manager.update(

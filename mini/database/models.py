@@ -186,7 +186,6 @@ class Room(BaseModel):
 class Message(BaseModel):
     id: str = Field(default_factory=generate_uuid)
     sender_id: str
-    receiver_id: str
     room_id: str
     created_at: datetime = Field(default_factory=utc_now)
     content: str = Field(default=None)

@@ -142,6 +142,7 @@ class DevConfig(BaseSettings):
     enable_response_delay: bool
     enable_celery_beat: bool
     bird_dev_channel_id: str
+    agent_id: str
 
 
 class BirdConfig(BaseSettings):

@@ -4,7 +4,9 @@ from typing import Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
 
+from config.config import config
 from mini.core.enums import MessageTaskType, MessagingProviderType
+from mini.core.logger import get_logger, logger
 from mini.core.models.context import Context
 from mini.core.models.message import MiniMessage
 from mini.core.models.message_tasks import ProactiveTask, ResponseTask
@@ -16,6 +18,8 @@ from mini.messaging.providers import MessagingProvider, messaging_providers
 from mini.messaging.providers.bird import BirdMessaging
 from mini.messaging.providers.instagram import InstagramMessaging
 from mini.utils.time import TimeManager
+
+logger = get_logger(__name__)
 
 
 class MessageTaskFactory:
@@ -198,10 +202,17 @@ class MessageTaskFactory:
             Tables.USERS,
             conditions={user_id_col: message.metadata.receiver_id},
         )
-        agent = self.database_manager.get_row(
-            Tables.AGENTS,
-            conditions={agent_id_col: message.metadata.sender_id},
-        )
+        if config.is_local():
+            # If is local, get agent by agent_id from config instead
+            agent = self.database_manager.get_row(
+                Tables.AGENTS,
+                conditions={Tables.AGENTS__id: config.DEV_CONFIG.agent_id},
+            )
+        else:
+            agent = self.database_manager.get_row(
+                Tables.AGENTS,
+                conditions={agent_id_col: message.metadata.sender_id},
+            )
 
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
