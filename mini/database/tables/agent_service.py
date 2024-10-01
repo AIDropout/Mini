@@ -39,24 +39,7 @@ class AgentTableService:
         if not agents:
             raise HTTPException(status_code=404, detail="Agents not found")
 
-        # Filter out agents with specific channel IDs
-        excluded_channel_ids = [
-            config.PHONE_OTP_CHANNEL_ID,
-            "946f4f9d-21c0-495e-b59d-5f3704deb11b",
-            "5a075672-763c-51df-aba6-82eecdceab72",
-        ]
-        filtered_agents = [
-            agent
-            for agent in agents
-            if agent.bird_channel_id not in excluded_channel_ids
-        ]
-
-        if not filtered_agents:
-            raise HTTPException(
-                status_code=404, detail="No valid agents found after filtering"
-            )
-
-        return filtered_agents
+        return agents
 
     def update_agent(self, agent_id: str, update_data: Dict[str, Any]) -> Agent:
         existing_agent = self.database_manager.get_row(
