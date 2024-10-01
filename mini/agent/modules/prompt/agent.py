@@ -1,16 +1,17 @@
-from datetime import datetime
-from typing import List
+from typing import Union
 
 from pydantic import BaseModel
 
-from mini.agent.modules.prompt.base import BasePromptModule, ChatMessage
+from mini.agent.modules.prompt.base import BasePromptModule
+from mini.agent.modules.prompt.prompts import AGENT_PROMPT
 from mini.core.models.context import Context
+from mini.core.models.message_tasks import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
 from mini.utils.time import TimeManager
 
 
 class ResponseFormat(BaseModel):
-    best_response: str
+    response: str
 
 
 class AgentPromptModule(BasePromptModule):
@@ -21,91 +22,38 @@ class AgentPromptModule(BasePromptModule):
         time_manager: TimeManager,
     ) -> None:
         super().__init__(database_manager, context, time_manager)
-        self._role = context.agent.prompt_role
-        self._rules = context.agent.prompt_rules
-        self._moods = context.agent.prompt_moods
-        self._return_hint = {}
+        self._return_hint = ResponseFormat(
+            response="insert your message here",
+        ).model_dump()
 
     @property
     def response_format(self):
         return ResponseFormat
 
-    def _load_agent_data(self) -> None:
-        response_format = ResponseFormat(
-            best_response="insert your best response here, be creative, move the conversation forward, be natural",
+    def _build_agent_prompt(self) -> str:
+        return AGENT_PROMPT.format(
+            role=self._role, rules=self._rules, actions=self._actions
         )
-
-        self._return_hint = response_format.model_dump()
-
-    def _build_role(self) -> str:
-        return self._role
-
-    def _build_rules(self) -> str:
-        rules = "\n".join([f"- {rule}" for rule in self._rules])
-        return f"""
-        **RULES:**
-
-        Keep the following in mind:
-        {rules}
-        """
-
-    def _build_moods(self) -> str:
-        moods = "\n".join(self._moods)
-        return f"""
-        **MOODS:**
-
-        Here is a list of moods you can be in:
-        {moods}
-        """
-
-    def _build_roleplay(self, roleplay: str | None) -> str:
-        if roleplay is None:
-            return ""
-
-        return f"""
-        **ROLEPLAY:**
-
-        Here is the current roleplay:
-        {roleplay}
-
-        - ensure to move the roleplay forward.
-        """
-
-    def _build_proactive_prompt(self) -> str:
-        return """
-        **REMINDER:**
-
-        Ensure that you build a message that is not necessarily just a continuation of the previous message.
-        Try to strike up a new conversation. Maybe ask about a previous conversation, or add something new about yourself.
-        """
 
     def build_prompt(
         self,
-        chat_history: List[ChatMessage] | None = None,
+        task: Union[ResponseTask, ProactiveTask],
         relevant_memories: str | None = None,
-        roleplay: str | None = None,
-        proactive_prompt: bool | None = False,
-        last_user_message_time: datetime | None = None,
-        last_agent_message_time: datetime | None = None,
     ) -> str:
+        prompt = []
+        agent_prompt = self._build_agent_prompt()
+        metadata = self._build_metadata(
+            last_agent_message_time=task.context.room.agent_last_msg_sent_at,
+            last_user_message_time=task.context.room.last_msg_sent_at,
+        )
+        return_hint = self._build_return_hint()
+        instructions = self._build_additional_instructions(task.instructions)
 
-        self._load_agent_data()
-
-        prompt = [
-            self._build_role(),
-            self._build_rules(),
-            self._build_moods(),
-            self._build_metadata(
-                last_agent_message_time=last_agent_message_time,
-                last_user_message_time=last_user_message_time,
-                relevant_memories=relevant_memories,
-            ),
-            # self._build_chat_history(chat_history),
-            self._build_roleplay(roleplay),
-            self._build_return_hint(),
-        ]
-
-        if proactive_prompt:
-            prompt.append(self._build_proactive_prompt())
-
+        # NOTE: ORDER MATTERS IN PROMPTING
+        prompt.append(agent_prompt)
+        prompt.append(instructions)
+        prompt.append(metadata)
+        if relevant_memories:
+            prompt.append(self._build_memories(relevant_memories))
+        prompt.append(return_hint)
         return "\n\n".join(prompt)

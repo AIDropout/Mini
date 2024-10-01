@@ -17,14 +17,12 @@ class MessageTask(BaseTask):
 class ResponseTask(MessageTask):
     type: MessageTaskType = MessageTaskType.RESPONSE
     scheduled_for: datetime
-    instructions: str = "You are texting someone."  # TODO: implement in prompt builder
+    instructions: str = "You are replying to someone's message."
 
 
 class ProactiveTask(MessageTask):
     type: MessageTaskType = MessageTaskType.PROACTIVE
-    instructions: str = (
-        "You are reaching out."  # TODO: Add time context (ex: "you last texted them last night") and implement
-    )
+    instructions: str = "You are starting a conversation by reaching out."
 
 
 class RemindTask(MessageTask):

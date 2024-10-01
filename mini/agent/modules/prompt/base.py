@@ -1,20 +1,19 @@
 import json
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from mini.agent.modules.base import AgentModule
+from mini.agent.modules.prompt.prompts import (
+    ADDITIONAL_INSTRUCTIONS,
+    MEMORIES,
+    METADATA,
+    RETURN_HINT,
+)
 from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
 from mini.utils.time import TimeManager
-
-
-class ChatMessage(BaseModel):
-    role: str = Field(
-        ..., description="The role of the message sender (e.g., 'user', 'assistant')"
-    )
-    content: str = Field(..., description="The content of the message")
 
 
 class BasePromptModule(AgentModule):
@@ -28,14 +27,10 @@ class BasePromptModule(AgentModule):
         self.time_manager = time_manager
         self._role = context.agent.prompt_role
         self._rules = context.agent.prompt_rules
-        self._moods = context.agent.prompt_moods
+        self._actions = context.agent.prompt_actions
         self._return_hint = {}
 
-    def build_prompt(
-        self,
-        chat_history: Optional[List[ChatMessage]] = None,
-        relevant_memories: Optional[str] = None,
-    ) -> str:
+    def build_prompt(self) -> str:
         raise NotImplementedError("Subclasses must implement build_prompt")
 
     @property
@@ -43,45 +38,20 @@ class BasePromptModule(AgentModule):
         """The response format of the prompt module."""
         raise NotImplementedError("Subclasses must implement response_format")
 
-    def _prepare_messages(self, chat_history: List[ChatMessage]) -> List[ChatMessage]:
-        """Prepare messages by combining consecutive user messages."""
-        prepared: List[ChatMessage] = []
-        for msg in chat_history:
-            if msg.role == "assistant":
-                msg.role = self.context.agent.name
-            if prepared and prepared[-1].role == msg.role == "user":
-                prepared[-1].content += f" | {msg.content}"
-            else:
-                prepared.append(msg)
-        if prepared and prepared[-1].role == "assistant":
-            prepared.append(ChatMessage(role="user", content="[ignore]"))
-        return prepared
-
-    def _build_chat_history(self, chat_history: Optional[List[ChatMessage]]) -> str:
-        if chat_history is None:
-            return ""
-
-        prepared_history = self._prepare_messages(chat_history)
-        chat_history_str = "\n".join(
-            [f"{msg.role}: {msg.content}" for msg in prepared_history]
-        )
-
-        return f"""
-        **CHAT HISTORY:**
-        
-        You must respond to the following chat history:
-        {chat_history_str}
-        """
+    def _build_memories(
+        self,
+        relevant_memories: str | None = None,
+    ) -> str:
+        return MEMORIES.format(memories=relevant_memories or "")
 
     def _build_metadata(
         self,
         last_user_message_time: datetime | None = None,
         last_agent_message_time: datetime | None = None,
-        relevant_memories: str | None = None,
     ) -> str:
-        now = self.time_manager.get_user_datetime()
-        since_agent_msg = None
         since_user_msg = None
+        since_agent_msg = None
+        now = self.time_manager.get_user_datetime()
 
         if last_user_message_time:
             since_user_msg = self.time_manager.timedelta_to_description(
@@ -93,31 +63,16 @@ class BasePromptModule(AgentModule):
                 now - last_agent_message_time
             )
 
-        memories = (
-            f"\n- Here are relevant memories: \n{relevant_memories}"
-            if relevant_memories
-            else ""
+        return METADATA.format(
+            current_time=self.time_manager.current_readable_time(),
+            since_user_msg=since_user_msg or "irrelevant",
+            since_agent_msg=since_agent_msg or "irrelevant",
         )
 
-        return f"""
-        **METADATA:**
-
-        - Currnet time: {self.time_manager.current_readable_time()}
-        - User last messaged you at: {since_user_msg} ago
-        - You last messaged user at: {since_agent_msg} ago{memories}
-        """
+    def _build_additional_instructions(self, additional_instructions: str) -> str:
+        return ADDITIONAL_INSTRUCTIONS.format(
+            additional_instructions=additional_instructions
+        )
 
     def _build_return_hint(self) -> str:
-        return f"""
-        **IMPORTANT: JSON-ONLY RESPONSE REQUIRED**
-
-        You must **only** respond in the exact JSON format as shown below, with no additional text, comments, symbols,or explanations.
-        Any non-JSON content will be considered invalid.
-
-        No matter how critical or important your response is, it must be in JSON format.
-
-        JSON schema to follow:
-        {json.dumps(self._return_hint, indent=2)}
-
-        Ensure your response conforms strictly to this schema.
-        """
+        return RETURN_HINT.format(json_schema=json.dumps(self._return_hint, indent=2))

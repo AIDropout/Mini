@@ -5,7 +5,7 @@ from mini.agent.modules.filter.filter import IntentConfig, MessageFilterModule
 from mini.agent.modules.memory import MemoryManager
 from mini.agent.modules.memory.service import MemoryModule
 from mini.agent.modules.proactive import ScheduleDispatch
-from mini.agent.modules.prompt import AgentPromptModule, RoleplayPromptModule
+from mini.agent.modules.prompt import AgentPromptModule
 from mini.agent.modules.sender import MessageSenderModule
 from mini.core.enums import ConfidenceLevel
 from mini.core.models.context import Context
@@ -59,11 +59,6 @@ def build_agent(config: Config, context: Context) -> AgentService:
             ),
         ),
         agent_prompt_module=AgentPromptModule(
-            database_manager=database_manager,
-            context=context,
-            time_manager=user_time_manager,
-        ),
-        role_prompt_module=RoleplayPromptModule(
             database_manager=database_manager,
             context=context,
             time_manager=user_time_manager,
