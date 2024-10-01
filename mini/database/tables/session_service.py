@@ -14,6 +14,10 @@ logger = get_logger(__name__)
 
 
 class SessionTableService:
+    """
+    Service Class that interacts with the Sessions Table.
+    """
+
     def __init__(
         self,
         database_manager: DatabaseManager,
@@ -25,6 +29,7 @@ class SessionTableService:
     def get_or_start_active_session(self, room_id: str) -> Session:
         """
         Returns active session, or a new one if no active session
+        - This + "update_active_session" is called when a user or agent sends a message
         """
         return self.get_active_session(room_id) or self.start_session(room_id)
 
@@ -46,11 +51,10 @@ class SessionTableService:
         """
         return self.database_manager.insert(Tables.SESSIONS, Session(room_id=room_id))
 
-    def update_active_session(self, room_id: str) -> Session:
+    def update_active_session(self, session: Session) -> Session:
         """
         Increment session message count and update last msg timestamp
         """
-        session = self.get_active_session(room_id)
         timestamp = self.system_time_manager.get_user_datetime()
         return self.database_manager.update(
             table_name=Tables.SESSIONS,
@@ -62,7 +66,36 @@ class SessionTableService:
             condition_value=session.id,
         )
     
-    def end_session(self, session_id: str):
+    def get_recent_processed_sessions(self, count: int) -> Optional[List[Session]]:
+        """
+        Returns list of most recently processed Session objects
+        - Called before a message is to be generated
+        """
+        pass
+    
+    """The following are methods run by cron:"""
+
+    def process_stale_sessions(self) -> bool:
+        """
+        Called by Beat every x minutes
+        """
+        sessions = self._get_stale_sessions()
+
+        for session in sessions:
+            self._end_session(session.id)
+            # TODO: add Celery task to process session (i.e. process memory, user preferences)
+            self._mark_session_processed(session.id)
+
+    def _get_stale_sessions(self) -> List[Session]:
+        """
+        Define criteria here:
+
+        - At least 20 messages have been sent
+        - AND 12 hours have passed since active session was last updated
+        """
+        pass
+
+    def _end_session(self, session_id: str):
         """
         Updates the ended_at field
         """
@@ -71,6 +104,19 @@ class SessionTableService:
             table_name=Tables.SESSIONS,
             update_data={
                 Tables.SESSIONS__ended_at: timestamp,
+            },
+            condition_key=Tables.SESSIONS__id,
+            condition_value=session_id,
+        )
+
+    def _mark_session_processed(self, session_id) -> Session:
+        """
+        Updates "processed" field to True
+        """
+        self.database_manager.update(
+            table_name=Tables.SESSIONS,
+            update_data={
+                Tables.SESSIONS__processed: True,
             },
             condition_key=Tables.SESSIONS__id,
             condition_value=session_id,
