@@ -128,7 +128,10 @@ class MessageTaskFactory:
         if isinstance(messaging_provider, BirdMessaging):
 
             messaging_provider.set_receiver(context.user.phone_number)
-            messaging_provider.set_sender(context.agent.bird_channel_id)
+            if config.is_local():
+                messaging_provider.set_sender(config.DEV_CONFIG.bird_dev_channel_id)
+            else:
+                messaging_provider.set_sender(context.agent.bird_channel_id)
 
         elif isinstance(messaging_provider, InstagramMessaging):
 
