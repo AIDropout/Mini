@@ -1,7 +1,7 @@
 import json
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -27,7 +27,7 @@ class Tables(str, Enum):
     AGENTS__image_url = "image_url"
     AGENTS__prompt_role = "prompt_role"
     AGENTS__prompt_rules = "prompt_rules"
-    AGENTS__prompt_moods = "prompt_moods"
+    AGENTS__prompt_actions = "prompt_actions"
     AGENTS__room_count = "room_count"
 
     CHANNELS = "channels"
@@ -120,7 +120,7 @@ class Agent(BaseModel):
     image_url: Optional[str]
     prompt_role: str
     prompt_rules: List[str]
-    prompt_moods: List[str]
+    prompt_actions: List[str]
     room_count: Optional[int]
 
 
