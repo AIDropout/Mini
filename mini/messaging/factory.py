@@ -37,7 +37,6 @@ class MessageTaskFactory:
         self.system_time_manager = system_time_manager
         self.message_table_service = message_table_service
 
-
     def _get_recent_messages(
         self, context: Context, count: int = 20
     ) -> List[Dict[str, str]]:
@@ -128,10 +127,12 @@ class MessageTaskFactory:
         if isinstance(messaging_provider, BirdMessaging):
 
             messaging_provider.set_receiver(context.user.phone_number)
-            if config.is_local():
-                messaging_provider.set_sender(config.DEV_CONFIG.bird_dev_channel_id)
-            else:
-                messaging_provider.set_sender(context.agent.bird_channel_id)
+            sender_id = (
+                config.DEV_CONFIG.bird_dev_channel_id
+                if config.is_local()
+                else context.agent.bird_channel_id
+            )
+            messaging_provider.set_sender(sender_id)
 
         elif isinstance(messaging_provider, InstagramMessaging):
 
@@ -168,7 +169,7 @@ class MessageTaskFactory:
                     if message.provider == MessagingProviderType.BIRD
                     else None
                 ),
-                background_tasks=None
+                background_tasks=None,
             )
 
         room = self._get_or_create_room(user, agent)
