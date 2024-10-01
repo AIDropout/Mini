@@ -161,6 +161,7 @@ class MessageTaskFactory:
                     if message.provider == MessagingProviderType.BIRD
                     else None
                 ),
+                background_tasks=None
             )
 
         room = self._get_or_create_room(user, agent)

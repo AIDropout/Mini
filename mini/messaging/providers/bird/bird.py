@@ -7,6 +7,7 @@ import requests
 
 from config.config import config
 from mini.core.logger import get_logger, logger
+from mini.database.models import Message
 from mini.core.models.message import (
     MessageType,
     MiniMessage,

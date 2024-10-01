@@ -95,3 +95,13 @@ class CrossedMessageLimitError(Exception):
         super().__init__(
             f"User in room {room_id} has crossed the msg limit & isn't subscribed. Canceling."
         )
+
+class StopKeywordError(Exception):
+    def __init__(self, room_id: str):
+        super().__init__(
+            f"User in room {room_id} has sent a STOP keyword. Canceling."
+        )
+
+class AdminResetPhraseError(Exception):
+    """Raised when admin sends secret phrase"""
+    pass

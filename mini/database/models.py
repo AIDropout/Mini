@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
-from mini.core.enums import JobStatus, MessageTaskType
+from mini.core.enums import JobStatus, MessageTaskType, MessagingProviderType
 from mini.utils.utils import generate_uuid, utc_now
 
 
@@ -63,6 +63,7 @@ class Tables(str, Enum):
     MESSAGES = "messages"
     MESSAGES__id = "id"
     MESSAGES__sender_id = "sender_id"
+    MESSAGES__receiver_id = "receiver_d"
     MESSAGES__room_id = "room_id"
     MESSAGES__created_at = "created_at"
     MESSAGES__content = "content"
@@ -171,6 +172,7 @@ class Room(BaseModel):
 class Message(BaseModel):
     id: str = Field(default_factory=generate_uuid)
     sender_id: str
+    receiver_id: str
     room_id: str
     created_at: datetime = Field(default_factory=utc_now)
     content: str = Field(default=None)
@@ -205,7 +207,7 @@ class Job(BaseModel):
     status: str = Field(default=JobStatus.SCHEDULED.value)
     log: Optional[str]
     is_local: bool = Field(default=False)
-    messaging_provider: str
+    messaging_provider: str = Field(default=MessagingProviderType.BIRD.value)
 
 
 class IGAccounts(BaseModel):

@@ -108,6 +108,7 @@ class Container:
         return MessagingService(
             database_manager=self.database_manager,
             user_table_service=self.user_table_service,
+            room_table_service=self.room_table_service,
             system_time_manager=self.system_time_manager,
             message_table_service=self.message_table_service,
             message_task_factory=self.message_task_factory,

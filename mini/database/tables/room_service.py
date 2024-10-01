@@ -127,3 +127,11 @@ class RoomTableService:
                 Tables.MESSAGES__sender_id: sender_id,
             },
         )
+    
+    def update_room_last_sent(self, room_id: str, timestamp: str) -> Room:
+        return self.database_manager.update(
+            Tables.ROOMS,
+            {Tables.ROOMS__last_msg_sent_at: timestamp},
+            condition_key=Tables.ROOMS__id,
+            condition_value=room_id,
+        )

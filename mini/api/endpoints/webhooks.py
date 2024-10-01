@@ -37,7 +37,7 @@ async def bird_inbound_webhook(
 ):
     """Endpoint hit by incoming user messages."""
     messaging_service.handle_incoming_message(
-        MessagingProviderType.INSTAGRAM, request.model_dump(), background_tasks
+        MessagingProviderType.BIRD, request.model_dump(), background_tasks
     )
     return {"status": "Success"}
 
