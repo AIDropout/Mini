@@ -4,7 +4,7 @@ from celery.exceptions import Ignore as Canceled
 from config.config import config
 from config.container import container
 from mini.core.logger import get_logger
-from mini.core.models.message import MessagingProviderType
+from mini.core.enums import MessagingProviderType
 from mini.messaging.providers.discord import discord_manager
 from mini.core.enums import MessageTaskType
 from mini.agent.build_agent import build_agent

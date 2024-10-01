@@ -1,7 +1,7 @@
 from typing import Dict
 from typing import Union
 
-from mini.core.models.message import MessagingProviderType
+from mini.core.enums import MessagingProviderType
 from mini.messaging.providers.bird import BirdMessaging
 from mini.messaging.providers.instagram import InstagramMessaging
 

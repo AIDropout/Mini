@@ -5,7 +5,7 @@ from config.config import config
 from config.container import container
 from mini.core.enums import JobStatus
 from mini.core.logger import get_logger
-from mini.core.models.message import MessagingProviderType
+from mini.core.enums import MessagingProviderType
 from mini.messaging.send_message.send_message import send_message
 from mini.server.celery.celery import app
 

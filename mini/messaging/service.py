@@ -5,10 +5,10 @@ from typing import Dict, List, Optional, Tuple
 from fastapi import HTTPException
 
 from config.config import config
-from mini.core.enums import MessageTaskType
+from mini.core.enums import MessageTaskType, MessagingProviderType
 from mini.core.exceptions import RoomDisabledByAdminError
 from mini.core.models.context import Context
-from mini.core.models.message import MessagingProviderType, MiniMessage
+from mini.core.models.message import MiniMessage
 from mini.core.models.message_tasks import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Message, Room, Tables, User

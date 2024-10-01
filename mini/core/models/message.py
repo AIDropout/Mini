@@ -1,13 +1,8 @@
 from enum import Enum
 from typing import List
-
 from pydantic import BaseModel, Field
 
-
-class MessagingProviderType(Enum):
-    TELEGRAM = "telegram"
-    BIRD = "bird"
-    INSTAGRAM = "instagram"
+from mini.core.enums import MessagingProviderType
 
 
 class MessageType(Enum):

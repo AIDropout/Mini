@@ -1,16 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends
 
 from config.container import container
 from mini.api.security import ApiKeyDep
 from mini.core.logger import get_logger
-from mini.core.models.message import MessagingProviderType
 from mini.database.models import Room
 from mini.database.tables.room_service import RoomTableService
-from mini.messaging.send_message.send_message import send_message
-from mini.core.enums import MessageTaskType
-from mini.server.celery.celery import app
 
 
 RoomTableServiceDep = Annotated[

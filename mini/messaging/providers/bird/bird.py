@@ -9,10 +9,11 @@ from config.config import config
 from mini.core.logger import get_logger, logger
 from mini.core.models.message import (
     MessageType,
-    MessagingProviderType,
     MiniMessage,
     MiniMessageMetadata,
 )
+from mini.core.enums import MessagingProviderType
+
 from mini.messaging.providers.base import ProviderBase
 from mini.messaging.providers.bird.models import (
     BirdRequest,

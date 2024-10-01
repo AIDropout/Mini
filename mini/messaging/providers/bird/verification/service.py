@@ -2,7 +2,7 @@ from fastapi import HTTPException
 
 from config.config import config
 from mini.core.logger import get_logger
-from mini.core.models.message import MessagingProviderType
+from mini.core.enums import MessagingProviderType
 from mini.messaging.providers.bird.verification.models import (
     ResendVerificationRequest,
     ResendVerificationResponse,

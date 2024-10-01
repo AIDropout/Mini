@@ -10,11 +10,12 @@ import telegram
 from config.config import config
 from mini.core.logger import get_logger
 from mini.core.models.message import (
-    MessagingProviderType,
     MessageType,
     MiniMessageMetadata,
     MiniMessage,
 )
+from mini.core.enums import MessagingProviderType
+
 from mini.messaging.providers.base import ProviderBase
 from mini.messaging.providers.telegram.models import (
     TelegramMessage,

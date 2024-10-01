@@ -5,7 +5,7 @@ from mini.messaging.providers.instagram.models import InstagramWebhook, MessageE
 from mini.messaging.send_message.send_message import send_message
 from mini.core.enums import MessageTaskType
 from mini.messaging.service import MessagingService
-from mini.core.models.message import MessagingProviderType
+from mini.core.enums import MessagingProviderType
 from mini.database.database import DatabaseManager
 from mini.database.models import Tables
 
