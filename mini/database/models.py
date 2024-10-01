@@ -76,6 +76,20 @@ class Tables(str, Enum):
     SUBSCRIPTIONS__user_id = "user_id"
     SUBSCRIPTIONS__status = "status"
 
+    SESSIONS = "sessions"
+    SESSIONS__id = "id"
+    SESSIONS__room_id = "room_id"
+    SESSIONS__created_at = "created_at"
+    SESSIONS__ended_at = "ended_at"
+    SESSIONS__processed = "processed"
+    SESSIONS__message_count = "message_count"
+    SESSIONS__last_updated = "last_updated"
+    
+    # Processing includes:
+    # - Storing user preferences 
+    # - Memory updating/summarizing 
+    # - Potential additional columns: summary
+
     JOBS = "jobs"
     JOBS__id = "id"
     JOBS__room_id = "room_id"
@@ -196,6 +210,14 @@ class Subscription(BaseModel):
     user_id: str
     status: str
 
+class Session(BaseModel):
+    id: str = Field(default_factory=generate_uuid)
+    room_id: str
+    created_at: datetime = Field(default_factory=utc_now)
+    ended_at: Optional[datetime] = Field(default=None)
+    processed: bool = Field(default=False)
+    message_count: int = Field(default=0)
+    last_updated: datetime = Field(default_factory=utc_now)
 
 class Job(BaseModel):
     id: str = Field(default_factory=generate_uuid)

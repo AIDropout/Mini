@@ -10,6 +10,7 @@ from mini.database.tables.job_service import JobTableService
 from mini.database.tables.room_service import RoomTableService
 from mini.database.tables.user_service import UserTableService
 from mini.database.tables.message_service import MessageTableService
+from mini.database.tables.session_service import SessionTableService
 from mini.database.tables.subscription_service import SubscriptionTableService
 from mini.llm import LLMService, Model
 from mini.messaging.paywall import PaywallService
@@ -61,6 +62,7 @@ class Container:
             customer_manager=self.customer_manager,
             user_table_service=self.user_table_service,
             agent_table_service=self.agent_table_service,
+            session_table_service=self.session_table_service,
         )
 
     @property
@@ -86,6 +88,14 @@ class Container:
     def message_table_service(self):
         return MessageTableService(
             database_manager=self.database_manager,
+        )
+
+    @property
+    @lru_cache()
+    def session_table_service(self):
+        return SessionTableService(
+            database_manager=self.database_manager,
+            system_time_manager=self.system_time_manager,
         )
 
     # --- Other services: ---

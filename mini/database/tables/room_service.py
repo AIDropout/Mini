@@ -9,6 +9,7 @@ from mini.messaging.providers.bird import BirdMessaging
 from mini.payment.stripe.customer import CustomerManager
 from mini.database.tables.user_service import UserTableService
 from mini.database.tables.agent_service import AgentTableService
+from mini.database.tables.session_service import SessionTableService
 
 logger = get_logger(__name__)
 
@@ -20,12 +21,14 @@ class RoomTableService:
         customer_manager: CustomerManager,
         user_table_service: UserTableService,
         agent_table_service: AgentTableService,
+        session_table_service: SessionTableService,
     ):
         self.database_manager = database_manager
         self.messaging_provider = BirdMessaging()
         self.customer_manager = customer_manager
         self.user_table_service = user_table_service
         self.agent_table_service = agent_table_service
+        self.session_table_service = session_table_service
 
     def create_room(self, agent_id: str, user_id: str) -> Room:
         """Creates a new room & sends the first message"""
@@ -82,6 +85,9 @@ class RoomTableService:
                 ),
             )
 
+            # Start a session
+            self.session_table_service.get_or_start_active_session(new_room.id)
+
             return new_room
 
         except Exception as e:
@@ -127,7 +133,7 @@ class RoomTableService:
                 Tables.MESSAGES__sender_id: sender_id,
             },
         )
-    
+
     def update_room_last_sent(self, room_id: str, timestamp: str) -> Room:
         return self.database_manager.update(
             Tables.ROOMS,
