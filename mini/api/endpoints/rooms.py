@@ -35,18 +35,3 @@ def create_room(
 ) -> Room:
     """Creates a room and sends the first message to the user"""
     return room_service.create_room(agent_id=agent_id, user_id=user_id)
-
-
-@router.post("/{room_id}/proactive")
-async def proactive_endpoint(
-    api_key: ApiKeyDep,
-    room_id: Annotated[str, Path(..., title="Room ID for proactive messaging")],
-):
-    logger.info(app.tasks)
-    """Endpoint for sending proactive messages."""
-    send_message.delay(
-        provider_name=MessagingProviderType.BIRD.value,
-        room_id=room_id,
-        type=MessageTaskType.PROACTIVE.value,
-    )
-    return {"status": "Success"}

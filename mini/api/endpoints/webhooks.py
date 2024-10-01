@@ -35,6 +35,8 @@ async def bird_inbound_webhook(request: BirdRequest, factory: FactoryDep):
     # Generate a random delay between 3 and 20 seconds
     delay = random.randint(3, 20)
 
+    # 1 in 20 chance that a message response gets scheduled for later.
+
     # Schedule the message sending with the random delay
     send_message.apply_async(
         kwargs={

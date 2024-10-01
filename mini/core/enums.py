@@ -23,3 +23,8 @@ class JobStatus(Enum):
     COMPLETE = "Complete"
     ERROR = "Error"
     CANCELLED = "Cancelled"
+
+class MessagingProviderType(Enum):
+    BIRD = "Bird"
+    INSTAGRAM = "Instagram"
+    TELEGRAM = "Telegram"
