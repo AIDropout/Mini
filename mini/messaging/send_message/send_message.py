@@ -12,7 +12,7 @@ from mini.messaging.send_message.cancellable import CancellableTask
 
 logger = get_logger(__name__)
 
-messaging_service = container.messaging_service
+messaging_service = container.message_task_factory
 paywall_service = container.paywall_service
 CancellableTask.init_redis(container.redis_manager)
 

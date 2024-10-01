@@ -1,25 +1,20 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 import json
 from mini.core.logger import get_logger
 from mini.messaging.providers.instagram.models import InstagramWebhook, MessageEvent
-from mini.messaging.send_message.send_message import send_message
-from mini.core.enums import MessageTaskType
 from mini.messaging.service import MessagingService
 from mini.core.enums import MessagingProviderType
-from mini.database.database import DatabaseManager
-from mini.database.models import Tables
 
 router = APIRouter()
 logger = get_logger(__name__)
 
 
 class InstagramWebhookService:
-    def __init__(self, factory: MessagingService):
-        self.factory = factory
+    def __init__(self, messaging_service: MessagingService):
+        self.messaging_service = messaging_service
 
     def handle_webhook(
-        self,
-        webhook: InstagramWebhook,
+        self, webhook: InstagramWebhook, background_tasks: BackgroundTasks
     ):
         logger.info(webhook)
         for entry in webhook.entry:
@@ -27,13 +22,10 @@ class InstagramWebhookService:
                 if event.message:
                     if event.message.is_echo:
                         return  # Don't process echo
-                    room_id = self.factory.process_and_store_incoming_message(
-                        MessagingProviderType.INSTAGRAM, event.model_dump()
-                    )
-                    send_message.delay(
-                        MessagingProviderType.INSTAGRAM.value,
-                        room_id,
-                        MessageTaskType.RESPONSE.value,
+                    self.messaging_service.handle_incoming_message(
+                        MessagingProviderType.INSTAGRAM,
+                        event.model_dump(),
+                        background_tasks,
                     )
                 elif event.read:
                     self._handle_read_receipt(event)

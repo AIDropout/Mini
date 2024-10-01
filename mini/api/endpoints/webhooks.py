@@ -1,51 +1,44 @@
 from typing import Annotated
 import random
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    BackgroundTasks,
+)
 
 from config.config import config
 from config.container import container
-from mini.core.enums import MessageTaskType, MessagingProviderType
+from mini.core.enums import MessagingProviderType
 from mini.core.logger import get_logger
-from mini.database.database import DatabaseManager
 from mini.messaging.providers.bird.models import BirdRequest
 from mini.messaging.providers.instagram.dependencies import validate_instagram_webhook
 from mini.messaging.providers.instagram.models import InstagramWebhook
 from mini.messaging.providers.instagram.webhook import InstagramWebhookService
-from mini.messaging.send_message.send_message import send_message
 from mini.messaging.service import MessagingService
-from mini.server.celery.celery import app
 
 router = APIRouter(
     prefix="/webhooks",
     tags=["webhooks"],
 )
 logger = get_logger(__name__)
-FactoryDep = Annotated[MessagingService, Depends(lambda: container.messaging_service)]
+MessagingServiceDep = Annotated[
+    MessagingService, Depends(lambda: container.messaging_service)
+]
 
 
 @router.post("/bird")
-async def bird_inbound_webhook(request: BirdRequest, factory: FactoryDep):
+async def bird_inbound_webhook(
+    request: BirdRequest,
+    messaging_service: MessagingServiceDep,
+    background_tasks: BackgroundTasks,
+):
     """Endpoint hit by incoming user messages."""
-    room_id = factory.process_and_store_incoming_message(
-        MessagingProviderType.BIRD, request.model_dump()
+    messaging_service.handle_incoming_message(
+        MessagingProviderType.INSTAGRAM, request.model_dump(), background_tasks
     )
-    logger.info(app.tasks)
-
-    # Generate a random delay between 3 and 20 seconds
-    delay = random.randint(3, 20)
-
-    # 1 in 20 chance that a message response gets scheduled for later.
-
-    # Schedule the message sending with the random delay
-    send_message.apply_async(
-        kwargs={
-            "provider_name": MessagingProviderType.BIRD.value,
-            "room_id": room_id,
-            "type": MessageTaskType.RESPONSE.value,
-        },
-        countdown=delay,
-    )
-
     return {"status": "Success"}
 
 
@@ -74,9 +67,10 @@ async def verify_instagram_webhook(request: Request):
 
 @router.post("/instagram")
 def handle_instagram_webhook(
-    factory: FactoryDep,
+    background_tasks: BackgroundTasks,
+    messaging_service: MessagingServiceDep,
     webhook: InstagramWebhook = Depends(validate_instagram_webhook),
 ):
     """Instagram events for any of our characters hit this endpoint"""
-    service = InstagramWebhookService(factory)
+    service = InstagramWebhookService(messaging_service, background_tasks)
     return service.handle_webhook(webhook)

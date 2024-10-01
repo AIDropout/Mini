@@ -9,11 +9,13 @@ from mini.database.tables.agent_service import AgentTableService
 from mini.database.tables.job_service import JobTableService
 from mini.database.tables.room_service import RoomTableService
 from mini.database.tables.user_service import UserTableService
+from mini.database.tables.message_service import MessageTableService
 from mini.database.tables.subscription_service import SubscriptionTableService
 from mini.llm import LLMService, Model
 from mini.messaging.paywall import PaywallService
 from mini.messaging.providers.bird.verification.service import VerifyService
 from mini.messaging.service import MessagingService
+from mini.messaging.factory import MessageTaskFactory
 from mini.payment.service import PaymentService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
 from mini.server.redis.redis import RedisManager
@@ -79,6 +81,13 @@ class Container:
             agent_table_service=self.agent_table_service,
         )
 
+    @property
+    @lru_cache()
+    def message_table_service(self):
+        return MessageTableService(
+            database_manager=self.database_manager,
+        )
+
     # --- Other services: ---
     @property
     @lru_cache
@@ -100,6 +109,18 @@ class Container:
             database_manager=self.database_manager,
             user_table_service=self.user_table_service,
             system_time_manager=self.system_time_manager,
+            message_table_service=self.message_table_service,
+            message_task_factory=self.message_task_factory,
+        )
+
+    @property
+    @lru_cache()
+    def message_task_factory(self):
+        return MessageTaskFactory(
+            database_manager=self.database_manager,
+            user_table_service=self.user_table_service,
+            system_time_manager=self.system_time_manager,
+            message_table_service=self.message_table_service,
         )
 
     @property
