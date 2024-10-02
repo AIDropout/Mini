@@ -37,7 +37,7 @@ class AgentService:
         self.message_sender.set_messaging_provider(task.messaging_provider)
         check_cancellation()
 
-        agent_response = self._generate_response(task, check_cancellation)
+        agent_response = self._generate_response(task)
         check_cancellation()
 
         self.message_sender.send_message(text=agent_response)
@@ -47,7 +47,6 @@ class AgentService:
     def _generate_response(
         self,
         task: Union[ResponseTask, ProactiveTask],
-        check_cancellation: Callable[[], None],
     ) -> str:
         el.log(f"RECENT MESSAGES PASSED TO AGENT: {task.recent_messages}")
 
@@ -63,7 +62,12 @@ class AgentService:
         )
         el.log(f"AGENT LLM RESPONSE: {agent_response_text}")
 
-        agent_response_json = json.loads(agent_response_text)
+        try:
+            agent_response_json = json.loads(agent_response_text)
+        except json.JSONDecodeError:
+            agent_response_json = {
+                "response": agent_response_text
+            }  # dangerous, hope filter figures this out if there are issues
         agent_response = self.agent_prompt.response_format(**agent_response_json)
         return self.filter.validate_message(
             task.recent_messages, agent_response.response
