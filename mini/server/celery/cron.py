@@ -1,11 +1,9 @@
-from celery import shared_task, chain, group
-from celery.exceptions import Ignore as Canceled
+from celery import chain, group, shared_task
 
 from config.config import config
 from config.container import container
-from mini.core.enums import JobStatus
+from mini.core.enums import JobStatus, MessagingProviderType
 from mini.core.logger import get_logger
-from mini.core.enums import MessagingProviderType
 from mini.messaging.send_message.send_message import send_message
 from mini.server.celery.celery import app
 
@@ -31,6 +29,7 @@ def run_jobs():
 
     # Execute all chain concurrently
     group(job_chains).apply_async()
+
 
 @shared_task
 def update_job_status(job_id: str, status: str):

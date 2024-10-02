@@ -12,8 +12,8 @@ from mini.core.models.message import MiniMessage
 from mini.core.models.message_tasks import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
 from mini.database.models import Agent, Message, Room, Tables, User
-from mini.database.tables.user_service import UserTableService
 from mini.database.tables.message_service import MessageTableService
+from mini.database.tables.user_service import UserTableService
 from mini.messaging.providers import MessagingProvider, messaging_providers
 from mini.messaging.providers.bird import BirdMessaging
 from mini.messaging.providers.instagram import InstagramMessaging
@@ -92,8 +92,6 @@ class MessageTaskFactory:
                 messaging_provider=messaging_provider,
                 recent_messages=recent_messages,
             )
-
-        pass
 
     def _get_context_from_room_id(self, room_id) -> Context:
         room = self.database_manager.get_row(
