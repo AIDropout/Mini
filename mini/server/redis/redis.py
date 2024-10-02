@@ -1,59 +1,57 @@
-from contextlib import contextmanager
-from time import time
-from typing import Any, Generator
+from typing import Any, Generator, List, Tuple
 from redis import ConnectionPool, Redis
+import json
+from time import time
 
 from config.config import config
 from mini.core.logger import get_logger
 
 logger = get_logger(__name__)
 
-
 class RedisManager:
     def __init__(self) -> None:
         self.pool = None
+        self.client = None
 
     def initialize(self) -> None:
         if self.pool is None:
             self.pool = ConnectionPool.from_url(config.REDIS_URL)
+            self.client = Redis(connection_pool=self.pool)
             logger.info("Redis pool initialized")
 
-    @contextmanager
-    def get_connection(self) -> Generator[Redis, None, None]:
-        if self.pool is None:
-            self.initialize()
-        client = Redis(connection_pool=self.pool)
-        try:
-            yield client
-        finally:
-            client.close()
-
     def close(self):
+        if self.client:
+            self.client.close()
         if self.pool:
             self.pool.disconnect()
             self.pool = None
+            self.client = None
             logger.info("Redis connection pool closed")
 
+    def _ensure_connection(self):
+        if self.client is None:
+            self.initialize()
+
     def set(self, key: str, value: Any) -> None:
-        """Set a key-value pair in Redis, with an optional expiry time in seconds."""
-        with self.get_connection() as client:
-            client.set(key, value)
+        """Set a key-value pair in Redis."""
+        self._ensure_connection()
+        self.client.set(key, value)
 
     def get(self, key: str) -> Any:
         """Get the value for a given key from Redis."""
-        with self.get_connection() as client:
-            return client.get(key)
+        self._ensure_connection()
+        return self.client.get(key)
 
     def delete(self, key: str) -> None:
         """Delete a key from Redis."""
-        with self.get_connection() as client:
-            client.delete(key)
+        self._ensure_connection()
+        self.client.delete(key)
 
     def scan_iter(self, match: str, count: int = 100) -> Generator[str, None, None]:
         """Scan Redis for keys matching a pattern."""
-        with self.get_connection() as client:
-            for key in client.scan_iter(match=match, count=count):
-                yield key.decode("utf-8")
+        self._ensure_connection()
+        for key in self.client.scan_iter(match=match, count=count):
+            yield key.decode("utf-8")
 
     def check_rate_limit(self, key: str, max_calls: int, period: int) -> bool:
         """
@@ -64,21 +62,43 @@ class RedisManager:
         :param period: Time period in seconds
         :return: True if rate limited, False otherwise
         """
-        with self.get_connection() as client:
-            current_time = int(time())
-            rate_limit_key = f"rate_limit:{key}"
+        self._ensure_connection()
+        current_time = int(time())
+        rate_limit_key = f"rate_limit:{key}"
 
-            pipe = client.pipeline()
-            pipe.zremrangebyscore(rate_limit_key, 0, current_time - period)
-            pipe.zcard(rate_limit_key)
-            pipe.zadd(rate_limit_key, {str(current_time): current_time})
-            pipe.expire(rate_limit_key, period)
-            _, call_count, _, _ = pipe.execute()
+        pipe = self.client.pipeline()
+        pipe.zremrangebyscore(rate_limit_key, 0, current_time - period)
+        pipe.zcard(rate_limit_key)
+        pipe.zadd(rate_limit_key, {str(current_time): current_time})
+        pipe.expire(rate_limit_key, period)
+        _, call_count, _, _ = pipe.execute()
 
-            return call_count >= max_calls
+        return call_count >= max_calls
 
-    def flush_all(self) -> None:
-        """Delete all keys from all databases in the Redis instance."""
-        with self.get_connection() as client:
-            client.flushall()
-            logger.warning("All keys in all Redis databases have been deleted")
+    def lpush(self, key: str, value: str) -> None:
+        """Push a value to the head of the list stored at key."""
+        self._ensure_connection()
+        self.client.lpush(key, value)
+
+    def ltrim(self, key: str, start: int, end: int) -> None:
+        """Trim a list so that it will contain only the specified range of elements."""
+        self._ensure_connection()
+        self.client.ltrim(key, start, end)
+
+    def lindex(self, key: str, index: int) -> bytes:
+        """Get an element from a list by its index."""
+        self._ensure_connection()
+        return self.client.lindex(key, index)
+
+    def lrem(self, key: str, count: int, value: Any) -> int:
+        """Remove elements from a list."""
+        self._ensure_connection()
+        return self.client.lrem(key, count, value)
+
+    def get_tasks(self, room_id: str) -> List[str]:
+        """
+        Retrieves all tasks for a room.
+        """
+        self._ensure_connection()
+        tasks = self.client.lrange(f"tasks:{room_id}", 0, -1)
+        return [task.decode('utf-8') for task in tasks]

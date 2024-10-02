@@ -73,10 +73,17 @@ class MessagingService:
         self.room_table_service.update_room_last_sent(context.room.id, timestamp)
 
         # Simulate human-like response time
-        delay = self._generate_response_delay()
+        delay = (
+            self._generate_response_delay()
+            if config.DEV_CONFIG.enable_response_delay
+            else 0
+        )
+        logger.info("-----")
+        logger.info(delay)
 
         # Celery task
         from mini.messaging.send_message.send_message import send_message
+
         logger.info(app.tasks)
         send_message.apply_async(
             kwargs={
@@ -93,7 +100,7 @@ class MessagingService:
         """
         if context.room.disabled_by_admin:
             raise RoomDisabledByAdminError(room_id=context.room.id)
-        if message.content == "STOP":  # TODO: handle other keywords
+        if message.content in ["STOP", "STOPALL"]:
             # TODO: cancel all scheduled jobs / make room disabled
             raise StopKeywordError(room_id=context.room.id)
         if config.ENVIRONMENT == "production":
