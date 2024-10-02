@@ -17,12 +17,14 @@ class MessageTask(BaseTask):
 class ResponseTask(MessageTask):
     type: MessageTaskType = MessageTaskType.RESPONSE
     scheduled_for: datetime
-    instructions: str = "You are replying to someone's message."
+    instructions: str = "Remember, you are replying to this person's iMessage."
 
 
 class ProactiveTask(MessageTask):
     type: MessageTaskType = MessageTaskType.PROACTIVE
-    instructions: str = "You are starting a conversation by reaching out."
+    instructions: str = (
+        "Remember, you are texting this person using iMessage, and you are starting a conversation by reaching out first in this instance."
+    )
 
 
 class RemindTask(MessageTask):
