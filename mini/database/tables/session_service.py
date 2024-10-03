@@ -77,7 +77,7 @@ class SessionTableService:
         pass
     
     """The following are methods run by cron:"""
-
+    
     def process_stale_sessions(self) -> bool:
         """
         Called by Beat every x minutes

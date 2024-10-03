@@ -28,14 +28,14 @@ class MessagingService:
         database_manager: DatabaseManager,
         user_table_service: UserTableService,
         room_table_service: RoomTableService,
-        system_time_manager: TimeManager,
+        session_table_service: SessionTableService,
         message_table_service: MessageTableService,
         message_task_factory: MessageTaskFactory,
     ) -> None:
         self.database_manager = database_manager
         self.user_table_service = user_table_service
         self.room_table_service = room_table_service
-        self.system_time_manager = system_time_manager
+        self.session_table_service = session_table_service
         self.message_table_service = message_table_service
         self.message_task_factory = message_task_factory
         self.messaging_provider = None
@@ -60,14 +60,15 @@ class MessagingService:
         if not self._handle_special_cases(context, message):
             return
 
-        # Insert message
+        # Update rooms, messages, & session table
         self.message_table_service.add_message(
-            context.room.id, context.user.id, message.content, session_id=context.session.id
+            context.room.id,
+            context.user.id,
+            message.content,
+            session_id=context.session.id,
         )
-
-        # Update rooms table
-        timestamp = self.system_time_manager.get_user_timestamp()
-        self.room_table_service.update_room_last_sent(context.room.id, timestamp)
+        self.room_table_service.update_room_last_sent(context.room.id)
+        self.session_table_service.update_active_session(context.session)
 
         # Simulate human-like response time
         delay = (

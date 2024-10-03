@@ -63,6 +63,7 @@ class Container:
             user_table_service=self.user_table_service,
             agent_table_service=self.agent_table_service,
             session_table_service=self.session_table_service,
+            system_time_manager=self.system_time_manager,
         )
 
     @property
@@ -119,7 +120,7 @@ class Container:
             database_manager=self.database_manager,
             user_table_service=self.user_table_service,
             room_table_service=self.room_table_service,
-            system_time_manager=self.system_time_manager,
+            session_table_service=self.session_table_service,
             message_table_service=self.message_table_service,
             message_task_factory=self.message_task_factory,
         )

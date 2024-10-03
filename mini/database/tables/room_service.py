@@ -10,6 +10,8 @@ from mini.payment.stripe.customer import CustomerManager
 from mini.database.tables.user_service import UserTableService
 from mini.database.tables.agent_service import AgentTableService
 from mini.database.tables.session_service import SessionTableService
+from mini.utils.time import TimeManager
+
 
 logger = get_logger(__name__)
 
@@ -22,6 +24,7 @@ class RoomTableService:
         user_table_service: UserTableService,
         agent_table_service: AgentTableService,
         session_table_service: SessionTableService,
+        system_time_manager: TimeManager,
     ):
         self.database_manager = database_manager
         self.messaging_provider = BirdMessaging()
@@ -29,6 +32,7 @@ class RoomTableService:
         self.user_table_service = user_table_service
         self.agent_table_service = agent_table_service
         self.session_table_service = session_table_service
+        self.system_time_manager = system_time_manager
 
     def create_room(self, agent_id: str, user_id: str) -> Room:
         """Creates a new room & sends the first message"""
@@ -70,7 +74,9 @@ class RoomTableService:
             )
 
             # Start a session
-            new_session = self.session_table_service.get_or_start_active_session(new_room.id)
+            new_session = self.session_table_service.get_or_start_active_session(
+                new_room.id
+            )
             # Log the initial message
             self.database_manager.insert(
                 table_name=Tables.MESSAGES,
@@ -81,7 +87,6 @@ class RoomTableService:
                     session_id=new_session.id,
                 ),
             )
-
 
             return new_room
 
@@ -129,7 +134,9 @@ class RoomTableService:
             },
         )
 
-    def update_room_last_sent(self, room_id: str, timestamp: str) -> Room:
+    def update_room_last_sent(self, room_id) -> Room:
+        timestamp = self.system_time_manager.get_user_datetime().isoformat()
+
         return self.database_manager.update(
             Tables.ROOMS,
             {Tables.ROOMS__last_msg_sent_at: timestamp},
