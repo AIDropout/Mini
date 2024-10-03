@@ -11,8 +11,9 @@ from mini.core.models.context import Context
 from mini.core.models.message import MiniMessage
 from mini.core.models.message_tasks import ProactiveTask, ResponseTask
 from mini.database.database import DatabaseManager
-from mini.database.models import Agent, Message, Room, Tables, User
+from mini.database.models import Agent, Message, Room, Tables, User, Session
 from mini.database.tables.message_service import MessageTableService
+from mini.database.tables.session_service import SessionTableService
 from mini.database.tables.user_service import UserTableService
 from mini.messaging.providers import MessagingProvider, messaging_providers
 from mini.messaging.providers.bird import BirdMessaging
@@ -31,11 +32,13 @@ class MessageTaskFactory:
         user_table_service: UserTableService,
         system_time_manager: TimeManager,
         message_table_service: MessageTableService,
+        session_table_service: SessionTableService,
     ) -> None:
         self.database_manager = database_manager
         self.user_table_service = user_table_service
         self.system_time_manager = system_time_manager
         self.message_table_service = message_table_service
+        self.session_table_service = session_table_service
 
     def _get_recent_messages(
         self, context: Context, count: int = 20
@@ -107,11 +110,9 @@ class MessageTaskFactory:
             Tables.AGENTS,
             conditions={Tables.AGENTS__id: room.agent_id},
         )
-        return Context(
-            user=user,
-            agent=agent,
-            room=room,
-        )
+        session = self.session_table_service.get_or_start_active_session(room.id)
+
+        return Context(user=user, agent=agent, room=room, session=session)
 
     def _get_messaging_provider_from_context(
         self, context: Context, provider_name: MessagingProviderType
@@ -171,11 +172,13 @@ class MessageTaskFactory:
             )
 
         room = self._get_or_create_room(user, agent)
+        session = self.session_table_service.get_or_start_active_session(room.id)
 
         return Context(
             user=user,
             agent=agent,
             room=room,
+            session=session
         )
 
     def _get_user_and_agent_from_db(

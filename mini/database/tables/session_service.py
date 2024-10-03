@@ -58,7 +58,7 @@ class SessionTableService:
         Increment session message count and update last msg timestamp
         - Called when a message is sent
         """
-        timestamp = self.system_time_manager.get_user_datetime()
+        timestamp = self.system_time_manager.get_user_datetime().isoformat()
         return self.database_manager.update(
             table_name=Tables.SESSIONS,
             update_data={
@@ -102,7 +102,7 @@ class SessionTableService:
         """
         Updates the ended_at field
         """
-        timestamp = self.system_time_manager.get_user_datetime()
+        timestamp = self.system_time_manager.get_user_datetime().isoformat()
         self.database_manager.update(
             table_name=Tables.SESSIONS,
             update_data={

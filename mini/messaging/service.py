@@ -11,6 +11,7 @@ from mini.database.database import DatabaseManager
 from mini.database.tables.user_service import UserTableService
 from mini.database.tables.room_service import RoomTableService
 from mini.database.tables.message_service import MessageTableService
+from mini.database.tables.session_service import SessionTableService
 from mini.messaging.factory import MessageTaskFactory
 from mini.messaging.providers import messaging_providers
 from mini.messaging.providers.discord import discord_manager
@@ -61,7 +62,7 @@ class MessagingService:
 
         # Insert message
         self.message_table_service.add_message(
-            context.room.id, context.user.id, message.content
+            context.room.id, context.user.id, message.content, session_id=context.session.id
         )
 
         # Update rooms table

@@ -27,12 +27,13 @@ class MessageTableService:
         # self.user_table_service = user_table_service
         # self.agent_table_service = agent_table_service
 
-    def add_message(self, room_id: str, sender_id: str, content: str) -> None:
+    def add_message(self, room_id: str, sender_id: str, content: str, session_id: str) -> None:
         self.database_manager.insert(
             table_name=Tables.MESSAGES,
             item=Message(
                 room_id=room_id,
                 sender_id=sender_id,
                 content=content,
+                session_id=session_id
             ),
         )

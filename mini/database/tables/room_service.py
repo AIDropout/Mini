@@ -69,6 +69,8 @@ class RoomTableService:
                 condition_value=agent_id,
             )
 
+            # Start a session
+            new_session = self.session_table_service.get_or_start_active_session(new_room.id)
             # Log the initial message
             self.database_manager.insert(
                 table_name=Tables.MESSAGES,
@@ -76,11 +78,10 @@ class RoomTableService:
                     room_id=new_room.id,
                     sender_id=agent_id,
                     content=agent.first_message,
+                    session_id=new_session.id,
                 ),
             )
 
-            # Start a session
-            self.session_table_service.get_or_start_active_session(new_room.id)
 
             return new_room
 

@@ -32,6 +32,8 @@ def build_agent(config: Config, context: Context) -> AgentService:
             llm_manager=LLMService(
                 model=Model.from_model_name(config.ACTION_MANAGER_LLM)
             ),
+            message_table_service=container.message_table_service,
+            session_table_service=container.session_table_service
         ),
         memory_module=MemoryModule(
             database_manager=database_manager,

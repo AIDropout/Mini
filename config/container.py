@@ -132,6 +132,7 @@ class Container:
             user_table_service=self.user_table_service,
             system_time_manager=self.system_time_manager,
             message_table_service=self.message_table_service,
+            session_table_service=self.session_table_service,
         )
 
     @property

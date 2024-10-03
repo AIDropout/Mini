@@ -9,7 +9,6 @@ from mini.core.enums import JobStatus, MessageTaskType, MessagingProviderType
 from mini.utils.utils import generate_uuid, utc_now
 
 
-# TODO: MOVE ALL THESE TO RESPECTIVE FOLDERS IN DATABASE
 class Tables(str, Enum):
     """Tables and columns available in the database."""
 
@@ -70,6 +69,7 @@ class Tables(str, Enum):
     MESSAGES__type = "type"
     MESSAGES__sent_by_admin = "sent_by_admin"
     MESSAGES__log = "log"
+    MESSAGES__session_id = "session_id"
 
     SUBSCRIPTIONS = "subscriptions"
     SUBSCRIPTIONS__id = "id"
@@ -193,6 +193,7 @@ class Message(BaseModel):
     log: Optional[Union[List[Dict[str, Any]], str]] = Field(
         default=None, description="JSONB field for agent logs"
     )
+    session_id: str = Field(default_factory=generate_uuid)
 
     @field_validator("log", mode="before")
     def parse_log(cls, value):
@@ -242,13 +243,16 @@ class IGAccounts(BaseModel):
     handle: str
 
 
-TableModel = Union[User, Agent, Channel, Room, Message, Job, Subscription, IGAccounts]
+TableModel = Union[
+    User, Agent, Channel, Room, Message, Session, Job, Subscription, IGAccounts
+]
 TABLE_MODEL_MAP = {
     Tables.USERS: User,
     Tables.AGENTS: Agent,
     Tables.CHANNELS: Channel,
     Tables.ROOMS: Room,
     Tables.MESSAGES: Message,
+    Tables.SESSIONS: Session,
     Tables.JOBS: Job,
     Tables.SUBSCRIPTIONS: Subscription,
     Tables.IGACCOUNTS: IGAccounts,

@@ -11,6 +11,8 @@ from mini.database.database import DatabaseManager
 from mini.database.models import Message, Tables
 from mini.llm import LLMService
 from mini.messaging.providers import MessagingProvider
+from mini.database.tables.message_service import MessageTableService
+from mini.database.tables.session_service import SessionTableService
 from mini.messaging.providers.discord import discord_manager
 from mini.utils.time import TimeManager
 from mini.utils.utils import utc_now
@@ -25,12 +27,16 @@ class MessageSenderModule(AgentModule):
         system_time_manager: TimeManager,
         context: Context,
         llm_manager: LLMService,
+        message_table_service: MessageTableService,
+        session_table_service: SessionTableService,
     ):
         super().__init__(database_manager, context)
         self.llm_manager = llm_manager
         self.llm_manager.cost_tracking_callback = self._update_user_message_cost
         self.messaging_provider = None
         self.system_time_manager = system_time_manager
+        self.message_table_service = message_table_service
+        self.session_table_service = session_table_service
 
     def set_messaging_provider(self, messaging_provider: MessagingProvider) -> None:
         self.messaging_provider = messaging_provider
@@ -139,6 +145,7 @@ class MessageSenderModule(AgentModule):
 
     def _handle_successful_send(self, final_message: str):
         message = self._add_message_to_db(final_message)
+        self.session_table_service.update_active_session(self.context.session)
         self._log_to_discord(final_message, message.id)
         self._update_room_last_message_time()
 
@@ -150,6 +157,7 @@ class MessageSenderModule(AgentModule):
                 sender_id=self.context.agent.id,
                 content=final_message,
                 log=el.get_logs(),
+                session_id=self.context.session.id,
             ),
         )
         return message
