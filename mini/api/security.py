@@ -15,7 +15,6 @@ def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security
 
     i.e. When calling our endpoints, add "Bearer {OUR_API_KEY}" to the Authorization header
     """
-    logger.info("hi")
     token = credentials.credentials
     if token != config.BACKEND_API_KEY:
         raise HTTPException(status_code=403, detail="Could not validate credentials")

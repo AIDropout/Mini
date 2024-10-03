@@ -84,10 +84,10 @@ class Tables(str, Enum):
     SESSIONS__processed = "processed"
     SESSIONS__message_count = "message_count"
     SESSIONS__last_updated = "last_updated"
-    
+
     # Processing includes:
-    # - Storing user preferences 
-    # - Memory updating/summarizing 
+    # - Storing user preferences
+    # - Memory updating/summarizing
     # - Potential additional columns: summary
 
     JOBS = "jobs"
@@ -136,7 +136,7 @@ class Agent(BaseModel):
     prompt_role: str
     prompt_rules: List[str]
     prompt_actions: List[str]
-    room_count: Optional[int]
+    room_count: int = Field(default=0)
 
 
 class Channel(BaseModel):
@@ -209,6 +209,7 @@ class Subscription(BaseModel):
     user_id: str
     status: str
 
+
 class Session(BaseModel):
     id: str = Field(default_factory=generate_uuid)
     room_id: str
@@ -217,6 +218,7 @@ class Session(BaseModel):
     processed: bool = Field(default=False)
     message_count: int = Field(default=0)
     last_updated: datetime = Field(default_factory=utc_now)
+
 
 class Job(BaseModel):
     id: str = Field(default_factory=generate_uuid)

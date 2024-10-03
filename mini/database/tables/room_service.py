@@ -49,17 +49,11 @@ class RoomTableService:
             self.messaging_provider.set_receiver(user.phone_number)
             self.messaging_provider.set_sender(agent.bird_channel_id)
 
-            # Get agent phone number
-            channel = self.database_manager.get_row(
-                Tables.CHANNELS,
-                {Tables.CHANNELS__id: agent.bird_channel_id},
-            )
-
             file_url = self.agent_table_service.get_or_create_contact_card(agent_id)
 
             # First message w/ vcard
-            self.messaging_provider.send_message(text=agent.first_message)
             self.messaging_provider.send_message(files=[(file_url, "text/vcard")])
+            self.messaging_provider.send_message(text=agent.first_message)
 
             # Create a new room
             new_room = self.database_manager.insert(

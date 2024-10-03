@@ -14,13 +14,12 @@ RoomTableServiceDep = Annotated[
 ]
 
 router = APIRouter(
-    prefix="/rooms",
     tags=["rooms"],
 )
 logger = get_logger(__name__)
 
 
-@router.post("/")
+@router.post("/rooms")
 def create_room(
     agent_id: Annotated[
         str, Body(..., title="Agent ID of the page the user signed up to")

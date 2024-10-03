@@ -4,11 +4,6 @@ from fastapi import BackgroundTasks
 
 from config.config import config
 from mini.core.enums import MessageTaskType, MessagingProviderType
-from mini.core.exceptions import (
-    RoomDisabledByAdminError,
-    StopKeywordError,
-    AdminResetPhraseError,
-)
 from mini.core.logger import get_logger
 from mini.core.models.context import Context
 from mini.core.models.message import MiniMessage
@@ -61,7 +56,8 @@ class MessagingService:
         self.messaging_provider = messaging_providers.get(provider_name)
         message = self.messaging_provider.receive_message(request_body)
         context = self.message_task_factory._get_context_from_message(message)
-        self._handle_special_cases(context, message)
+        if not self._handle_special_cases(context, message):
+            return
 
         # Insert message
         self.message_table_service.add_message(
@@ -94,15 +90,15 @@ class MessagingService:
             countdown=delay,
         )
 
-    def _handle_special_cases(self, context: Context, message: MiniMessage):
+    def _handle_special_cases(self, context: Context, message: MiniMessage) -> bool:
         """
-        Handle special cases
+        Handle special cases. Return boolean whether to continue processing.
         """
         if context.room.disabled_by_admin:
-            raise RoomDisabledByAdminError(room_id=context.room.id)
+            return False
         if message.content in ["STOP", "STOPALL"]:
             # TODO: cancel all scheduled jobs / make room disabled
-            raise StopKeywordError(room_id=context.room.id)
+            return False
         if config.ENVIRONMENT == "production":
             discord_manager.log_message(
                 message=f"-# {context.user.phone_number} -> {context.agent.name}: {message.content}"
@@ -113,7 +109,8 @@ class MessagingService:
             self.messaging_provider.send_message(
                 text="Successfully deleted your user from Auth tables and Users table"
             )
-            raise AdminResetPhraseError()
+            return False
+        return True
 
     def _generate_response_delay(self) -> int:
         """
