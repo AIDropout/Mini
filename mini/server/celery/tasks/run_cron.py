@@ -10,7 +10,6 @@ from mini.server.celery.celery import app
 logger = get_logger(__name__)
 job_table_service = container.job_table_service
 session_table_service = container.session_table_service
-proactive_service = container.proactive_service
 
 
 @app.task
@@ -26,8 +25,6 @@ def run_cron():
 
     # Process stale sessions
     session_table_service.process_stale_sessions()
-    # Process all proactives
-    # proactive_service.send_proactive_messages(is_local=config.is_local())
 
     # Run all due jobs
     jobs = job_table_service.get_due_jobs(is_local=config.is_local())

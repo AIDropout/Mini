@@ -110,6 +110,21 @@ class RoomTableService:
             raise HTTPException(status_code=404, detail="Room not found")
         return room
 
+    def get_room_by_id(self, room_id) -> Optional[Room]:
+        """Retrieves a room by agent_id and user_id, optionally raising an error if not found"""
+
+        room = self.database_manager.get_row(
+            Tables.ROOMS,
+            conditions={
+                Tables.ROOMS__id: room_id,
+            },
+        )
+        if not room:
+            raise HTTPException(
+                status_code=404, detail=f"Room not found for id {room_id}"
+            )
+        return room
+
     def get_user_rooms(self, user_id: str) -> Optional[List[Room]]:
         rooms = self.database_manager.get_multiple_rows(
             Tables.ROOMS,
@@ -122,7 +137,7 @@ class RoomTableService:
             raise HTTPException(status_code=404, detail="Rooms not found")
         return rooms
 
-    def update_room_last_sent(self, room_id) -> Room:
+    def update_room_last_sent(self, room_id: str) -> Room:
         timestamp = self.system_time_manager.get_user_timestamp()
 
         return self.database_manager.update(
@@ -132,4 +147,11 @@ class RoomTableService:
             condition_value=room_id,
         )
     
-    
+    def update_room_proactivity(self, room_id: str, new_proactivity: float) -> Room:
+        return self.database_manager.update(
+            Tables.ROOMS,
+            {Tables.ROOMS__agent_proactivity: new_proactivity},
+            condition_key=Tables.ROOMS__id,
+            condition_value=room_id,
+        )
+
