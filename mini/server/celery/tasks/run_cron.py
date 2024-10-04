@@ -4,17 +4,32 @@ from config.config import config
 from config.container import container
 from mini.core.enums import JobStatus, MessagingProviderType
 from mini.core.logger import get_logger
-from mini.messaging.send_message.send_message import send_message
+from mini.server.celery.tasks.send_message import send_message
 from mini.server.celery.celery import app
 
 logger = get_logger(__name__)
 job_table_service = container.job_table_service
+session_table_service = container.session_table_service
+proactive_service = container.proactive_service
 
 
 @app.task
-def run_jobs():
-    # logger.info("Running cron...")
+def run_cron():
+    """
+    Runs every x seconds. The interval is set in config in celeryconfig.py.
+    
+    1. End and process all stale sessions
+    2. Run all due jobs
+    3. Run all proactive messages
+    """
+    logger.info("Running cron...")
 
+    # Process stale sessions
+    session_table_service.process_stale_sessions()
+    # Process all proactives
+    # proactive_service.send_proactive_messages(is_local=config.is_local())
+
+    # Run all due jobs
     jobs = job_table_service.get_due_jobs(is_local=config.is_local())
 
     job_chains = [

@@ -11,7 +11,7 @@ timezone = "UTC"
 enable_utc = True
 beat_schedule = {
     "run-every-x-seconds": {
-        "task": "mini.server.celery.cron.run_jobs",
+        "task": "mini.server.celery.tasks.run_cron.run_cron",
         "schedule": timedelta(seconds=config.PROACTIVE_CONFIG.cron_interval),
     },
 }

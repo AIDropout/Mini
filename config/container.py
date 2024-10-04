@@ -1,7 +1,6 @@
 from functools import lru_cache
 
 from config.config import config
-from mini.agent.modules.memory import MemoryManager
 from mini.core.logger import get_logger
 from mini.core.rate_limiter import RateLimiter
 from mini.database.database import DatabaseManager
@@ -19,6 +18,7 @@ from mini.messaging.service import MessagingService
 from mini.messaging.factory import MessageTaskFactory
 from mini.payment.service import PaymentService
 from mini.payment.stripe import CheckoutManager, CustomerManager, SubscriptionManager
+from mini.messaging.proactive.service import ProactiveService
 from mini.server.redis.redis import RedisManager
 from mini.utils.time import TimeManager
 
@@ -102,10 +102,19 @@ class Container:
     # --- Other services: ---
     @property
     @lru_cache
+    def proactive_service(self):
+        return ProactiveService(
+            database_manager=self.database_manager,
+            system_time_manager=self.system_time_manager,
+            room_service=self.room_table_service,
+        )
+
+    @property
+    @lru_cache
     def paywall_service(self):
         return PaywallService(
             database_manager=self.database_manager,
-            room_service=self.room_table_service,
+            message_service=self.message_table_service,
         )
 
     @property

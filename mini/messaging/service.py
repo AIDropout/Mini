@@ -15,7 +15,6 @@ from mini.database.tables.session_service import SessionTableService
 from mini.messaging.factory import MessageTaskFactory
 from mini.messaging.providers import messaging_providers
 from mini.messaging.providers.discord import discord_manager
-from mini.utils.time import TimeManager
 
 logger = get_logger(__name__)
 
@@ -80,7 +79,7 @@ class MessagingService:
         logger.info(delay)
 
         # Celery task
-        from mini.messaging.send_message.send_message import send_message
+        from mini.server.celery.tasks.send_message import send_message
 
         logger.info(app.tasks)
         send_message.apply_async(

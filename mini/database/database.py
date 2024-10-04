@@ -126,7 +126,7 @@ class DatabaseManager:
         self,
         table_name: str,
         *conditions: Union[
-            Tuple[str, str], Tuple[str, str, str], Tuple[str, str, Tuple]
+            Tuple[str, str], Tuple[str, str, str], Tuple[str, str, Union[Any, Tuple]]
         ],
     ) -> List[TableModel]:
         query = self.supabase.table(table_name).select("*")
@@ -153,6 +153,11 @@ class DatabaseManager:
                         logger.warning(
                             f"IN condition expects a list or tuple, got {type(value)}"
                         )
+                elif op.upper() == "IS":
+                    if value is None:
+                        query = query.is_(key, None)
+                    else:
+                        logger.warning(f"IS condition expects None, got {value}")
                 else:
                     query = query.eq(key, value)
             else:
@@ -161,7 +166,7 @@ class DatabaseManager:
         data, _ = query.execute()
         model_class = TABLE_MODEL_MAP[table_name]
         return [model_class(**item) for item in data[1]] if data and data[1] else []
-
+    
     def count_rows(
         self, table_name: str, conditions: Optional[Dict[str, Any]] = None
     ) -> int:

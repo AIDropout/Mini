@@ -12,6 +12,7 @@ class EventLogger:
     def __init__(self):
         self.logs: List[Dict[str, Any]] = []
 
+    # TODO: use TimeManager
     def log(self, message: str):
         cleaned_message = self._clean_string(message)
         log_entry = {"log": cleaned_message, "timestamp": datetime.now().isoformat()}

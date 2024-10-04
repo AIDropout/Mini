@@ -8,7 +8,7 @@ from mini.core.enums import MessagingProviderType
 from mini.messaging.providers.discord import discord_manager
 from mini.core.enums import MessageTaskType
 from mini.agent.build_agent import build_agent
-from mini.messaging.send_message.cancellable import CancellableTask
+from mini.server.redis.cancellable import CancellableTask
 
 logger = get_logger(__name__)
 

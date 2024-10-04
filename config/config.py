@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings
 
 
 class StripeConfig(BaseSettings):
+    messages_before_paywall: int
     secret_key: str
     webhook_secret: str
     basic_weekly_price_id: str

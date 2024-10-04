@@ -38,11 +38,11 @@ class JobTableService:
         return self.database_manager.insert(Tables.JOBS, job)
 
     def get_due_jobs(self, is_local: bool = False) -> List[Job]:
-        current_time = self.system_time_manager.get_user_datetime()
+        current_time = self.system_time_manager.get_user_timestamp()
 
         conditions = [
             (Tables.JOBS__status, JobStatus.SCHEDULED.value),
-            (Tables.JOBS__scheduled_for, "<=", current_time.isoformat()),
+            (Tables.JOBS__scheduled_for, "<=", current_time),
             (Tables.JOBS__is_local, is_local),
         ]
 
@@ -54,12 +54,12 @@ class JobTableService:
         """
         Get scheduled jobs that are upcoming
         """
-        current_time = self.system_time_manager.get_user_datetime()
+        current_time = self.system_time_manager.get_user_timestamp()
 
         jobs = self.database_manager.query(
             Tables.JOBS,
             (Tables.JOBS__status, JobStatus.SCHEDULED.value),
-            (Tables.JOBS__scheduled_for, ">=", current_time.isoformat()),
+            (Tables.JOBS__scheduled_for, ">=", current_time),
         )
 
         jobs = cast(List[Job], jobs)
@@ -69,13 +69,13 @@ class JobTableService:
         """
         Get scheduled jobs that are upcoming
         """
-        current_time = self.system_time_manager.get_user_datetime()
+        current_time = self.system_time_manager.get_user_timestamp()
 
         jobs = self.database_manager.query(
             Tables.JOBS,
             (Tables.JOBS__room_id, room_id),
             (Tables.JOBS__status, JobStatus.SCHEDULED.value),
-            (Tables.JOBS__scheduled_for, ">=", current_time.isoformat()),
+            (Tables.JOBS__scheduled_for, ">=", current_time),
         )
 
         jobs = cast(List[Job], jobs)

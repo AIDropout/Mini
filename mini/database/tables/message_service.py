@@ -27,13 +27,34 @@ class MessageTableService:
         # self.user_table_service = user_table_service
         # self.agent_table_service = agent_table_service
 
-    def add_message(self, room_id: str, sender_id: str, content: str, session_id: str) -> None:
+    def add_message(
+        self, room_id: str, sender_id: str, content: str, session_id: str
+    ) -> None:
         self.database_manager.insert(
             table_name=Tables.MESSAGES,
             item=Message(
                 room_id=room_id,
                 sender_id=sender_id,
                 content=content,
-                session_id=session_id
+                session_id=session_id,
             ),
+        )
+
+    def get_messages_in_session(self, session_id: str) -> List[Message]:
+        messages = self.database_manager.get_multiple_rows(
+            table_name=Tables.MESSAGES,
+            max_rows=100,  # Set high
+            order_by=Tables.MESSAGES__created_at,
+            order_desc=True,
+            conditions={Tables.MESSAGES__session_id: session_id},
+        )
+
+        return messages
+    
+    def get_user_message_count(self, user_id: str) -> int:
+        return self.database_manager.count_rows(
+            table_name=Tables.MESSAGES,
+            conditions={
+                Tables.MESSAGES__sender_id: user_id,
+            },
         )

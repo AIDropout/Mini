@@ -4,6 +4,7 @@ from mini.core.logger import get_logger
 from mini.core.models.message_tasks import ResponseTask
 from mini.database.database import DatabaseManager
 from mini.database.tables.room_service import RoomTableService
+from mini.database.tables.message_service import MessageTableService
 from mini.database.models import Tables
 
 logger = get_logger(__name__)
@@ -15,10 +16,10 @@ class PaywallService:
     """
 
     def __init__(
-        self, database_manager: DatabaseManager, room_service: RoomTableService
+        self, database_manager: DatabaseManager, message_service: MessageTableService
     ) -> None:
         self.database_manager = database_manager
-        self.room_service = room_service
+        self.message_service = message_service
 
     def handle_subscription_check(self, task: ResponseTask) -> None:
         """
@@ -26,12 +27,10 @@ class PaywallService:
         """
         if task.context.user.is_subscribed:
             return
+        
+        user_message_count = self.message_service.get_user_message_count(task.context.user.id)
 
-        agent_message_count = self.room_service.get_message_count_for_sender(
-            task.context.room.id, task.context.agent.id
-        )
-
-        if agent_message_count >= task.context.agent.free_msg_limit:
+        if user_message_count >= config.STRIPE_CONFIG.messages_before_paywall:
             if not task.context.room.subscribe_msg_sent:
                 message = (
                     f"{task.context.agent.subscribe_msg}\n"
