@@ -41,7 +41,6 @@ class Container:
 
     # --- Table services: ---
     @property
-    @lru_cache()
     def user_table_service(self):
         return UserTableService(
             database_manager=self.database_manager,
@@ -49,12 +48,10 @@ class Container:
         )
 
     @property
-    @lru_cache()
     def agent_table_service(self):
         return AgentTableService(database_manager=self.database_manager)
 
     @property
-    @lru_cache()
     def room_table_service(self):
         return RoomTableService(
             database_manager=self.database_manager,
@@ -66,7 +63,6 @@ class Container:
         )
 
     @property
-    @lru_cache()
     def job_table_service(self):
         return JobTableService(
             database_manager=self.database_manager,
@@ -74,7 +70,6 @@ class Container:
         )
 
     @property
-    @lru_cache()
     def subscription_table_service(self):
         return SubscriptionTableService(
             database_manager=self.database_manager,
@@ -84,14 +79,12 @@ class Container:
         )
 
     @property
-    @lru_cache()
     def message_table_service(self):
         return MessageTableService(
             database_manager=self.database_manager,
         )
 
     @property
-    @lru_cache()
     def session_table_service(self):
         return SessionTableService(
             database_manager=self.database_manager,
@@ -101,7 +94,6 @@ class Container:
     # --- Other services: ---
 
     @property
-    @lru_cache
     def paywall_service(self):
         return PaywallService(
             database_manager=self.database_manager,
@@ -109,12 +101,10 @@ class Container:
         )
 
     @property
-    @lru_cache
     def rate_limiter(self):
         return RateLimiter(redis_manager=self.redis_manager, max_calls=20, period=300)
 
     @property
-    @lru_cache()
     def messaging_service(self):
         return MessagingService(
             database_manager=self.database_manager,
@@ -126,7 +116,6 @@ class Container:
         )
 
     @property
-    @lru_cache()
     def message_task_factory(self):
         return MessageTaskFactory(
             database_manager=self.database_manager,
@@ -137,14 +126,12 @@ class Container:
         )
 
     @property
-    @lru_cache()
     def llm_service(self):
         return LLMService(
             model=Model.from_model_name(config.MEMORY_GENERAL_LLM),
         )
 
     @property
-    @lru_cache()
     def payment_service(self):
         return PaymentService(
             checkout_manager=self.checkout_manager,
