@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cached_property
 
 from config.config import config
 from mini.core.logger import get_logger
@@ -40,18 +40,18 @@ class Container:
         self.redis_manager = RedisManager()
 
     # --- Table services: ---
-    @property
+    @cached_property
     def user_table_service(self):
         return UserTableService(
             database_manager=self.database_manager,
             customer_manager=self.customer_manager,
         )
 
-    @property
+    @cached_property
     def agent_table_service(self):
         return AgentTableService(database_manager=self.database_manager)
 
-    @property
+    @cached_property
     def room_table_service(self):
         return RoomTableService(
             database_manager=self.database_manager,
@@ -62,14 +62,14 @@ class Container:
             system_time_manager=self.system_time_manager,
         )
 
-    @property
+    @cached_property
     def job_table_service(self):
         return JobTableService(
             database_manager=self.database_manager,
             system_time_manager=self.system_time_manager,
         )
 
-    @property
+    @cached_property
     def subscription_table_service(self):
         return SubscriptionTableService(
             database_manager=self.database_manager,
@@ -78,13 +78,13 @@ class Container:
             agent_table_service=self.agent_table_service,
         )
 
-    @property
+    @cached_property
     def message_table_service(self):
         return MessageTableService(
             database_manager=self.database_manager,
         )
 
-    @property
+    @cached_property
     def session_table_service(self):
         return SessionTableService(
             database_manager=self.database_manager,
@@ -93,18 +93,18 @@ class Container:
 
     # --- Other services: ---
 
-    @property
+    @cached_property
     def paywall_service(self):
         return PaywallService(
             database_manager=self.database_manager,
             message_service=self.message_table_service,
         )
 
-    @property
+    @cached_property
     def rate_limiter(self):
         return RateLimiter(redis_manager=self.redis_manager, max_calls=20, period=300)
 
-    @property
+    @cached_property
     def messaging_service(self):
         return MessagingService(
             database_manager=self.database_manager,
@@ -115,7 +115,7 @@ class Container:
             message_task_factory=self.message_task_factory,
         )
 
-    @property
+    @cached_property
     def message_task_factory(self):
         return MessageTaskFactory(
             database_manager=self.database_manager,
@@ -125,13 +125,13 @@ class Container:
             session_table_service=self.session_table_service,
         )
 
-    @property
+    @cached_property
     def llm_service(self):
         return LLMService(
             model=Model.from_model_name(config.MEMORY_GENERAL_LLM),
         )
 
-    @property
+    @cached_property
     def payment_service(self):
         return PaymentService(
             checkout_manager=self.checkout_manager,
