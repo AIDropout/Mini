@@ -47,28 +47,22 @@ class MessagingService:
         background_tasks: BackgroundTasks,
     ) -> None:
         """
-        Function that processes request body received by our webhooks 
-        (e.g. Bird and Instagram)
-
-        - Handles special cases
-        - Inserts message
-        - Calculates human-like response delay
-        - Schedules response
+        Function that processes request body received by our webhooks (e.g. Bird and Instagram)
+        Handles special cases. Inserts message & updates sessions/rooms tables. Calculates human-like response delay. Schedules response
         """
         self.messaging_provider = messaging_providers.get(provider_name)
         message = self.messaging_provider.receive_message(request_body)
         context = self.message_task_factory._get_context_from_message(message)
         if not self._handle_special_cases(context, message):
             return
-        
-        self.update_tables(context, message, background_tasks)
 
+        self.update_tables(context, message, background_tasks)
         delay = self._generate_response_delay()
 
         # Celery task
-        from mini.server.celery.tasks.send_message import send_message
 
         logger.info(f"Response delay: {delay}")
+        from mini.server.celery.tasks.send_message import send_message
         task = send_message.apply_async(
             kwargs={
                 "provider_name": provider_name.value,
@@ -102,8 +96,10 @@ class MessagingService:
             )
             return False
         return True
-    
-    def update_tables(self, context: Context, message: MiniMessage, background_tasks: BackgroundTasks) -> None:
+
+    def update_tables(
+        self, context: Context, message: MiniMessage, background_tasks: BackgroundTasks
+    ) -> None:
         """
         Update messages, rooms, and session tables
         """
