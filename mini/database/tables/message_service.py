@@ -29,8 +29,8 @@ class MessageTableService:
 
     def add_message(
         self, room_id: str, sender_id: str, content: str, session_id: str
-    ) -> None:
-        self.database_manager.insert(
+    ) -> Message:
+        return self.database_manager.insert(
             table_name=Tables.MESSAGES,
             item=Message(
                 room_id=room_id,

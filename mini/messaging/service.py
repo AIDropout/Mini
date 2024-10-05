@@ -15,6 +15,7 @@ from mini.database.tables.session_service import SessionTableService
 from mini.messaging.factory import MessageTaskFactory
 from mini.messaging.providers import messaging_providers
 from mini.messaging.providers.discord import discord_manager
+from mini.server.redis.cancellable import CancellableTask
 
 logger = get_logger(__name__)
 
@@ -60,12 +61,14 @@ class MessagingService:
             return
 
         # Update rooms, messages, & session table
-        self.message_table_service.add_message(
+        message = self.message_table_service.add_message(
             context.room.id,
             context.user.id,
             message.content,
             session_id=context.session.id,
         )
+
+        # Make updates to tables
         self.room_table_service.update_room_last_sent(context.room.id)
         self.session_table_service.update_active_session(context.session)
 
@@ -82,7 +85,7 @@ class MessagingService:
         from mini.server.celery.tasks.send_message import send_message
 
         logger.info(app.tasks)
-        send_message.apply_async(
+        task = send_message.apply_async(
             kwargs={
                 "provider_name": provider_name.value,
                 "room_id": context.room.id,
@@ -90,6 +93,10 @@ class MessagingService:
             },
             countdown=delay,
         )
+
+        # Store task id to redis (room:message_id)
+        logger.info(f"🩷🩷 adding task {task.id}")
+        CancellableTask.register_task(context.room.id, task.id)
 
     def _handle_special_cases(self, context: Context, message: MiniMessage) -> bool:
         """
@@ -118,4 +125,4 @@ class MessagingService:
         Returns delay in seconds
         """
         # TODO: eventually make it based on how many messages there are in the session -> more messages = longer delay
-        return random.randint(7, 35)
+        return random.randint(10, 60)

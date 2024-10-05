@@ -23,9 +23,13 @@ def send_message(
     room_id: str,
     type: str,
 ):
-    self.register_task(room_id)
-
     try:
+        self.room_id = room_id
+
+        logger.info(f"🩷🩷 checking task {self.request.id}")
+
+        self.check_cancellation()
+
         task = messaging_service.build_message_task(
             MessagingProviderType(provider_name), room_id, MessageTaskType(type)
         )
