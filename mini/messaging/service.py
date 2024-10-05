@@ -47,7 +47,8 @@ class MessagingService:
         background_tasks: BackgroundTasks,
     ) -> None:
         """
-        Function called by our webhooks (e.g. Bird and Instagram)
+        Function that processes request body received by our webhooks 
+        (e.g. Bird and Instagram)
 
         - Handles special cases
         - Inserts message
@@ -59,32 +60,15 @@ class MessagingService:
         context = self.message_task_factory._get_context_from_message(message)
         if not self._handle_special_cases(context, message):
             return
+        
+        self.update_tables(context, message, background_tasks)
 
-        # Update rooms, messages, & session table
-        message = self.message_table_service.add_message(
-            context.room.id,
-            context.user.id,
-            message.content,
-            session_id=context.session.id,
-        )
-
-        # Make updates to tables
-        self.room_table_service.update_room_last_sent(context.room.id)
-        self.session_table_service.update_active_session(context.session)
-
-        # Simulate human-like response time
-        delay = (
-            self._generate_response_delay()
-            if config.DEV_CONFIG.enable_response_delay
-            else 0
-        )
-        logger.info("-----")
-        logger.info(delay)
+        delay = self._generate_response_delay()
 
         # Celery task
         from mini.server.celery.tasks.send_message import send_message
 
-        logger.info(app.tasks)
+        logger.info(f"Response delay: {delay}")
         task = send_message.apply_async(
             kwargs={
                 "provider_name": provider_name.value,
@@ -94,8 +78,7 @@ class MessagingService:
             countdown=delay,
         )
 
-        # Store task id to redis (room:message_id)
-        logger.info(f"🩷🩷 adding task {task.id}")
+        logger.info(f"🩷🩷 adding task to redis: {task.id}")
         CancellableTask.register_task(context.room.id, task.id)
 
     def _handle_special_cases(self, context: Context, message: MiniMessage) -> bool:
@@ -119,10 +102,30 @@ class MessagingService:
             )
             return False
         return True
+    
+    def update_tables(self, context: Context, message: MiniMessage, background_tasks: BackgroundTasks) -> None:
+        """
+        Update messages, rooms, and session tables
+        """
+        self.message_table_service.add_message(
+            context.room.id,
+            context.user.id,
+            message.content,
+            session_id=context.session.id,
+        )
+        background_tasks.add_task(
+            self.room_table_service.update_room_last_sent, context.room.id
+        )
+        background_tasks.add_task(
+            self.session_table_service.update_active_session, context.session
+        )
 
     def _generate_response_delay(self) -> int:
         """
         Returns delay in seconds
         """
+        if not config.DEV_CONFIG.enable_response_delay:
+            return 0
+
         # TODO: eventually make it based on how many messages there are in the session -> more messages = longer delay
         return random.randint(10, 60)
