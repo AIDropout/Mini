@@ -51,6 +51,14 @@ class MessageTableService:
 
         return messages
     
+    def get_room_message_count(self, room_id: str) -> int:
+        return self.database_manager.count_rows(
+            table_name=Tables.MESSAGES,
+            conditions={
+                Tables.MESSAGES__room_id: room_id,
+            },
+        )
+    
     def get_user_message_count(self, user_id: str) -> int:
         return self.database_manager.count_rows(
             table_name=Tables.MESSAGES,

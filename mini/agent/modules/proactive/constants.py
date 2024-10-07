@@ -1,9 +1,0 @@
-from config.config import config
-
-# Proactive scheduling constants
-SHORT_PROACTIVE_MESSAGE_DELAY = config.PROACTIVE_CONFIG.short_proactive_message_delay
-MEDIUM_PROACTIVE_MESSAGE_DELAY = config.PROACTIVE_CONFIG.medium_proactive_message_delay
-LONG_PROACTIVE_MESSAGE_DELAY = config.PROACTIVE_CONFIG.long_proactive_message_delay
-DEAD_ZONE_START = config.PROACTIVE_CONFIG.dead_zone_start
-DEAD_ZONE_END = config.PROACTIVE_CONFIG.dead_zone_end
-RANDOM_HOUR_RANGE = config.PROACTIVE_CONFIG.random_hour_range

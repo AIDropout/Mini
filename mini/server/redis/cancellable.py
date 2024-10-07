@@ -7,6 +7,7 @@ from mini.server.redis.redis import RedisManager
 
 logger = get_logger(__name__)
 
+# TODO: in future, have new tasks retroactively cancel prior tasks
 class CancellableTask(Task):
     _redis_manager = None
 

@@ -59,8 +59,6 @@ class MessagingService:
         self.update_tables(context, message, background_tasks)
         delay = self._generate_response_delay()
 
-        # Celery task
-
         logger.info(f"Response delay: {delay}")
         from mini.server.celery.tasks.send_message import send_message
         task = send_message.apply_async(

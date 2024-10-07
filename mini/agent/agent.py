@@ -3,7 +3,7 @@ from typing import Callable, Union
 
 from mini.agent.modules.filter.filter import MessageFilterModule
 from mini.agent.modules.memory.service import MemoryModule
-from mini.agent.modules.proactive.schedule_dispatch import ScheduleDispatch
+from mini.messaging.proactive.proactive import ProactiveService
 from mini.agent.modules.prompt import AgentPromptModule
 from mini.agent.modules.sender import MessageSenderModule
 from mini.core.event_logger import event_logger as el
@@ -16,13 +16,13 @@ logger = get_logger(__name__)
 class AgentService:
     def __init__(
         self,
-        schedule_dispatch: ScheduleDispatch,
+        proactive_service: ProactiveService,
         message_sender_module: MessageSenderModule,
         memory_module: MemoryModule,
         filter_module: MessageFilterModule,
         agent_prompt_module: AgentPromptModule,
     ) -> None:
-        self.schedule_dispatch = schedule_dispatch
+        self.proactive_service = proactive_service
         self.message_sender = message_sender_module
         self.memory = memory_module
         self.filter = filter_module
@@ -41,7 +41,7 @@ class AgentService:
         check_cancellation()
 
         self.message_sender.send_message(text=agent_response)
-        self._update_proactive_message_schedule()
+        self.proactive_service.schedule_proactive_message()
         return True
 
     def _generate_response(
@@ -72,6 +72,3 @@ class AgentService:
         return self.filter.validate_message(
             task.recent_messages, agent_response.response
         )
-
-    def _update_proactive_message_schedule(self):
-        self.schedule_dispatch.schedule_proactive_message()

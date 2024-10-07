@@ -105,11 +105,17 @@ class JobTableService:
             condition_value=job_id,
         )
 
-    def remove_jobs_from_room(self, room_id: str) -> None:
-        """
-        Would be used if a user deletes account or doesn't want to be texted anymore.
-        """
-        pass
+    def remove_jobs_from_room(self, room_id: str) -> int:
+        """Removes all proactive jobs from a room
+
+        Returns number of deleted jobs"""
+        return self.database_manager.delete(
+            Tables.JOBS,
+            {
+                Tables.JOBS__room_id: room_id,
+                Tables.JOBS__type: MessageTaskType.PROACTIVE.value,
+            },
+        )
 
 
 if __name__ == "__main__":

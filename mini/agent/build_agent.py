@@ -4,7 +4,7 @@ from mini.agent.agent import AgentService
 from mini.agent.modules.filter.filter import IntentConfig, MessageFilterModule
 from mini.agent.modules.memory import MemoryManager
 from mini.agent.modules.memory.service import MemoryModule
-from mini.agent.modules.proactive import ScheduleDispatch
+from mini.messaging.proactive.proactive import ProactiveService
 from mini.agent.modules.prompt import AgentPromptModule
 from mini.agent.modules.sender import MessageSenderModule
 from mini.core.enums import ConfidenceLevel
@@ -19,11 +19,12 @@ system_time_manager = container.system_time_manager
 def build_agent(config: Config, context: Context) -> AgentService:
 
     return AgentService(
-        schedule_dispatch=ScheduleDispatch(
-            database_manager=database_manager,
+        proactive_service=ProactiveService(
             system_time_manager=system_time_manager,
             context=context,
             job_table_service=container.job_table_service,
+            room_table_service=container.room_table_service,
+            message_table_service=container.message_table_service,
         ),
         message_sender_module=MessageSenderModule(
             database_manager=database_manager,
@@ -33,7 +34,7 @@ def build_agent(config: Config, context: Context) -> AgentService:
                 model=Model.from_model_name(config.ACTION_MANAGER_LLM)
             ),
             message_table_service=container.message_table_service,
-            session_table_service=container.session_table_service
+            session_table_service=container.session_table_service,
         ),
         memory_module=MemoryModule(
             database_manager=database_manager,
