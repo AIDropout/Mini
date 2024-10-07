@@ -29,7 +29,7 @@ class ProactiveService:
         self.room_table_service = room_table_service
         self.message_table_service = message_table_service
 
-    def schedule_proactive_message(self) -> Optional[str]:
+    def schedule_proactive_message(self) -> None:
         """
         1. Remove existing proactive jobs
         2. Calculate time till next send
@@ -37,14 +37,11 @@ class ProactiveService:
             - Agent proactivity in room
             - Avoid night time
         3. Schedule next proactive job
-
-        Returns:
-            Optional[str]: The scheduled dispatch time as a string, or None if no message is scheduled.
         """
 
         self.job_table_service.remove_jobs_from_room(self.context.room.id)
         next_send_time = self._get_next_send_time()
-        return self._schedule_proactive_job(next_send_time)
+        self._schedule_proactive_job(next_send_time)
 
     def _get_next_send_time(self) -> datetime:
         """
