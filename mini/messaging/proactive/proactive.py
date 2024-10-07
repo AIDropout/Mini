@@ -46,7 +46,7 @@ class ProactiveService:
         next_send_time = self._get_next_send_time()
         return self._schedule_proactive_job(next_send_time)
 
-    def _get_next_send_time(self) -> str:
+    def _get_next_send_time(self) -> datetime:
         """
         Determine the next send time for a proactive message.
 
@@ -57,6 +57,8 @@ class ProactiveService:
 
         Returns:
             str: The next send time for the proactive message as a timestamp string
+
+        # TODO: 2nd follow-up
         """
         message_count = self.message_table_service.get_room_message_count(
             self.context.room.id
@@ -87,19 +89,17 @@ class ProactiveService:
             additional_delay = timedelta(hours=random.uniform(12, 24))
             next_send_time += additional_delay
 
-        return self.system_time_manager.datetime_to_timestamp(next_send_time)
+        return next_send_time
 
     def _schedule_proactive_job(
         self,
         timestamp: datetime,
-        log: str,
     ) -> str:
-        """Schedule a message for a future time, avoiding the dead zone."""
+        """Adds job to jobs table."""
         converted_timestamp = TimeManager.datetime_to_timestamp(timestamp)
         return self.job_table_service.create_job(
             room_id=self.context.room.id,
             scheduled_for=converted_timestamp,
             status=JobStatus.SCHEDULED,
             job_type=MessageTaskType.PROACTIVE,
-            log=log,
         )
