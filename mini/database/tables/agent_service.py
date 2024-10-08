@@ -29,17 +29,26 @@ class AgentTableService:
 
     def get_agents(self) -> List[Agent]:
         """
-        Get all agents (for website)
+        Get all agents (for website), excluding specific agent IDs using post-filtering
         """
+        excluded_ids = {
+            "61bb9ddb-11c7-446e-bdb7-1fa66a99f363", # Life Coach
+            "843af504-a3bd-45c3-ad96-f41bb28755e8" # Fitness
+        }
+
         agents = self.database_manager.get_multiple_rows(
             Tables.AGENTS,
             order_by="id",
             max_rows=100,
         )
-        if not agents:
+
+        # Post-filtering to exclude specific agent IDs
+        filtered_agents = [agent for agent in agents if agent.id not in excluded_ids]
+
+        if not filtered_agents:
             raise HTTPException(status_code=404, detail="Agents not found")
 
-        return agents
+        return filtered_agents
 
     def update_agent(self, agent_id: str, update_data: Dict[str, Any]) -> Agent:
         existing_agent = self.database_manager.get_row(
