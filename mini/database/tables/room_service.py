@@ -39,7 +39,7 @@ class RoomTableService:
         agent_id: str,
         user_id: str,
         background_tasks: BackgroundTasks,
-        first_message: Optional[str] = None,
+        should_send_message: bool
     ) -> Room:
         """Creates a new room & schedules the first message as a background task"""
 
@@ -63,7 +63,7 @@ class RoomTableService:
                 new_room,
                 agent_id,
                 user_id,
-                first_message
+                should_send_message
             )
 
             return new_room
@@ -77,7 +77,7 @@ class RoomTableService:
         room: Room,
         agent_id: str,
         user_id: str,
-        first_message: Optional[str]
+        should_send_message: bool
     ):
         """Performs tasks after room creation as a background process"""
         try:
@@ -85,16 +85,30 @@ class RoomTableService:
             agent = self.agent_table_service.get_agent(agent_id)
             user = self.user_table_service.get_user(user_id)
 
-            # Send the first message
-            self.messaging_provider.set_receiver(user.phone_number)
-            self.messaging_provider.set_sender(agent.bird_channel_id)
+            if should_send_message:
+                # Send the first message
+                self.messaging_provider.set_receiver(user.phone_number)
+                self.messaging_provider.set_sender(agent.bird_channel_id)
 
-            file_url = self.agent_table_service.get_or_create_contact_card(agent.id)
+                file_url = self.agent_table_service.get_or_create_contact_card(agent.id)
 
-            # First message w/ vcard
-            self.messaging_provider.send_message(files=[(file_url, "text/vcard")])
-            message_to_send = first_message if first_message is not None else agent.first_message
-            self.messaging_provider.send_message(text=message_to_send)
+                # First message w/ vcard
+                self.messaging_provider.send_message(files=[(file_url, "text/vcard")])
+                self.messaging_provider.send_message(text=agent.first_message)
+
+                # Start a session
+                new_session = self.session_table_service.get_or_start_active_session(room.id)
+
+                # Log the initial message
+                self.database_manager.insert(
+                    table_name=Tables.MESSAGES,
+                    item=Message(
+                        room_id=room.id,
+                        sender_id=agent.id,
+                        content=agent.first_message,
+                        session_id=new_session.id,
+                    ),
+                )
 
             # Increment agent's room count
             self.database_manager.update(
@@ -104,19 +118,6 @@ class RoomTableService:
                 condition_value=agent.id,
             )
 
-            # Start a session
-            new_session = self.session_table_service.get_or_start_active_session(room.id)
-
-            # Log the initial message
-            self.database_manager.insert(
-                table_name=Tables.MESSAGES,
-                item=Message(
-                    room_id=room.id,
-                    sender_id=agent.id,
-                    content=message_to_send,
-                    session_id=new_session.id,
-                ),
-            )
 
         except Exception as e:
             logger.exception("Error in post-room creation tasks")

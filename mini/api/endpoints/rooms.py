@@ -28,14 +28,14 @@ def create_room(
     room_service: RoomTableServiceDep,
     api_key: ApiKeyDep,
     background_tasks: BackgroundTasks,
-    first_message: Annotated[
-        str, Body(title="Optional first message to send to the user")
-    ] = None,
+    should_send_message: Annotated[
+        bool, Body(title="Whether to send the first messagae")
+    ] = True,
 ) -> Room:
     """Creates a room and sends the first message to the user"""
     return room_service.create_room(
         agent_id=agent_id,
         user_id=user_id,
-        first_message=first_message,
+        should_send_message=should_send_message,
         background_tasks=background_tasks,
     )
