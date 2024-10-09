@@ -15,16 +15,14 @@ router = APIRouter(
 logger = get_logger(__name__)
 
 
-@router.post("/messages", response_model=Agent)
+@router.post("/messages", response_model=Message)
 def send_message(
     room_id: Annotated[str, Body(..., title="The room ID to send a message to")],
     content: Annotated[str, Body(..., title="The message content")],
     api_key: ApiKeyDep,
 ) -> Message:
-    logger.info(room_id, content)
     context = container.message_task_factory._get_context_from_room_id(room_id)
     messaging_provider = BirdMessaging()
-
 
     messaging_provider.set_receiver(context.user.phone_number)
     messaging_provider.set_sender(context.agent.bird_channel_id)
