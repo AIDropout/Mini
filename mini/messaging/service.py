@@ -122,4 +122,4 @@ class MessagingService:
             return 0
 
         # TODO: eventually make it based on how many messages there are in the session -> more messages = longer delay
-        return random.randint(10, 60)
+        return random.randint(10, 30)
