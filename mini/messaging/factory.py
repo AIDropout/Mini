@@ -41,7 +41,7 @@ class MessageTaskFactory:
         self.session_table_service = session_table_service
 
     def _get_recent_messages(
-        self, context: Context, count: int = 20
+        self, context: Context, count: int = 40
     ) -> List[Dict[str, str]]:
         """
         Get the most recent messages for a given room ID.
