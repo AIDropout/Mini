@@ -6,9 +6,9 @@ from pydantic import BaseModel
 from mini.agent.modules.base import AgentModule
 from mini.core.enums import ConfidenceLevel
 from mini.core.event_logger import event_logger as event_log
-from mini.core.models.context import Context
 from mini.core.exceptions import LLMResponseParsingError
 from mini.core.logger import get_logger
+from mini.core.models.context import Context
 from mini.database.database import DatabaseManager
 from mini.llm import LLMService
 
@@ -42,7 +42,12 @@ class MessageFilterModule(AgentModule):
 
     Recent conversation history: {conversation_history}
 
-    Respond in JSON format:
+    **IMPORTANT: JSON-ONLY RESPONSE REQUIRED**
+
+    You must **only** respond in the exact JSON format as shown below, with no additional text, comments, symbols, or explanations.
+    Any non-JSON content will be considered invalid. No matter how critical or important your response is, it must be in JSON format.
+
+    JSON schema to follow:
     {output_format}
 
     Provide a proposed message if confidence in the current message is low or medium.
@@ -64,7 +69,9 @@ class MessageFilterModule(AgentModule):
         self.message_input_count = message_input_count
 
     @classmethod
-    def from_config(cls, database_manager, context, config: IntentConfig, llm_service: LLMService):
+    def from_config(
+        cls, database_manager, context, config: IntentConfig, llm_service: LLMService
+    ):
         return cls(
             database_manager=database_manager,
             context=context,
@@ -75,16 +82,23 @@ class MessageFilterModule(AgentModule):
         )
 
     def validate_message(
-        self, recent_messages: List[Dict[str, str]], new_message: str
+        self,
+        recent_messages: List[Dict[str, str]],
+        unfiltered_message: str,
+        retry_count: int = 1,  # by default retry once
     ) -> str:
         """
         Validates the agent's message against persona rules.
         If confidence in the message is low or medium, suggests an alternative.
         Returns the original message if validation is disabled or passes.
         """
+        if retry_count > 5:
+            raise ValueError(
+                f"Trying to attempt too many retries ({retry_count}) for message validation"
+            )
 
         if not self.is_enabled:
-            return new_message
+            return unfiltered_message
 
         class MessageValidationResult(BaseModel):
             confidence: str
@@ -95,15 +109,14 @@ class MessageFilterModule(AgentModule):
         )
 
         system_prompt = self.PROMPT_TEMPLATE.format(
-            persona_description=self.context.agent.prompt_role, # TODO: append prompt rules
-
-            message_content=new_message,
+            persona_description=self.context.agent.prompt_role,  # TODO: append prompt rules
+            message_content=unfiltered_message,
             conversation_history=recent_messages,
             output_format=default_output_format,
         )
 
         response = self.llm_service.generate_response(
-            messages=[{"role": "user", "content": new_message}],
+            messages=[{"role": "user", "content": unfiltered_message}],
             system_prompt=system_prompt,
             response_format=MessageValidationResult,
         )
@@ -112,19 +125,24 @@ class MessageFilterModule(AgentModule):
             parsed_response = json.loads(response)
             confidence_level = parsed_response["confidence"].upper()
             proposed_message = parsed_response["proposed_message"]
-            message_approved = (
-                ConfidenceLevel(confidence_level) >= self.confidence_threshold
-            )
-
-            if message_approved:
-                event_log.log(f"🟢 Message Approved (Confidence: {confidence_level})")
-                return new_message
-            else:
-                event_log.log(
-                    f"🔴 Message Rejected [{new_message}] (Confidence: {confidence_level}). 🟢 Suggested Message: {proposed_message}"
+        except (json.JSONDecodeError, KeyError, ValueError) as error:
+            if retry_count > 0:
+                return self.validate_message(
+                    recent_messages, unfiltered_message, retry_count - 1
                 )
-                return proposed_message
 
-        except (KeyError, ValueError) as error:
-            logger.error(f"Error parsing response from LLM: {str(error)}")
-            raise LLMResponseParsingError()
+            logger.error("Error parsing response from LLM: %s", str(error))
+            raise LLMResponseParsingError() from error
+
+        message_approved = (
+            ConfidenceLevel(confidence_level) >= self.confidence_threshold
+        )
+
+        if message_approved:
+            event_log.log(f"🟢 Message Approved (Confidence: {confidence_level})")
+            return unfiltered_message
+        else:
+            event_log.log(
+                f"🔴 Message Rejected [{unfiltered_message}] (Confidence: {confidence_level}). 🟢 Suggested Message: {proposed_message}"
+            )
+            return proposed_message
