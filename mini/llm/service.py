@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional, Union, cast
+from typing import Callable, Dict, List, Optional, Type, Union, cast
 from uuid import uuid4
 
 import litellm
@@ -66,7 +66,7 @@ class LLMService:
         messages: List[Dict[str, str]],
         system_prompt: str,
         json_mode: Optional[bool] = False,
-        response_format: Optional[BaseModel] = None,
+        response_format: Optional[Union[BaseModel, Type[BaseModel]]] = None,
         **kwargs,
     ) -> Union[str, Dict]:
         """Generate a response using the specified model."""
